@@ -48,29 +48,35 @@ class ClienteForm(forms.ModelForm):
             'email': forms.EmailInput(attrs={'class': 'form-control'}),
             'telefone': forms.TextInput(attrs={'class': 'form-control'}),
             'cpf': forms.TextInput(attrs={'class': 'form-control'}),
-            'nascimento': forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'nascimento': forms.DateInput(
+                attrs={'class': 'form-control', 'type': 'date'},
+                format='%Y-%m-%d'
+            ),
             'rg': forms.TextInput(attrs={'class': 'form-control'}),
             'cep': forms.TextInput(attrs={'class': 'form-control'}),
             'bairro': forms.TextInput(attrs={'class': 'form-control'}),
             'endereco': forms.TextInput(attrs={'class': 'form-control'}),
             'cidade': forms.TextInput(attrs={'class': 'form-control'}),
             'uf': forms.TextInput(attrs={'class': 'form-control'}),
-            'cliente_cred_facil': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
         labels = {
             'nome': 'Nome*',
-            'email': 'Email',
-            'telefone': 'Telefone',
+            'email': 'Email*',
+            'telefone': 'Telefone*',
             'cpf': 'CPF*',
             'nascimento': 'Data de Nascimento*',
-            'rg': 'RG',
-            'cep': 'CEP',
-            'bairro': 'Bairro',
-            'endereco': 'Endereço',
-            'cidade': 'Cidade',
-            'uf': 'UF',
-            'cliente_cred_facil': 'Cliente Crédito Fácil',
+            'rg': 'RG*',
+            'cep': 'CEP*',
+            'bairro': 'Bairro*',
+            'endereco': 'Endereço*',
+            'cidade': 'Cidade*',
+            'uf': 'UF*',
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.required = True
 
 class ContatoAdicionalForm(forms.ModelForm):
     class Meta:
@@ -82,6 +88,26 @@ class ContatoAdicionalForm(forms.ModelForm):
             'contato': forms.TextInput(attrs={'class': 'form-control'}),
             'endereco_adicional': forms.TextInput(attrs={'class': 'form-control'}),
         }
+        
+
+class AnaliseCreditoClienteForm(forms.ModelForm):
+    class Meta:
+        model = AnaliseCreditoCliente
+        fields = ['produto', 'observacao']
+        widgets = {
+            'produto': Select2Widget(attrs={'class': 'form-control'}),
+            'observacao': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+        }
+        
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+        
+        if self.instance and self.instance.pk:
+            if user and not user.has_perm('vendas.change_status_analise'):
+                # if self.instance.status == 'EA':
+                self.fields['produto'].disabled = True
+
 
 class EnderecoForm(forms.ModelForm):
     class Meta:
@@ -108,6 +134,18 @@ class ComprovantesClienteForm(forms.ModelForm):
             'comprovante_residencia': forms.FileInput(attrs={'class': 'form-control'}),
             'consulta_serasa': forms.FileInput(attrs={'class': 'form-control'}),
         }
+        
+        labels = {
+            'documento_identificacao_frente': 'Documento de Identificação Frente*',
+            'documento_identificacao_verso': 'Documento de Identificação Verso*',
+            'comprovante_residencia': 'Comprovante de Residência*',
+            'consulta_serasa': 'Consulta Serasa*',
+        }
+        
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.required = True
 
 class TipoPagamentoForm(forms.ModelForm):
     class Meta:
@@ -249,16 +287,7 @@ class ProdutoSelectWidget(HeavySelect2Widget):
 
 
 class ProdutoVendaForm(forms.ModelForm):
-    valor_total = forms.DecimalField(
-        label='Valor Total',
-        disabled=True,
-        required=False,
-        widget=forms.TextInput(attrs={
-            'class': 'form-control money',
-            'readonly': 'readonly',
-            'width': '100%'
-        })
-    )
+    valor_total = forms.DecimalField(label='Valor Total', disabled=True, required=False, widget=forms.NumberInput(attrs={'class': 'form-control', 'readonly': 'readonly', 'width': '100%'}))
     imei = forms.ModelChoiceField(
         queryset=EstoqueImei.objects.filter(vendido=False),
         label='imei',
@@ -299,14 +328,14 @@ class ProdutoVendaForm(forms.ModelForm):
         labels = {
             'valor_unitario': 'Valor*',
             'valor_desconto': 'Desconto*',
-            'quantidade': 'Quantidade*',
+            'quantidade': 'Quantidade*', 
             'produto': 'Produto*',
         }
-
+    
     def __init__(self, *args, **kwargs):
         loja = kwargs.pop('loja', None)
         super().__init__(*args, **kwargs)
-        # Filtra apenas os produtos que estão em estoque (quantidade > 0)
+        # Filtra apenas os produtos que estão em estoque (quantidade >  0)
         self.fields['produto'].queryset = Produto.objects.filter(
             Exists(
                 Estoque.objects.filter(
@@ -527,22 +556,8 @@ class RelatorioVendasForm(forms.Form):
         widget=Select2MultipleWidget(attrs={'class': 'form-control'})
     )
     tipos_venda = forms.ModelMultipleChoiceField(
-        queryset=TipoPagamento.objects.all().distinct(),
-        label='Tipos de Pagamento',
+        queryset=TipoVenda.objects.all(),
+        label='Tipos de Venda',
         required=False,
         widget=Select2MultipleWidget(attrs={'class': 'form-control'})
     )
-
-    def __init__(self, *args, **kwargs):
-        loja = kwargs.pop('loja', None)
-        print(f'Loja no form: {loja}')
-        super().__init__(*args, **kwargs)
-        if loja:
-            self.fields['produtos'].queryset = Produto.objects.filter(loja=loja)
-            self.fields['cliente'].queryset = Cliente.objects.filter(loja=loja)
-            self.fields['vendedores'].queryset = User.objects.filter(loja=loja)
-            self.fields['lojas'].queryset = Loja.objects.filter(id=loja)
-            self.fields['tipos_venda'].queryset = TipoPagamento.objects.filter(loja=loja)
-
-            self.fields['lojas'].initial = loja
-

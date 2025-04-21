@@ -89,3 +89,11 @@ class ParcelaAdmin(AdminBase):
 @admin.register(LancamentoCaixa)
 class LancamentoCaixaAdmin(AdminBase):
     list_display = ('caixa', 'tipo_lancamento', 'valor')
+    
+    
+@admin.register(AnaliseCreditoCliente)
+class AnaliseCreditoClienteAdmin(AdminBase):
+    list_display = ('cliente', 'status')
+    list_filter = ('status',)
+    search_fields = ('cliente__nome',)
+    list_editable = ('status',)

@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 import json
 from typing import Any
 from django.contrib import messages
@@ -10,14 +10,15 @@ from django.views.generic import TemplateView, ListView, DetailView, CreateView,
 from django.utils.timezone import localtime, now
 from estoque.models import Estoque, EstoqueImei
 from produtos.models import Produto
-from vendas.forms import ClienteForm, ComprovantesClienteForm, ContatoAdicionalForm, FormaPagamentoEditFormSet, LojaForm, ProdutoVendaEditFormSet, RelatorioVendasForm, VendaForm, ProdutoVendaFormSet, FormaPagamentoFormSet, LancamentoForm, LancamentoCaixaTotalForm
-from .models import Caixa, Cliente, Loja, Pagamento, ProdutoVenda, TipoPagamento, Venda, LancamentoCaixa, LancamentoCaixaTotal
+from vendas.forms import AnaliseCreditoClienteForm, ClienteForm, ComprovantesClienteForm, ContatoAdicionalForm, FormaPagamentoEditFormSet, LojaForm, ProdutoVendaEditFormSet, RelatorioVendasForm, VendaForm, ProdutoVendaFormSet, FormaPagamentoFormSet, LancamentoForm, LancamentoCaixaTotalForm
+from .models import AnaliseCreditoCliente, Caixa, Cliente, Loja, Pagamento, ProdutoVenda, TipoPagamento, Venda, LancamentoCaixa, LancamentoCaixaTotal
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.utils import timezone
 from django.db import transaction
 from django_select2.views import AutoResponseView
 from django.db.models import Sum
-from django.db.models import Q, BooleanField, Case, When
+from django.contrib.auth.decorators import permission_required
+
 
 logger = logging.getLogger(__name__)
 
@@ -198,62 +199,221 @@ class ClienteListView(BaseView, PermissionRequiredMixin, ListView):
         
         return query.order_by('nome')
     
-    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
-        context = super().get_context_data(**kwargs)
-        context['form_cliente'] = ClienteForm()
-        context['form_adicional'] = ContatoAdicionalForm() 
-        context['form_comprovantes'] = ComprovantesClienteForm()
-        return context
+    # def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+    #     context = super().get_context_data(**kwargs)
+    #     context['form_cliente'] = ClienteForm()
+    #     context['form_adicional'] = ContatoAdicionalForm() 
+    #     context['form_comprovantes'] = ComprovantesClienteForm()
+    #     return context
     
-    def post(self, request, *args, **kwargs):
-        cliente_id = request.POST.get('cliente_id')  # Verifique se há um cliente_id
+    # def post(self, request, *args, **kwargs):
+    #     cliente_id = request.POST.get('cliente_id')  # Verifique se há um cliente_id
         
-        if cliente_id:  # Se cliente_id existe, é uma edição
-            cliente = Cliente.objects.get(id=cliente_id)
-            form_cliente = ClienteForm(request.POST, instance=cliente)
+    #     if cliente_id:  # Se cliente_id existe, é uma edição
+    #         cliente = Cliente.objects.get(id=cliente_id)
+    #         form_cliente = ClienteForm(request.POST, instance=cliente)
             
-            # Usamos as instâncias existentes de contato e comprovantes para evitar duplicação
-            form_adicional = ContatoAdicionalForm(request.POST, instance=cliente.contato_adicional)
-            form_comprovantes = ComprovantesClienteForm(request.POST, request.FILES, instance=cliente.comprovantes)
-        else:  # Se não, é um novo cadastro
-            form_cliente = ClienteForm(request.POST)
-            form_adicional = ContatoAdicionalForm(request.POST)
-            form_comprovantes = ComprovantesClienteForm(request.POST, request.FILES)
+    #         # Usamos as instâncias existentes de contato e comprovantes para evitar duplicação
+    #         form_adicional = ContatoAdicionalForm(request.POST, instance=cliente.contato_adicional)
+    #         form_comprovantes = ComprovantesClienteForm(request.POST, request.FILES, instance=cliente.comprovantes)
+    #     else:  # Se não, é um novo cadastro
+    #         form_cliente = ClienteForm(request.POST)
+    #         form_adicional = ContatoAdicionalForm(request.POST)
+    #         form_comprovantes = ComprovantesClienteForm(request.POST, request.FILES)
         
-        if form_cliente.is_valid() and form_adicional.is_valid() and form_comprovantes.is_valid():
+    #     if form_cliente.is_valid() and form_adicional.is_valid() and form_comprovantes.is_valid():
+    #         cliente = form_cliente.save(commit=False)
+    #         endereco = form_adicional.save(commit=False)  # Salve o contato sem commit para associá-lo
+    #         comprovantes = form_comprovantes.save(commit=False)  # Salve comprovantes sem commit
+    #         loja = Loja.objects.get(id=request.session.get('loja_id'))
+    #         cliente.criado_por = request.user
+    #         cliente.modificado_por = request.user
+    #         cliente.loja = loja
+    #         endereco.criado_por = request.user
+    #         endereco.modificado_por = request.user
+    #         endereco.loja = loja
+    #         comprovantes.criado_por = request.user
+    #         comprovantes.modificado_por = request.user
+    #         comprovantes.loja = loja
+            
+    #         # Associa as instâncias e depois salva tudo
+    #         cliente.contato_adicional = endereco
+    #         cliente.comprovantes = comprovantes
+            
+    #         endereco.save()  # Salva as instâncias associadas
+    #         comprovantes.save()
+    #         cliente.save()
+
+    #         # Mensagem de sucesso baseada em ação de edição ou criação
+    #         if cliente_id:
+    #             messages.success(request, 'Cliente atualizado com sucesso')
+    #         else:
+    #             messages.success(request, 'Cliente cadastrado com sucesso')
+                    
+    #         return redirect('vendas:cliente_list')
+        
+    #     # Mensagem de erro e retorno do formulário em caso de falha na validação
+    #     messages.error(request, 'Erro ao cadastrar cliente')
+    #     return self.get(request, *args, **kwargs)
+    
+
+class ClienteCreateView(PermissionRequiredMixin, CreateView):
+    model = Cliente
+    form_class = ClienteForm
+    template_name = 'cliente/form_cliente.html'
+    success_url = reverse_lazy('vendas:cliente_list')
+    permission_required = 'vendas.add_cliente'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        context['form_cliente'] = kwargs.get('form_cliente', ClienteForm())
+        context['form_adicional'] = kwargs.get('form_adicional', ContatoAdicionalForm())
+        context['form_comprovantes'] = kwargs.get('form_comprovantes', ComprovantesClienteForm())
+        context['form_analise_credito'] = kwargs.get('form_analise_credito', AnaliseCreditoClienteForm(user=self.request.user))
+
+        return context
+
+    def post(self, request, *args, **kwargs):
+        print("✅ Entrou no método POST da ClienteCreateView")
+
+        self.object = None
+
+        form_cliente = ClienteForm(request.POST)
+        form_adicional = ContatoAdicionalForm(request.POST)
+        form_comprovantes = ComprovantesClienteForm(request.POST, request.FILES)
+        form_analise_credito = AnaliseCreditoClienteForm(request.POST, user=request.user)
+
+        print("🔍 Validando formulários...")
+
+        if all([
+            form_cliente.is_valid(),
+            form_adicional.is_valid(),
+            form_comprovantes.is_valid(),
+            form_analise_credito.is_valid()
+        ]):
+            print("✅ Todos os formulários são válidos")
+
+            # Primeiro salva os comprovantes
+            comprovantes = form_comprovantes.save()
+            contato_adicional = form_adicional.save()
+            print("✅ Comprovantes salvos")
+            loja_id = request.session.get('loja_id')
+
+            # Atribui os comprovantes ao form_cliente antes de salvar
             cliente = form_cliente.save(commit=False)
-            endereco = form_adicional.save(commit=False)  # Salve o contato sem commit para associá-lo
-            comprovantes = form_comprovantes.save(commit=False)  # Salve comprovantes sem commit
-            loja = Loja.objects.get(id=request.session.get('loja_id'))
             cliente.criado_por = request.user
             cliente.modificado_por = request.user
-            cliente.loja = loja
-            endereco.criado_por = request.user
-            endereco.modificado_por = request.user
-            endereco.loja = loja
-            comprovantes.criado_por = request.user
-            comprovantes.modificado_por = request.user
-            comprovantes.loja = loja
+            cliente.loja = Loja.objects.get(id=loja_id)
             
-            # Associa as instâncias e depois salva tudo
-            cliente.contato_adicional = endereco
+            cliente.contato_adicional = contato_adicional
             cliente.comprovantes = comprovantes
-            
-            endereco.save()  # Salva as instâncias associadas
-            comprovantes.save()
             cliente.save()
 
-            # Mensagem de sucesso baseada em ação de edição ou criação
-            if cliente_id:
-                messages.success(request, 'Cliente atualizado com sucesso')
-            else:
-                messages.success(request, 'Cliente cadastrado com sucesso')
-                    
-            return redirect('vendas:cliente_list')
+            print(f"🏪 Loja ID da sessão: {loja_id}")
+
+            try:
+                loja = Loja.objects.get(id=loja_id)
+            except Loja.DoesNotExist:
+                print(f"❌ Loja com ID {loja_id} não encontrada")
+                return self.form_invalid(form_cliente)
+
+            analise = form_analise_credito.save(commit=False)
+            analise.cliente = cliente
+            analise.loja = loja
+            analise.criado_por = request.user
+            analise.modificado_por = request.user
+            analise.save()
+            print("✅ Análise de crédito salva")
+
+            return redirect(self.success_url)
+
+        else:
+            print("❌ Um ou mais formulários são inválidos:")
+            print("form_cliente errors:", form_cliente.errors)
+            print("form_adicional errors:", form_adicional.errors)
+            print("form_comprovantes errors:", form_comprovantes.errors)
+            print("form_analise_credito errors:", form_analise_credito.errors)
+
+        # Renderiza novamente com os erros
+        context = self.get_context_data(
+            form_cliente=form_cliente,
+            form_adicional=form_adicional,
+            form_comprovantes=form_comprovantes,
+            form_analise_credito=form_analise_credito,
+        )
+        return self.render_to_response(context)
+
+
+class ClienteUpdateView(PermissionRequiredMixin, UpdateView):
+    model = Cliente
+    form_class = ClienteForm
+    template_name = 'cliente/form_cliente.html'
+    success_url = reverse_lazy('vendas:cliente_list')
+    permission_required = 'vendas.change_cliente'
+    context_object_name = 'cliente'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        cliente_id = self.kwargs.get('pk')
+        cliente = get_object_or_404(Cliente, id=cliente_id)
+        form_cliente = ClienteForm(instance=cliente)
+        form_adicional = ContatoAdicionalForm(instance=cliente.contato_adicional)
+        form_comprovantes = ComprovantesClienteForm(instance=cliente.comprovantes)
+        form_analise_credito = AnaliseCreditoClienteForm(instance=cliente.analises_credito.first(), user=self.request.user)
         
-        # Mensagem de erro e retorno do formulário em caso de falha na validação
-        messages.error(request, 'Erro ao cadastrar cliente')
-        return self.get(request, *args, **kwargs)
+        context['form_cliente'] = form_cliente
+        context['form_adicional'] = form_adicional
+        context['form_comprovantes'] = form_comprovantes
+        context['form_analise_credito'] = form_analise_credito
+        context['cliente_id'] = cliente_id
+
+        return context
+
+
+@permission_required('vendas.change_status_analise', raise_exception=True)
+def aprovar_analise_credito(request, analise_id):
+    try:
+        analise = AnaliseCreditoCliente.objects.get(id=analise_id)
+        analise.aprovar(user=request.user)
+        analise.modificado_por = request.user
+        analise.modificado_em = timezone.now()
+        analise.save()
+        messages.success(request, 'Análise de crédito aprovada com sucesso')
+    except AnaliseCreditoCliente.DoesNotExist:
+        messages.error(request, 'Análise de crédito não encontrada')
+
+    return redirect('vendas:cliente_list')
+
+@permission_required('vendas.change_status_analise', raise_exception=True)
+def cancelar_analise_credito(request, analise_id):
+    try:
+        analise = AnaliseCreditoCliente.objects.get(id=analise_id)
+        analise.cancelar()
+        analise.modificado_por = request.user
+        analise.modificado_em = timezone.now()
+        analise.save()
+        messages.success(request, 'Análise de crédito cancelada com sucesso')
+    except AnaliseCreditoCliente.DoesNotExist:
+        messages.error(request, 'Análise de crédito não encontrada')
+
+    return redirect('vendas:cliente_list')
+
+@permission_required('vendas.change_status_analise', raise_exception=True)
+def reprovar_analise_credito(request, analise_id):
+    try:
+        analise = AnaliseCreditoCliente.objects.get(id=analise_id)
+        analise.reprovar()
+        analise.modificado_por = request.user
+        analise.modificado_em = timezone.now()
+        analise.save()
+        messages.success(request, 'Análise de crédito reprovada com sucesso')
+    except AnaliseCreditoCliente.DoesNotExist:
+        messages.error(request, 'Análise de crédito não encontrada')
+
+    return redirect('vendas:cliente_list')
+    
+    
 
 
 def cliente_editar_view(request):
@@ -279,24 +439,12 @@ class VendaListView(BaseView, PermissionRequiredMixin, ListView):
     permission_required = 'vendas.view_venda'
     
     def get_queryset(self):
-        qs = super().get_queryset()
+        query = super().get_queryset()
         data_filter = self.request.GET.get('search')
-        
-        qs = qs.annotate(
-            carne=Case(
-                When(
-                    Q(pagamentos__tipo_pagamento__carne=True),
-                    then=True
-                ),
-                default=False,
-                output_field=BooleanField()
-            )
-        ).order_by('-criado_em').distinct()  # O distinct() pode ser necessário se houver junção (join) com pagamentos.
-        
         if data_filter:
-            qs = qs.filter(data_venda__date=data_filter, is_deleted=False)
-
-        return qs
+            return query.filter(data_venda=data_filter)
+        
+        return query.order_by('-criado_em')
 
 class VendaCreateView(PermissionRequiredMixin, CreateView):
     model = Venda
@@ -945,7 +1093,7 @@ def folha_carne_view(request, pk, tipo):
         return redirect('vendas:venda_list')
     
     quantidade_parcelas = pagamento_carne.parcelas
-    valor_parcela = f'{pagamento_carne.valor_parcela:.2f}'
+    valor_parcela = pagamento_carne.valor_parcela
     nome_cliente = venda.cliente.nome.title()
     tipo_pagamento = 'Carnê' if tipo == 'carne' else 'Promissória'
     endereco_cliente = venda.cliente.endereco
@@ -953,19 +1101,6 @@ def folha_carne_view(request, pk, tipo):
 
     # Lista de parcelas (1 a quantidade_parcelas)
     parcelas = list(range(1, quantidade_parcelas + 1))
-    datas_vencimento = []
-
-    for i in range(quantidade_parcelas):
-        # somar 1 meses a data de vencimento
-        data_vencimento = pagamento_carne.data_primeira_parcela
-        mes = data_vencimento.month + i
-        ano = data_vencimento.year
-        if mes > 12:
-            mes -= 12
-            ano += 1
-        data_vencimento = data_vencimento.replace(month=mes, year=ano)
-        datas_vencimento.append(data_vencimento.strftime('%d/%m/%Y'))
-
 
     # Contexto para o template
     context = {
@@ -978,90 +1113,37 @@ def folha_carne_view(request, pk, tipo):
         'endereco_cliente': endereco_cliente,
         'cpf': cpf,
         'parcelas': parcelas,  # Envia a lista de parcelas
-        'datas_vencimento': datas_vencimento,  # Envia as datas de vencimento
-        'data_atual': localtime(now()).date(),
     }
 
     return render(request, "venda/folha_carne.html", context)
 
-def contrato_view(request, pk):
-    
-    # Busca a venda
-    venda = Venda.objects.get(pk=pk)
-    valor_total = venda.pagamentos_valor_total
-    pagamento_carne = Pagamento.objects.filter(venda=venda, tipo_pagamento__carne=True).first()
-    aparelho = venda.itens_venda.first()
-    imei = aparelho.imei if aparelho else None
-    loja = Loja.objects.get(id=request.session.get('loja_id'))
-    cliente = venda.cliente
-    contrato = loja.contrato
-    contrato = json.dumps(contrato)
-    primeira_parcela = pagamento_carne.data_primeira_parcela if pagamento_carne else None
-    parcelas = pagamento_carne.parcelas if pagamento_carne else 0
-    parcelas_meses = []
 
-    for i in range(parcelas):
-        # somar 1 meses a data de vencimento
-        mes = primeira_parcela.month + i
-        ano = primeira_parcela.year
-        if mes > 12:
-            mes -= 12
-            ano += 1
-        data_vencimento = primeira_parcela.replace(month=mes, year=ano)
-        parcelas_meses.append(data_vencimento.strftime('%d/%m/%Y'))
-
-    ultima_parcela = parcelas_meses[-1] if parcelas_meses else None
-
-    context = {
-        'venda': venda,
-        'valor_total': valor_total,
-        'tipo_pagamento': 'Carnê' if pagamento_carne else 'À vista',
-        'cliente': cliente,
-        'data_atual': localtime(now()).date(),
-        'loja': loja,
-        'contrato': contrato,
-        'aparelho': aparelho,
-        'imei': imei,
-        'valor_parcela': pagamento_carne.valor_parcela if pagamento_carne else None,
-        'quantidade_parcelas': parcelas,
-        'parcelas_meses': parcelas_meses,
-        'primeira_parcela': primeira_parcela.strftime('%d/%m/%Y') if primeira_parcela else None,
-        'ultima_parcela': ultima_parcela,
-
-    }
-
-    return render(request, "venda/contrato.html", context)
 
 class RelatorioVendasView(PermissionRequiredMixin, FormView):
     template_name = 'relatorios/relatorio_vendas.html'
     form_class = RelatorioVendasForm
     permission_required = 'vendas.can_generate_report_sale'
 
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs['loja'] = self.request.session.get('loja_id')
-        return kwargs
-
-class FolhaRelatorioVendasView(PermissionRequiredMixin, TemplateView):
-    template_name = 'relatorios/folha_relatorio_vendas.html'
-    permission_required = 'vendas.can_generate_report_sale'
-
-    def get_context_data(self, **kwargs):
-        data_inicial = self.request.GET.get('data_inicial')
-        data_final = self.request.GET.get('data_final')
-        produtos = self.request.GET.get('produtos')
-        vendedores = self.request.GET.get('vendedores')
-        loja = self.request.GET.get('lojas')
-        tipos_venda = self.request.GET.get('tipos_venda')
-
+    def form_valid(self, form):
+        print("Dados do formulário: %s" % form.cleaned_data)
+        
+        data_inicial = form.cleaned_data.get('data_inicial')
+        data_final = form.cleaned_data.get('data_final')
+        produtos = form.cleaned_data.get('produtos')
+        vendedores = form.cleaned_data.get('vendedores')
+        lojas = form.cleaned_data.get('lojas')
+        tipos_venda = form.cleaned_data.get('tipos_venda')
+        
+        # Se nenhuma loja for selecionada, utiliza a loja da sessão
+        if not lojas:
+            loja_id = self.request.session.get('loja_id')
+            loja = Loja.objects.get(id=loja_id)
+            lojas = [loja]
+        
         filtros = {}
 
         # Adiciona filtros para datas, se informadas
         if data_inicial and data_final:
-            data_final = datetime.strptime(data_final, '%Y-%m-%d')
-            data_inicial = datetime.strptime(data_inicial, '%Y-%m-%d')
-            
-            data_final = data_final + timedelta(days=1)
             filtros['data_venda__range'] = [data_inicial, data_final]
         elif data_inicial:
             filtros['data_venda__gte'] = data_inicial
@@ -1075,49 +1157,34 @@ class FolhaRelatorioVendasView(PermissionRequiredMixin, TemplateView):
             filtros['produtos__in'] = produtos
             
         if tipos_venda:
-            filtros['pagamentos__tipo_pagamento__in'] = tipos_venda
+            filtros['tipo_venda__in'] = tipos_venda
 
-        if loja:
-            filtros['loja__id'] = loja
-            loja = Loja.objects.filter(id=loja).first()
+        filtros['loja__in'] = lojas
 
         vendas = Venda.objects.filter(**filtros).distinct()
         
         if not vendas:
             messages.warning(self.request, 'Nenhuma venda encontrada com os filtros informados')
-            return redirect('vendas:venda_relatorio')
+            return self.form_invalid(form)
 
         total_vendas = vendas.count()
-        total_valor = 0
-        total_lucro = 0
-        
-        if tipos_venda:
-            for venda in vendas:
-                    for pagamento in venda.pagamentos.filter(tipo_pagamento__in=tipos_venda):
-                        if not pagamento.tipo_pagamento.nao_contabilizar:
-                            total_valor += pagamento.valor
-                            total_lucro += venda.lucro_total()
-        else:
-            total_valor = sum(venda.pagamentos_valor_total for venda in vendas)
-            total_lucro = sum(venda.lucro_total() for venda in vendas)
+        total_valor = vendas.aggregate(Sum('pagamentos__valor'))['pagamentos__valor__sum']
 
-        data_final = data_final - timedelta(days=1)
+        context = {
+            'form': form,
+            'vendas': vendas,
+            'total_vendas': total_vendas,
+            'total_valor': total_valor,
+            'data_inicial': data_inicial,
+            'data_final': data_final,
+            'lojas': lojas,
+        }
+        return render(self.request, self.template_name, context)
 
-        context = super().get_context_data(**kwargs)
-
-        context['vendas'] = vendas
-        context['total_vendas'] = total_vendas
-        context['total_valor'] = total_valor
-        context['data_inicial'] = f'{data_inicial.strftime("%d/%m/%Y")}' if data_inicial else None
-        context['data_final'] = f'{data_final.strftime("%d/%m/%Y")}' if data_final else None
-        context['lojas'] = loja
-        context['lucro'] = total_lucro
-
-        return context
-
-        
-
-
+    def form_invalid(self, form):
+        messages.error(self.request, 'Erro ao gerar relatório')
+        return super().form_invalid(form)
+    
 class ProdutoVendidoListView(PermissionRequiredMixin, ListView):
     model = ProdutoVenda
     template_name = 'produto_vendido/produto_vendido_list.html'

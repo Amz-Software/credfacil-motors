@@ -112,6 +112,7 @@ class Loja(Base):
     contrato = models.JSONField(null=True, blank=True, default=dict)
     usuarios = models.ManyToManyField('accounts.User', related_name='lojas')
     gerentes = models.ManyToManyField('accounts.User', related_name='lojas_gerenciadas')
+    chave_pix = models.CharField(max_length=100, null=True, blank=True)
 
     
     def __str__(self):
@@ -123,17 +124,16 @@ class Loja(Base):
 class Cliente(Base):
     nome = models.CharField(max_length=100)
     email = models.EmailField(null=True, blank=True)
-    telefone = models.CharField(max_length=20, null=True, blank=True)
+    telefone = models.CharField(max_length=20)
     cpf = models.CharField(max_length=14)
     nascimento = models.DateField()
-    rg = models.CharField(max_length=20, null=True, blank=True)
-    cep = models.CharField(max_length=8, null=True, blank=True)
-    endereco = models.CharField(max_length=200, null=True, blank=True)
-    bairro = models.CharField(max_length=100, null=True, blank=True)
-    cidade = models.CharField(max_length=100, null=True, blank=True)
-    uf = models.CharField(max_length=2, null=True, blank=True)
-    cliente_cred_facil = models.BooleanField(default=False)
-    comprovantes = models.ForeignKey('vendas.ComprovantesCliente', on_delete=models.PROTECT, related_name='comprovantes_clientes', null=True, blank=True)
+    rg = models.CharField(max_length=20)
+    cep = models.CharField(max_length=8)
+    endereco = models.CharField(max_length=200)
+    bairro = models.CharField(max_length=100)
+    cidade = models.CharField(max_length=100)
+    uf = models.CharField(max_length=2)
+    comprovantes = models.ForeignKey('vendas.ComprovantesCliente', on_delete=models.PROTECT, related_name='comprovantes_clientes')
     contato_adicional = models.ForeignKey('vendas.ContatoAdicional', on_delete=models.PROTECT, related_name='contatos_adicionais', null=True, blank=True)
     
     def __str__(self):
@@ -141,34 +141,7 @@ class Cliente(Base):
     
     class Meta:
         verbose_name_plural = 'Clientes'
-
-class ContatoAdicional(Base):
-    nome_adicional = models.CharField(max_length=100, null=True, blank=True)
-    contato = models.CharField(max_length=20, null=True, blank=True)
-    endereco_adicional = models.CharField(max_length=200, null=True, blank=True)
-
-class Endereco(Base):
-    cep = models.CharField(max_length=8)
-    bairro = models.CharField(max_length=100)
-    cidade = models.CharField(max_length=100)
-    endereco = models.CharField(max_length=200)
-    numero = models.CharField(max_length=10)
-    complemento = models.CharField(max_length=100)
-    
-    def __str__(self):
-        return self.endereco
-    
-    class Meta:
-        verbose_name_plural = 'Informacoes Clientes'
-
-class ComprovantesCliente(Base):
-    documento_identificacao_frente = models.ImageField(upload_to='comprovantes_clientes/%Y/%m/%d/', null=True, blank=True)
-    documento_identificacao_verso = models.ImageField(upload_to='comprovantes_clientes/%Y/%m/%d/', null=True, blank=True)
-    comprovante_residencia = models.ImageField(upload_to='comprovantes_clientes/%Y/%m/%d/', null=True, blank=True)
-    consulta_serasa = models.ImageField(upload_to='comprovantes_clientes/%Y/%m/%d/', null=True, blank=True)
-    
-    class Meta:
-        verbose_name_plural = 'Comprovantes Clientes'
+        
 
 
 class Venda(Base):
@@ -208,7 +181,76 @@ class Venda(Base):
         permissions = (
             ('can_more_desconto', 'Pode dar mais desconto'),
             ('can_generate_report_sale', 'Pode gerar relatório de vendas'),
+            ('change_status_analise', 'Pode alterar status de análise'),
         )
+
+
+class AnaliseCreditoCliente(Base):
+    cliente = models.ForeignKey('vendas.Cliente', on_delete=models.PROTECT, related_name='analises_credito')
+    data_analise = models.DateTimeField(auto_now_add=True)
+    data_aprovacao = models.DateTimeField(null=True, blank=True)
+    data_reprovacao = models.DateTimeField(null=True, blank=True)
+    data_cancelamento = models.DateTimeField(null=True, blank=True)
+    aprovado_por = models.ForeignKey('accounts.User', on_delete=models.PROTECT, related_name='analises_credito_aprovadas', null=True, blank=True)
+    status = models.CharField(max_length=20, choices=(
+        ('EA', 'Em análise'),
+        ('A', 'Aprovado'),
+        ('R', 'Reprovado'),
+        ('C', 'Cancelado'),
+    ), default='EA')
+    produto = models.ForeignKey('produtos.Produto', on_delete=models.PROTECT, related_name='analises_credito')
+    observacao = models.TextField(null=True, blank=True)
+    
+    def aprovar(self, user):
+        self.status = 'A'
+        self.data_aprovacao = timezone.now()
+        self.aprovado_por = user
+        self.save()
+        return self.status
+    
+    def reprovar(self):
+        self.status = 'R'
+        self.data_reprovacao = timezone.now()
+        self.save()
+        return self.status
+    
+    def cancelar(self):
+        self.status = 'C'
+        self.save()
+        return self.status
+    
+    def __str__(self):
+        return f"Análise de crédito para {self.cliente} - {self.data_analise.strftime('%d/%m/%Y')}"
+    
+    
+
+class ContatoAdicional(Base):
+    nome_adicional = models.CharField(max_length=100, null=True, blank=True)
+    contato = models.CharField(max_length=20, null=True, blank=True)
+    endereco_adicional = models.CharField(max_length=200, null=True, blank=True)
+
+class Endereco(Base):
+    cep = models.CharField(max_length=8)
+    bairro = models.CharField(max_length=100)
+    cidade = models.CharField(max_length=100)
+    endereco = models.CharField(max_length=200)
+    numero = models.CharField(max_length=10)
+    complemento = models.CharField(max_length=100)
+    
+    def __str__(self):
+        return self.endereco
+    
+    class Meta:
+        verbose_name_plural = 'Informacoes Clientes'
+
+class ComprovantesCliente(Base):
+    documento_identificacao_frente = models.ImageField(upload_to='comprovantes_clientes/%Y/%m/%d/')
+    documento_identificacao_verso = models.ImageField(upload_to='comprovantes_clientes/%Y/%m/%d/')
+    comprovante_residencia = models.ImageField(upload_to='comprovantes_clientes/%Y/%m/%d/')
+    consulta_serasa = models.ImageField(upload_to='comprovantes_clientes/%Y/%m/%d/')
+    
+    class Meta:
+        verbose_name_plural = 'Comprovantes Clientes'
 
 class ProdutoVenda(Base):
     produto = models.ForeignKey('produtos.Produto', on_delete=models.PROTECT, related_name='produto_vendas')

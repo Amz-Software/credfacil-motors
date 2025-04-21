@@ -24,6 +24,12 @@ urlpatterns = [
     #cliente
     path('clientes/', ClienteListView.as_view(), name='cliente_list'),
     path('clientes/editar/', cliente_editar_view, name='cliente_edit_form'),
+    path('clientes/cliente_create/', ClienteCreateView.as_view(), name='cliente_create'),
+    path('clientes/cliente_editar/<int:pk>/', ClienteUpdateView.as_view(), name='cliente_update'),
+    
+    path('aprovar_analise/<int:analise_id>/', aprovar_analise_credito, name='aprovar_analise'),
+    path('reprovar_analise/<int:analise_id>/', reprovar_analise_credito, name='reprovar_analise'),
+    path('cancelar_analise/<int:analise_id>/', cancelar_analise_credito, name='cancelar_analise'),
     
     #tipo de pagamento
     path('tipopagamento/', tipoPagamentoViews['list_view'].as_view(), name='tipos_pagamento'),
@@ -67,9 +73,7 @@ urlpatterns = [
     path('caixa/folha/<int:pk>/', FolhaCaixaPDFView.as_view(), name='caixa_pdf'),
     path('caixa/folha-produtos/<int:pk>/', FolhaProdutoPDFView.as_view(), name='caixa_produto_pdf'),
     path('gerar-carne/<int:pk>/<str:tipo>/', folha_carne_view, name='gerar_carne'),
-    path('venda/contrato/<int:pk>/', contrato_view, name='gerar_contrato'),
     
     path('vendas/relatorio/', RelatorioVendasView.as_view(), name='venda_relatorio'),
-    path('vendas/relatorio/folha/', FolhaRelatorioVendasView.as_view(), name='folha_venda_relatorio'),
     path('prdutos-vendidos/', ProdutoVendidoListView.as_view(), name='produto_vendido_list'),
 ]

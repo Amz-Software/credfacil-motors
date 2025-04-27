@@ -12,7 +12,7 @@ services:
     command: 'sh -c "python3 manage.py migrate && python3 manage.py collectstatic --noinput && gunicorn -c ./configs/configs.py core.wsgi"'
     restart: always
     ports:
-      - '8033:8033'
+      - '8010:8010'
     networks:
       - mynetwork
 
@@ -20,7 +20,7 @@ services:
     image: redis:latest
     restart: always
     ports:
-      - "6380:6379"
+      - "6381:6379"
     networks:
       - mynetwork
 

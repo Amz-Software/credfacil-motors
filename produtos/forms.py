@@ -12,6 +12,10 @@ class ProdutoForms(forms.ModelForm):
         labels = {
             'codigo': 'Código',
             'nome': 'Nome',
+            'valor_repasse_logista': 'Valor Repasse Logista',
+            'entrada_cliente': 'Entrada Cliente',
+            'valor_6_vezes': 'Valor total 6X',
+            'valor_4_vezes': 'Valor total 4X',
             'tipo': 'Tipo',
             'fabricante': 'Fabricante',
             'cor': 'Cor',
@@ -21,6 +25,10 @@ class ProdutoForms(forms.ModelForm):
         widgets = {
             'codigo': forms.TextInput(attrs={'class': 'form-control', 'disabled': 'disabled'}),
             'nome': forms.TextInput(attrs={'class': 'form-control'}),
+            'valor_repasse_logista': forms.TextInput(attrs={'class': 'form-control'}),
+            'entrada_cliente': forms.TextInput(attrs={'class': 'form-control'}),
+            'valor_6_vezes': forms.TextInput(attrs={'class': 'form-control', 'oninput': 'updateValues()'}),
+            'valor_4_vezes': forms.TextInput(attrs={'class': 'form-control', 'oninput': 'updateValues()'}),
             'tipo': forms.Select(attrs={'class': 'form-control'}),
             'fabricante': forms.Select(attrs={'class': 'form-control'}),
             'cor': forms.Select(attrs={'class': 'form-control'}),
@@ -29,11 +37,12 @@ class ProdutoForms(forms.ModelForm):
         }
 
     def __init__(self, *args, disabled=False, **kwargs):
-        self.user = kwargs.pop('user', None)  # Pega o usuário que será passado pela view
+        self.user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
         if disabled:
             for field in self.fields.values():
                 field.widget.attrs['disabled'] = True
+
 
     def save(self, commit=True):
         instance = super().save(commit=False)

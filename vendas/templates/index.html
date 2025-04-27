@@ -1,6 +1,5 @@
 {% extends "base.html" %}
 {% load static iam_tags %}
-{% load static %}
 
 {% block content %}
 <div class="container-xxl flex-grow-1 container-p-y">
@@ -11,58 +10,84 @@
         <div class="d-flex align-items-end row">
           <div class="col-sm-7">
             <div class="card-body">
-              <h5 class="card-title text-primary">Olá, {{user|title}} 👋</h5>
-              <p class="mb-4">Seja Bem-vindo ao <strong>{{ loja.nome }} Sistema de Vendas.</strong></p>
+              <h5 class="card-title text-primary">Olá, {{ user|title }} 👋</h5>
+              <p class="mb-4">Seja Bem-vindo ao <strong>{{ loja.nome }} Sistema de Financiamento CredFácil.</strong></p>
             </div>
           </div>
           <div class="col-sm-5 text-center text-sm-left">
             <div class="card-body pb-0 px-0 px-md-4">
-              <img src="{% static 'sneat-template/assets/img/illustrations/man-with-laptop-light.png' %}" height="140" alt="Welcome User" />
+              <img src="{% static 'sneat-template/assets/img/illustrations/man-with-laptop-light.png' %}"
+                   height="140"
+                   alt="Welcome User" />
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    {% if user|has_perm:"financeiro.view_caixamensal" %}
-    <!-- Caixa Diário Card -->
-    <div class="col-lg-6 mb-4 order-lg-1">
-      <div class="card">
-        <div class="card-body">
-          <h6 class="card-title text-primary">Caixa Diário</h6>
-          <div class="row">
-            <div class="col-12">
-              <div class="text-xlarge">Vendas Caixa: R$ {{caixa_diario.saldo_total_dinheiro}}</div>
-              <div class="text-xlarge">Entradas: R$ {{caixa_diario.entradas}}</div>
-              <div class="text-xlarge">Saidas: R$ {{caixa_diario.saidas}}</div>
-              <div class="text-xlarge">Atual: R$ {{caixa_diario_lucro}}</div>
-              <div class="text-muted small">Data Abertura: {{ caixa_diario.data_abertura }}</div>
-              {% if caixa_diario.caixa_fechado %}
-              <div class="text-muted small">Caixa Fechado</div>
-              {% else %}
-              <div class="text-muted small">Caixa Aberto</div>
-              {% endif %}
+    {% if user|has_perm:'vendas.view_venda' %}
+      <!-- Usuário SEM permissão: exibe cards de Vendas e Clientes -->
+      <div class="col-md-6 mb-4">
+        <div class="card border-start shadow-sm h-100">
+          <div class="card-body d-flex align-items-center">
+            <!-- Ícone -->
+            <div class="me-3">
+              <i class="bx bx-cart-alt fs-1 text-success"></i>
+            </div>
+            <!-- Conteúdo -->
+            <div>
+              <h6 class="card-title mb-1">Vendas</h6>
+              <p class="mb-2 text-muted">Realize todas as Vendas dos seus Clientes.</p>
+              <a href="{% url 'vendas:venda_list' %}" class="btn btn-sm btn-outline-success">
+                <i class="bx bx-right-arrow-alt me-1"></i>Ver Vendas
+              </a>
             </div>
           </div>
         </div>
       </div>
-    </div>
+      {% endif %}
 
-    <!-- Vendas Card -->
-    <div class="col-lg-6 mb-4 order-lg-1">
-      <div class="card">
-        <div class="card-body">
-          <h6 class="card-title text-primary">Caixa Total</h6>
-          <div class="row">
-            <div class="col-6">
-              <div class="text-xlarge">Saldo: R$ {{caixa_total}}</div>
+      {% if user|has_perm:'vendas.view_cliente' %}
+      <div class="col-md-6 mb-4">
+        <div class="card border-start shadow-sm h-100">
+          <div class="card-body d-flex align-items-center">
+            <!-- Ícone -->
+            <div class="me-3">
+              <i class="bx bx-user fs-1 text-success"></i>
+            </div>
+            <!-- Conteúdo -->
+            <div>
+              <h6 class="card-title mb-1">Clientes</h6>
+              <p class="mb-2 text-muted">Visualize e edite os seus cliente e Solicite sua análise de crédito.</p>
+              <a href="{% url 'vendas:cliente_list' %}" class="btn btn-sm btn-outline-success">
+                <i class="bx bx-right-arrow-alt me-1"></i>Ver Clientes
+              </a>
             </div>
           </div>
         </div>
       </div>
-    </div>
-    {% endif %}
-    
+      {% endif %}
+
+      {% if user|has_perm:'produto.view_produto' %}
+      <div class="col-md-6 mb-4">
+        <div class="card border-start shadow-sm h-100">
+          <div class="card-body d-flex align-items-center">
+            <!-- Ícone -->
+            <div class="me-3">
+              <i class="bx bx-user fs-1 text-success"></i>
+            </div>
+            <!-- Conteúdo -->
+            <div>
+              <h6 class="card-title mb-1">Produtos</h6>
+              <p class="mb-2 text-muted">Visualize e os Produtos disponíveis.</p>
+              <a href="{% url 'produtos:produtos' %}" class="btn btn-sm btn-outline-success">
+                <i class="bx bx-right-arrow-alt me-1"></i>Ver Produtos
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endif %}
   </div>
 </div>
 {% endblock %}

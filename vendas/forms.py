@@ -37,6 +37,9 @@ class EstoqueImeiSelectWidgetEdit(HeavySelect2Widget):
         self.choices = original_choices
         return rendered
 
+class EstoqueImeiSelectWidget(HeavySelect2Widget):
+    data_view = 'estoque:estoque-imei-search'
+
 
 class ClienteForm(forms.ModelForm):
     class Meta:
@@ -61,7 +64,6 @@ class ClienteForm(forms.ModelForm):
         }
         labels = {
             'nome': 'Nome*',
-            'email': 'Email*',
             'telefone': 'Telefone*',
             'cpf': 'CPF*',
             'nascimento': 'Data de Nascimento*',
@@ -70,13 +72,13 @@ class ClienteForm(forms.ModelForm):
             'bairro': 'Bairro*',
             'endereco': 'Endereço*',
             'cidade': 'Cidade*',
-            'uf': 'UF*',
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        for field in self.fields.values():
-            field.required = True
+        for name, field in self.fields.items():
+            if name not in ['email', 'uf']:
+                field.required = True
 
 class ContatoAdicionalForm(forms.ModelForm):
     class Meta:
@@ -91,14 +93,30 @@ class ContatoAdicionalForm(forms.ModelForm):
         
 
 class AnaliseCreditoClienteForm(forms.ModelForm):
+    imei = forms.ModelChoiceField(
+    queryset=EstoqueImei.objects.filter(vendido=False),
+    label='imei',
+    required=False,
+    widget=EstoqueImeiSelectWidget(
+        max_results=10,
+        attrs={
+            'class': 'form-control',
+            'data-minimum-input-length': '0',
+            'data-placeholder': 'Selecione um IMEI',
+            'data-allow-clear': 'true',
+        }
+    ))
     class Meta:
         model = AnaliseCreditoCliente
-        fields = ['produto', 'observacao']
+        fields = ['produto', 'numero_parcelas', 'imei', 'observacao']
         widgets = {
             'produto': Select2Widget(attrs={'class': 'form-control'}),
+
+            'numero_parcelas': forms.Select(attrs={'class': 'form-control'}),
+
             'observacao': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }
-        
+
     def __init__(self, *args, **kwargs):
         user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
@@ -123,6 +141,7 @@ class EnderecoForm(forms.ModelForm):
             'complemento': forms.TextInput(attrs={'class': 'form-control'}),
         }
 
+
 class ComprovantesClienteForm(forms.ModelForm):
     class Meta:
         model = ComprovantesCliente
@@ -130,22 +149,38 @@ class ComprovantesClienteForm(forms.ModelForm):
         exclude = ['cliente', 'loja']
         widgets = {
             'documento_identificacao_frente': forms.FileInput(attrs={'class': 'form-control'}),
+            'documento_identificacao_frente_analise': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'documento_identificacao_verso': forms.FileInput(attrs={'class': 'form-control'}),
+            'documento_identificacao_verso_analise': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'comprovante_residencia': forms.FileInput(attrs={'class': 'form-control'}),
+            'comprovante_residencia_analise': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'consulta_serasa': forms.FileInput(attrs={'class': 'form-control'}),
+            'consulta_serasa_analise': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
         
         labels = {
             'documento_identificacao_frente': 'Documento de Identificação Frente*',
+            'documento_identificacao_frente_analise': 'Análise Documento de Identificação Frente',
             'documento_identificacao_verso': 'Documento de Identificação Verso*',
+            'documento_identificacao_verso_analise': 'Análise Documento de Identificação Verso',
             'comprovante_residencia': 'Comprovante de Residência*',
-            'consulta_serasa': 'Consulta Serasa*',
+            'comprovante_residencia_analise': 'Análise Comprovante de Residência',
+            'consulta_serasa': 'Consulta Serasa',
+            'consulta_serasa_analise': 'Análise Consulta Serasa',
         }
-        
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        for field in self.fields.values():
-            field.required = True
+        
+        self.fields['documento_identificacao_frente_analise'].initial = False
+        self.fields['documento_identificacao_verso_analise'].initial = False
+        self.fields['comprovante_residencia_analise'].initial = False
+        self.fields['consulta_serasa_analise'].initial = False
+
+        for name, field in self.fields.items():
+            if name not in ['consulta_serasa', 'consulta_serasa_analise', 'documento_identificacao_frente_analise', 'documento_identificacao_verso_analise', 'comprovante_residencia_analise']:
+                field.required = True
+
 
 class TipoPagamentoForm(forms.ModelForm):
     class Meta:
@@ -278,9 +313,6 @@ class VendaForm(forms.ModelForm):
         if user:
             self.fields['vendedor'].initial = user
 
-
-class EstoqueImeiSelectWidget(HeavySelect2Widget):
-    data_view = 'estoque:estoque-imei-search'
 
 class ProdutoSelectWidget(HeavySelect2Widget):
     data_view = 'vendas:produtos_ajax'

@@ -79,7 +79,14 @@ Clientes
               <a class="dropdown-item" href="{% url 'vendas:cliente_update' cliente.pk %}">
                 <i class="bx bx-edit-alt me-1"></i> Editar
               </a>
-              
+              {% endif %}
+              {% if user|has_perm:"vendas.change_cliente" %}
+              <form method="post" action="{% url 'vendas:gerar_venda' cliente.pk %}" style="display: inline;" onsubmit="return confirm('Tem certeza que deseja gerar a venda?');">
+                {% csrf_token %}
+                <button type="submit" class="dropdown-item" style="background: none; border: none; padding: 0; margin: 0; cursor: pointer;">
+                  <i class="bx bx-edit-alt me-1"></i> Gerar Venda
+                </button>
+              </form>                        
               {% endif %}
             </div>
             </div>

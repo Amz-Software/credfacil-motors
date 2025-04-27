@@ -275,8 +275,6 @@ class ClienteCreateView(PermissionRequiredMixin, CreateView):
         return context
 
     def post(self, request, *args, **kwargs):
-        print("✅ Entrou no método POST da ClienteCreateView")
-
         self.object = None
 
         form_cliente = ClienteForm(request.POST)
@@ -284,20 +282,16 @@ class ClienteCreateView(PermissionRequiredMixin, CreateView):
         form_comprovantes = ComprovantesClienteForm(request.POST, request.FILES)
         form_analise_credito = AnaliseCreditoClienteForm(request.POST, user=request.user)
 
-        print("🔍 Validando formulários...")
-
         if all([
             form_cliente.is_valid(),
             form_adicional.is_valid(),
             form_comprovantes.is_valid(),
             form_analise_credito.is_valid()
         ]):
-            print("✅ Todos os formulários são válidos")
 
             # Primeiro salva os comprovantes
             comprovantes = form_comprovantes.save()
             contato_adicional = form_adicional.save()
-            print("✅ Comprovantes salvos")
             loja_id = request.session.get('loja_id')
 
             # Atribui os comprovantes ao form_cliente antes de salvar
@@ -309,8 +303,6 @@ class ClienteCreateView(PermissionRequiredMixin, CreateView):
             cliente.contato_adicional = contato_adicional
             cliente.comprovantes = comprovantes
             cliente.save()
-
-            print(f"🏪 Loja ID da sessão: {loja_id}")
 
             try:
                 loja = Loja.objects.get(id=loja_id)
@@ -355,20 +347,146 @@ class ClienteUpdateView(PermissionRequiredMixin, UpdateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        cliente_id = self.kwargs.get('pk')
-        cliente = get_object_or_404(Cliente, id=cliente_id)
-        form_cliente = ClienteForm(instance=cliente)
-        form_adicional = ContatoAdicionalForm(instance=cliente.contato_adicional)
-        form_comprovantes = ComprovantesClienteForm(instance=cliente.comprovantes)
-        form_analise_credito = AnaliseCreditoClienteForm(instance=cliente.analises_credito.first(), user=self.request.user)
-        
-        context['form_cliente'] = form_cliente
-        context['form_adicional'] = form_adicional
-        context['form_comprovantes'] = form_comprovantes
-        context['form_analise_credito'] = form_analise_credito
-        context['cliente_id'] = cliente_id
+        cliente = self.get_object()
+
+        context['form_cliente'] = kwargs.get('form_cliente', ClienteForm(instance=cliente))
+        context['form_adicional'] = kwargs.get('form_adicional', ContatoAdicionalForm(instance=cliente.contato_adicional))
+        context['form_comprovantes'] = kwargs.get('form_comprovantes', ComprovantesClienteForm(instance=cliente.comprovantes))
+        context['form_analise_credito'] = kwargs.get('form_analise_credito', AnaliseCreditoClienteForm(instance=cliente.analises_credito.first(), user=self.request.user))
+        context['cliente_id'] = cliente.id
 
         return context
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+
+        form_cliente = ClienteForm(request.POST, instance=self.object)
+        form_adicional = ContatoAdicionalForm(request.POST, instance=self.object.contato_adicional)
+        form_comprovantes = ComprovantesClienteForm(request.POST, request.FILES, instance=self.object.comprovantes)
+        form_analise_credito = AnaliseCreditoClienteForm(request.POST, instance=self.object.analises_credito.first(), user=request.user)
+
+        if all([
+            form_cliente.is_valid(),
+            form_adicional.is_valid(),
+            form_comprovantes.is_valid(),
+            form_analise_credito.is_valid()
+        ]):
+            contato_adicional = form_adicional.save()
+            comprovantes = form_comprovantes.save()
+            analise_credito = form_analise_credito.save()
+
+            cliente = form_cliente.save(commit=False)
+            cliente.contato_adicional = contato_adicional
+            cliente.comprovantes = comprovantes
+            cliente.save()
+
+            return redirect(self.success_url)
+        else:
+            print("❌ Formulários inválidos")
+            print("form_cliente errors:", form_cliente.errors)
+            print("form_adicional errors:", form_adicional.errors)
+            print("form_comprovantes errors:", form_comprovantes.errors)
+            print("form_analise_credito errors:", form_analise_credito.errors)
+
+        context = self.get_context_data(
+            form_cliente=form_cliente,
+            form_adicional=form_adicional,
+            form_comprovantes=form_comprovantes,
+            form_analise_credito=form_analise_credito,
+        )
+        return self.render_to_response(context)
+
+
+
+@transaction.atomic
+def gerar_venda(request, cliente_id):
+    if request.method == 'POST':
+        cliente = get_object_or_404(Cliente, id=cliente_id)
+        loja_id = request.session.get('loja_id')
+        loja = get_object_or_404(Loja, id=loja_id)
+
+        caixa = Caixa.objects.filter(
+            loja=loja,
+            data_abertura=timezone.now().date(),
+            data_fechamento__isnull=True
+        ).first()
+
+        if not caixa:
+            messages.error(request, "❌ Nenhum caixa aberto encontrado para hoje.")
+            return redirect('vendas:cliente_list')
+
+        # Pega a análise de crédito aprovada mais recente
+        analise_credito = cliente.analises_credito.filter(status='A').order_by('-data_analise').first()
+        if not analise_credito:
+            messages.error(request, "❌ Nenhuma análise de crédito aprovada para o cliente.")
+            return redirect('vendas:cliente_list')
+
+        produto = analise_credito.produto
+        imei = analise_credito.imei
+
+        # Cria a venda
+        venda = Venda.objects.create(
+            loja=loja,
+            cliente=cliente,
+            vendedor=request.user,
+            caixa=caixa,
+            observacao=analise_credito.observacao,
+            criado_por=request.user,
+            modificado_por=request.user,
+            criado_em=timezone.now(),
+            modificado_em=timezone.now()
+        )
+        # Pagamento de CredFacil (4x ou 6x)
+        if analise_credito.numero_parcelas == '4':
+            valor_credfacil = produto.valor_4_vezes
+            valor_unitario = produto.valor_4_vezes
+            parcelas = 4
+        else:
+            valor_credfacil = produto.valor_6_vezes
+            valor_unitario = produto.valor_6_vezes
+            parcelas = 6
+
+        # Cria o ProdutoVenda
+        ProdutoVenda.objects.create(
+            loja=loja,
+            venda=venda,
+            produto=produto,
+            imei=imei.imei if imei else None,
+            valor_unitario=valor_unitario,
+            quantidade=1,
+            valor_desconto=0
+        )
+
+        # Gera os pagamentos
+        tipo_entrada = TipoPagamento.objects.get(nome__iexact='Entrada')
+        tipo_credfacil = TipoPagamento.objects.get(nome__iexact='CredFacil')
+
+        # Pagamento de entrada
+        Pagamento.objects.create(
+            loja=loja,
+            venda=venda,
+            tipo_pagamento=tipo_entrada,
+            valor=produto.entrada_cliente,
+            parcelas=1,
+            data_primeira_parcela=timezone.now().date()
+        )
+
+
+        Pagamento.objects.create(
+            loja=loja,
+            venda=venda,
+            tipo_pagamento=tipo_credfacil,
+            valor=valor_credfacil,
+            parcelas=parcelas,
+            data_primeira_parcela=timezone.now().date()
+        )
+
+        messages.success(request, f"✅ Venda criada para o cliente {cliente.nome}!")
+        return redirect('vendas:cliente_list')
+
+    else:
+        return redirect('vendas:cliente_list')
+
 
 
 @permission_required('vendas.change_status_analise', raise_exception=True)

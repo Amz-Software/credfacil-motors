@@ -4,6 +4,10 @@ from vendas.models import Base
 class Produto(Base):
     codigo = models.IntegerField(unique=True, blank=True, null=True)
     nome = models.CharField(max_length=100)
+    valor_repasse_logista = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    entrada_cliente = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    valor_6_vezes = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    valor_4_vezes = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     tipo = models.ForeignKey('produtos.TipoProduto', on_delete=models.PROTECT, related_name='produtos_tipo', null=True, blank=True)
     fabricante = models.ForeignKey('produtos.Fabricante', on_delete=models.PROTECT, related_name='produtos_fabricante')
     cor = models.ForeignKey('produtos.CorProduto', on_delete=models.PROTECT, related_name='produtos_cor', null=True, blank=True)

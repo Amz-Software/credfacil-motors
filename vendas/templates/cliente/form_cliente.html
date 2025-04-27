@@ -108,20 +108,28 @@
             <hr>
             <div class="row">
               {% for field in form_comprovantes %}
-                <div class="col-md-6">
+                <div class="col-md-12">
                   <div class="form-group mt-3">
                     <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                    {% if field.value %}
+            
+                    {% if field.field.widget.input_type == "checkbox" %}
+                      <!-- Se for um checkbox, adiciona um hidden antes -->
+                      <input type="hidden" name="{{ field.html_name }}" value="False">
+                    {% endif %}
+            
+                    {% if field.value and field.field.widget.input_type != "checkbox" %}
                       <a href="{{ field.value.url }}" target="_blank" class="d-block mt-2">
                         <img src="{{ field.value.url }}" class="img-thumbnail" style="max-height: 100px;">
                       </a>
                       <span>Deseja trocar o arquivo? Escolha um novo e clique em salvar.</span>
                     {% endif %}
+            
                     {{ field }}
                   </div>
                 </div>
               {% endfor %}
             </div>
+            
 
             <h3 class="mt-3">Análise de Crédito</h3>
             <hr>

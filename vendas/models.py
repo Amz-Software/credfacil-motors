@@ -132,7 +132,7 @@ class Cliente(Base):
     endereco = models.CharField(max_length=200)
     bairro = models.CharField(max_length=100)
     cidade = models.CharField(max_length=100)
-    uf = models.CharField(max_length=2)
+    uf = models.CharField(max_length=2, blank=True, null=True)
     comprovantes = models.ForeignKey('vendas.ComprovantesCliente', on_delete=models.PROTECT, related_name='comprovantes_clientes')
     contato_adicional = models.ForeignKey('vendas.ContatoAdicional', on_delete=models.PROTECT, related_name='contatos_adicionais', null=True, blank=True)
     
@@ -148,8 +148,8 @@ class Venda(Base):
     data_venda = models.DateTimeField(auto_now_add=True)
     cliente = models.ForeignKey('vendas.cliente', on_delete=models.PROTECT, related_name='vendas')
     vendedor = models.ForeignKey('accounts.User', on_delete=models.PROTECT, related_name='vendas_realizadas')
-    tipo_venda = models.ForeignKey('vendas.TipoVenda', on_delete=models.PROTECT, related_name='vendas_tipo_venda')
-    tipo_entrega = models.ForeignKey('vendas.TipoEntrega', on_delete=models.PROTECT, related_name='vendas_tipo_entrega')
+    tipo_venda = models.ForeignKey('vendas.TipoVenda', on_delete=models.PROTECT, related_name='vendas_tipo_venda', null=True, blank=True)
+    tipo_entrega = models.ForeignKey('vendas.TipoEntrega', on_delete=models.PROTECT, related_name='vendas_tipo_entrega', null=True, blank=True)
     produtos = models.ManyToManyField('produtos.Produto', through='ProdutoVenda', related_name='vendas')
     caixa = models.ForeignKey('vendas.Caixa', on_delete=models.PROTECT, related_name='vendas')
     observacao = models.TextField(null=True, blank=True)
@@ -198,7 +198,12 @@ class AnaliseCreditoCliente(Base):
         ('R', 'Reprovado'),
         ('C', 'Cancelado'),
     ), default='EA')
+    numero_parcelas = models.CharField(max_length=20, null=True, blank=True, choices=(
+        ('4', '4x'),
+        ('6', '6x'),
+    ))
     produto = models.ForeignKey('produtos.Produto', on_delete=models.PROTECT, related_name='analises_credito')
+    imei = models.ForeignKey('estoque.EstoqueImei', on_delete=models.PROTECT, related_name='analises_credito_imei', null=True, blank=True)
     observacao = models.TextField(null=True, blank=True)
     
     def aprovar(self, user):
@@ -245,9 +250,13 @@ class Endereco(Base):
 
 class ComprovantesCliente(Base):
     documento_identificacao_frente = models.ImageField(upload_to='comprovantes_clientes/%Y/%m/%d/')
+    documento_identificacao_frente_analise = models.BooleanField(default=False)
     documento_identificacao_verso = models.ImageField(upload_to='comprovantes_clientes/%Y/%m/%d/')
+    documento_identificacao_verso_analise = models.BooleanField(default=False)
     comprovante_residencia = models.ImageField(upload_to='comprovantes_clientes/%Y/%m/%d/')
-    consulta_serasa = models.ImageField(upload_to='comprovantes_clientes/%Y/%m/%d/')
+    comprovante_residencia_analise = models.BooleanField(default=False)
+    consulta_serasa = models.ImageField(upload_to='comprovantes_clientes/%Y/%m/%d/', null=True, blank=True)
+    consulta_serasa_analise = models.BooleanField(default=False)
     
     class Meta:
         verbose_name_plural = 'Comprovantes Clientes'

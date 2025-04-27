@@ -99,3 +99,5 @@ class GastosAleatorios(Base):
     class Meta:
         verbose_name_plural = 'Gastos Aleatórios'
         verbose_name = 'Gasto Aleatório'
+
+

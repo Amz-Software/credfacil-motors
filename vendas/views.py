@@ -458,8 +458,8 @@ def gerar_venda(request, cliente_id):
         )
 
         # Gera os pagamentos
-        tipo_entrada = TipoPagamento.objects.get(nome__iexact='Entrada')
-        tipo_credfacil = TipoPagamento.objects.get(nome__iexact='CredFacil')
+        tipo_entrada = TipoPagamento.objects.get(nome__iexact='ENTRADA')
+        tipo_credfacil = TipoPagamento.objects.get(nome__iexact='CREDFACIL')
 
         # Pagamento de entrada
         Pagamento.objects.create(

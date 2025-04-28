@@ -60,7 +60,6 @@ class ClienteForm(forms.ModelForm):
             'bairro': forms.TextInput(attrs={'class': 'form-control'}),
             'endereco': forms.TextInput(attrs={'class': 'form-control'}),
             'cidade': forms.TextInput(attrs={'class': 'form-control'}),
-            'uf': forms.TextInput(attrs={'class': 'form-control'}),
         }
         labels = {
             'nome': 'Nome*',
@@ -77,7 +76,7 @@ class ClienteForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for name, field in self.fields.items():
-            if name not in ['email', 'uf']:
+            if name not in ['email']:
                 field.required = True
 
 class ContatoAdicionalForm(forms.ModelForm):
@@ -228,57 +227,6 @@ class TipoPagamentoForm(forms.ModelForm):
             instance.save()
         return instance
 
-class TipoEntregaForm(forms.ModelForm):
-    class Meta:
-        model = TipoEntrega
-        fields = '__all__'
-        exclude= ['loja']
-        widgets = {
-            'nome': forms.TextInput(attrs={'class': 'form-control'}),
-        }
-
-    def __init__(self, *args, disabled=False, **kwargs):
-        self.user = kwargs.pop('user', None)  # Pega o usuário que será passado pela view
-        super().__init__(*args, **kwargs)
-        if disabled:
-            for field in self.fields.values():
-                field.widget.attrs['disabled'] = True
-
-    def save(self, commit=True):
-        instance = super().save(commit=False)
-        if self.user:  
-            if not instance.pk: 
-                instance.criado_por = self.user
-            instance.modificado_por = self.user 
-        if commit:
-            instance.save()
-        return instance
-
-class TipoVendaForm(forms.ModelForm):
-    class Meta:
-        model = TipoVenda
-        fields = '__all__'
-        exclude= ['loja']
-        widgets = {
-            'nome': forms.TextInput(attrs={'class': 'form-control'}),
-        }
-
-    def __init__(self, *args, disabled=False, **kwargs):
-        self.user = kwargs.pop('user', None)  # Pega o usuário que será passado pela view
-        super().__init__(*args, **kwargs)
-        if disabled:
-            for field in self.fields.values():
-                field.widget.attrs['disabled'] = True
-
-    def save(self, commit=True):
-        instance = super().save(commit=False)
-        if self.user:  
-            if not instance.pk: 
-                instance.criado_por = self.user
-            instance.modificado_por = self.user 
-        if commit:
-            instance.save()
-        return instance
     
 class VendaForm(forms.ModelForm):
     class Meta:
@@ -289,15 +237,11 @@ class VendaForm(forms.ModelForm):
         widgets = {
             'cliente': forms.Select(attrs={'class': 'form-control'}),
             'vendedor': forms.Select(attrs={'class': 'form-control'}),
-            'tipo_venda': forms.Select(attrs={'class': 'form-control'}),
-            'tipo_entrega': forms.Select(attrs={'class': 'form-control'}),
             'observacao': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }
         labels = {
             'cliente': 'Cliente*',
             'vendedor': 'Vendedor*',
-            'tipo_venda': 'Tipo de Venda*',
-            'tipo_entrega': 'Tipo de Entrega*',
             'observacao': 'Observação',
         }
 
@@ -308,8 +252,6 @@ class VendaForm(forms.ModelForm):
         if loja:
             self.fields['cliente'].queryset = Cliente.objects.filter(loja=loja)
             self.fields['vendedor'].queryset = Loja.objects.get(id=loja).usuarios.all()
-            self.fields['tipo_venda'].queryset = TipoVenda.objects.filter(loja=loja)
-            self.fields['tipo_entrega'].queryset = TipoEntrega.objects.filter(loja=loja)
         if user:
             self.fields['vendedor'].initial = user
 
@@ -584,12 +526,6 @@ class RelatorioVendasForm(forms.Form):
     lojas = forms.ModelMultipleChoiceField(
         queryset=Loja.objects.all(),
         label='Lojas',
-        required=False,
-        widget=Select2MultipleWidget(attrs={'class': 'form-control'})
-    )
-    tipos_venda = forms.ModelMultipleChoiceField(
-        queryset=TipoVenda.objects.all(),
-        label='Tipos de Venda',
         required=False,
         widget=Select2MultipleWidget(attrs={'class': 'form-control'})
     )

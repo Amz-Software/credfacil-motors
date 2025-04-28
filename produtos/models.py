@@ -10,9 +10,6 @@ class Produto(Base):
     valor_4_vezes = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     tipo = models.ForeignKey('produtos.TipoProduto', on_delete=models.PROTECT, related_name='produtos_tipo', null=True, blank=True)
     fabricante = models.ForeignKey('produtos.Fabricante', on_delete=models.PROTECT, related_name='produtos_fabricante')
-    cor = models.ForeignKey('produtos.CorProduto', on_delete=models.PROTECT, related_name='produtos_cor', null=True, blank=True)
-    memoria = models.ForeignKey('produtos.MemoriaProduto', on_delete=models.PROTECT, related_name='produtos_memoria', null=True, blank=True)
-    estado = models.ForeignKey('produtos.EstadoProduto', on_delete=models.PROTECT, related_name='produtos_estado', blank=True, null=True)
     
     def gerar_codigo(self):
         last_product = Produto.objects.all().order_by('codigo').last()

@@ -132,7 +132,6 @@ class Cliente(Base):
     endereco = models.CharField(max_length=200)
     bairro = models.CharField(max_length=100)
     cidade = models.CharField(max_length=100)
-    uf = models.CharField(max_length=2, blank=True, null=True)
     comprovantes = models.ForeignKey('vendas.ComprovantesCliente', on_delete=models.PROTECT, related_name='comprovantes_clientes')
     contato_adicional = models.ForeignKey('vendas.ContatoAdicional', on_delete=models.PROTECT, related_name='contatos_adicionais', null=True, blank=True)
     
@@ -148,8 +147,6 @@ class Venda(Base):
     data_venda = models.DateTimeField(auto_now_add=True)
     cliente = models.ForeignKey('vendas.cliente', on_delete=models.PROTECT, related_name='vendas')
     vendedor = models.ForeignKey('accounts.User', on_delete=models.PROTECT, related_name='vendas_realizadas')
-    tipo_venda = models.ForeignKey('vendas.TipoVenda', on_delete=models.PROTECT, related_name='vendas_tipo_venda', null=True, blank=True)
-    tipo_entrega = models.ForeignKey('vendas.TipoEntrega', on_delete=models.PROTECT, related_name='vendas_tipo_entrega', null=True, blank=True)
     produtos = models.ManyToManyField('produtos.Produto', through='ProdutoVenda', related_name='vendas')
     caixa = models.ForeignKey('vendas.Caixa', on_delete=models.PROTECT, related_name='vendas')
     observacao = models.TextField(null=True, blank=True)
@@ -340,23 +337,4 @@ class Parcela(Base):
 
     def __str__(self):
         return f"Parcela {self.numero_parcela} de {self.pagamento}"
-        
-
-class TipoEntrega(Base):
-    nome = models.CharField(max_length=100)
-    
-    def __str__(self):
-        return self.nome
-    
-    class Meta:
-        verbose_name_plural = 'Tipos de Entrega'
-
-class TipoVenda(Base):
-    nome = models.CharField(max_length=100)
-    
-    def __str__(self):
-        return self.nome
-    
-    class Meta:
-        verbose_name_plural = 'Tipos de Vendas'
         

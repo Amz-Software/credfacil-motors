@@ -1250,7 +1250,6 @@ class RelatorioVendasView(PermissionRequiredMixin, FormView):
         produtos = form.cleaned_data.get('produtos')
         vendedores = form.cleaned_data.get('vendedores')
         lojas = form.cleaned_data.get('lojas')
-        tipos_venda = form.cleaned_data.get('tipos_venda')
         
         # Se nenhuma loja for selecionada, utiliza a loja da sessão
         if not lojas:
@@ -1273,9 +1272,6 @@ class RelatorioVendasView(PermissionRequiredMixin, FormView):
 
         if produtos:
             filtros['produtos__in'] = produtos
-            
-        if tipos_venda:
-            filtros['tipo_venda__in'] = tipos_venda
 
         filtros['loja__in'] = lojas
 

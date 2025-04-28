@@ -66,30 +66,44 @@ Clientes
           <td>{{ cliente.telefone }}</td>
           <td>
             <div class="dropdown">
-            <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
-              <i class="bx bx-dots-vertical-rounded"></i>
-            </button>
-            <div class="dropdown-menu">
-              <!-- {% if user|has_perm:"vendas.view_cliente" %}
-              <a class="dropdown-item" href="#" onclick="abrirFormularioEdicao({{ cliente.id }})" data-bs-toggle="offcanvas" data-bs-target="#offcanvasClienteEdit">
-                <i class="bx bx-show me-1"></i> Detalhes
-              </a>
-              {% endif %} -->
-              {% if user|has_perm:"vendas.change_cliente" %}
-              <a class="dropdown-item" href="{% url 'vendas:cliente_update' cliente.pk %}">
-                <i class="bx bx-edit-alt me-1"></i> Editar
-              </a>
-              {% endif %}
-              {% if user|has_perm:"vendas.change_cliente" %}
-              <form method="post" action="{% url 'vendas:gerar_venda' cliente.pk %}" style="display: inline;" onsubmit="return confirm('Tem certeza que deseja gerar a venda?');">
-                {% csrf_token %}
-                <button type="submit" class="dropdown-item" style="background: none; border: none; padding: 0; margin: 0; cursor: pointer;">
-                  <i class="bx bx-edit-alt me-1"></i> Gerar Venda
-                </button>
-              </form>                        
-              {% endif %}
+              <button
+                type="button"
+                class="btn p-0 dropdown-toggle hide-arrow"
+                data-bs-toggle="dropdown"
+              >
+                <i class="bx bx-dots-vertical-rounded"></i>
+              </button>
+              <div class="dropdown-menu">
+                {% if user|has_perm:"vendas.change_cliente" %}
+                  <a
+                    class="dropdown-item d-flex align-items-center"
+                    href="{% url 'vendas:cliente_update' cliente.pk %}"
+                  >
+                    <i class="bx bx-edit-alt me-1"></i>
+                    Editar
+                  </a>
+                {% endif %}
+            
+                {% if user|has_perm:"vendas.change_cliente" %}
+                  <form
+                    method="post"
+                    action="{% url 'vendas:gerar_venda' cliente.pk %}"
+                    onsubmit="return confirm('Tem certeza que deseja gerar a venda?');"
+                    class="m-0"
+                  >
+                    {% csrf_token %}
+                    <button
+                      type="submit"
+                      class="dropdown-item d-flex align-items-center"
+                    >
+                      <i class="bx bx-cart me-1"></i>
+                      Gerar Venda
+                    </button>
+                  </form>
+                {% endif %}
+              </div>
             </div>
-            </div>
+            
           </td>
           {% empty %}
           <td colspan="5">Nenhum registro encontrado</td>

@@ -58,14 +58,6 @@ class ClienteAdmin(AdminBase):
     list_display = ('nome', 'email', 'telefone', 'cpf')
 
 
-@admin.register(TipoVenda)
-class TipoVendaAdmin(AdminBase):
-    list_display = ('nome',)
-
-@admin.register(TipoEntrega)
-class TipoEntregaAdmin(AdminBase):
-    list_display = ('nome',)
-
 
 @admin.register(Endereco)
 class EnderecoAdmin(AdminBase):

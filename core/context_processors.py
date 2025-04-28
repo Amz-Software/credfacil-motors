@@ -28,29 +28,10 @@ def menu_items(request):
                     "url_name": "produtos:produtos",
                     "permission": "produtos.view_produto",
                 },
-                {
-                    "label": "Cor",
-                    "url_name": "produtos:cores",
-                    "permission": "produtos.view_produto",
-                },
+
                 {
                     "label": "Tipo",
                     "url_name": "produtos:tipos",
-                    "permission": "produtos.view_produto",
-                },
-                {
-                    "label": "Fabricante",
-                    "url_name": "produtos:fabricantes",
-                    "permission": "produtos.view_produto",
-                },
-                {
-                    "label": "Estado",
-                    "url_name": "produtos:estados",
-                    "permission": "produtos.view_produto",
-                },
-                {
-                    "label": "Memória",
-                    "url_name": "produtos:memorias",
                     "permission": "produtos.view_produto",
                 },
             ]
@@ -120,16 +101,6 @@ def menu_items(request):
                     "label": "Tipo pagamento",
                     "url_name": "vendas:tipos_pagamento",
                     "permission": "vendas.view_tipopagamento"
-                },
-                {
-                    "label": "Tipo venda",
-                    "url_name": "vendas:tipos_venda",
-                    "permission": "vendas.view_tipovenda"
-                },
-                {
-                    "label": "Tipo entrega",
-                    "url_name": "vendas:tipos_entrega",
-                    "permission": "vendas.view_tipoentrega"
                 },
             ],
         },

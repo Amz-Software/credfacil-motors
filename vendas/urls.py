@@ -26,9 +26,9 @@ urlpatterns = [
     path('clientes/cliente_create/', ClienteCreateView.as_view(), name='cliente_create'),
     path('clientes/cliente_editar/<int:pk>/', ClienteUpdateView.as_view(), name='cliente_update'),
     
-    path('cancelar_analise/<int:analise_id>/', cancelar_analise_credito, name='cancelar_analise'),
-    path('aprovar_analise/<int:analise_id>/', aprovar_analise_credito, name='aprovar_analise'),
-    path('reprovar_analise/<int:analise_id>/', reprovar_analise_credito, name='reprovar_analise'),
+    path('aprovar_analise/<int:id>/', aprovar_analise_credito, name='aprovar_analise'),
+    path('reprovar_analise/<int:id>/', reprovar_analise_credito, name='reprovar_analise'),
+    path('cancelar_analise/<int:id>/', cancelar_analise_credito, name='cancelar_analise'),
     
     #tipo de pagamento
     path('tipopagamento/', tipoPagamentoViews['list_view'].as_view(), name='tipos_pagamento'),

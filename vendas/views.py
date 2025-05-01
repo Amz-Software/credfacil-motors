@@ -557,9 +557,9 @@ def gerar_venda(request, cliente_id):
 
 
 @permission_required('vendas.change_status_analise', raise_exception=True)
-def aprovar_analise_credito(request, analise_id):
+def aprovar_analise_credito(request, id):
     try:
-        analise = AnaliseCreditoCliente.objects.get(id=analise_id)
+        analise = AnaliseCreditoCliente.objects.get(id=id)
         analise.aprovar(user=request.user)
         analise.modificado_por = request.user
         analise.modificado_em = timezone.now()
@@ -571,9 +571,9 @@ def aprovar_analise_credito(request, analise_id):
     return redirect('vendas:cliente_list')
 
 @permission_required('vendas.change_analisecreditocliente', raise_exception=True)
-def cancelar_analise_credito(request, analise_id):
+def cancelar_analise_credito(request, id):
     try:
-        analise = AnaliseCreditoCliente.objects.get(id=analise_id)
+        analise = AnaliseCreditoCliente.objects.get(id=id)
         analise.cancelar()
         analise.modificado_por = request.user
         analise.modificado_em = timezone.now()
@@ -585,9 +585,9 @@ def cancelar_analise_credito(request, analise_id):
     return redirect('vendas:cliente_list')
 
 @permission_required('vendas.change_status_analise', raise_exception=True)
-def reprovar_analise_credito(request, analise_id):
+def reprovar_analise_credito(request, id):
     try:
-        analise = AnaliseCreditoCliente.objects.get(id=analise_id)
+        analise = AnaliseCreditoCliente.objects.get(id=id)
         analise.reprovar()
         analise.modificado_por = request.user
         analise.modificado_em = timezone.now()

@@ -126,17 +126,40 @@
       </div>
 
       <!-- FOOTER FIXO COM AÇÕES -->
-      <div class="card-footer d-flex justify-content-end">
-        {% if user|has_perm:'vendas.change_status_analise' %}
-          <a href="{% url 'vendas:aprovar_analise' analise_id=cliente.analise_credito.id %}" class="btn btn-success me-2">Aprovar</a>
-          <a href="{% url 'vendas:reprovar_analise' analise_id=cliente.analise_credito.id %}" class="btn btn-success me-2">Reprovar</a>
-        {% endif %}
-        <a href="{% url 'vendas:cancelar_analise' analise_id=cliente.analise_credito.id %}" class="btn btn-danger me-2">Cancelar</a>
-        {% if user|has_perm:'vendas.change_cliente' %}
-          <button type="submit" class="btn btn-primary">Salvar</button>
-        {% endif %}
-        <a href="{% url 'vendas:cliente_list' %}" class="btn btn-secondary ms-2">Voltar</a>
+      <div class="card-footer d-flex justify-content-between align-items-center">
+        {# ações de análise, agrupadas e à esquerda #}
+        <div>
+          {% if cliente.pk and cliente.analise_credito %}
+            <div class="btn-group" role="group" aria-label="Análise de Crédito">
+              <a href="{% url 'vendas:aprovar_analise' cliente.analise_credito.id %}"
+                 class="btn btn-success">
+                <i class="bx bx-check me-1"></i> Aprovar
+              </a>
+              <a href="{% url 'vendas:reprovar_analise' cliente.analise_credito.id %}"
+                 class="btn btn-danger">
+                <i class="bx bx-x me-1"></i> Reprovar
+              </a>
+              <a href="{% url 'vendas:cancelar_analise' cliente.analise_credito.id %}"
+                 class="btn btn-outline-secondary">
+                <i class="bx bx-reset me-1"></i> Cancelar
+              </a>
+            </div>
+          {% endif %}
+        </div>
+      
+        {# ações de salvar/voltar, à direita #}
+        <div>
+          {% if user|has_perm:'vendas.change_cliente' %}
+            <button type="submit" class="btn btn-primary me-2">
+              <i class="bx bx-save me-1"></i> Salvar
+            </button>
+          {% endif %}
+          <a href="{% url 'vendas:cliente_list' %}" class="btn btn-secondary">
+            <i class="bx bx-arrow-back me-1"></i> Voltar
+          </a>
+        </div>
       </div>
+      
     </form>
   </div>
 </div>

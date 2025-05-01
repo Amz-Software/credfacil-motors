@@ -32,7 +32,7 @@ def menu_items(request):
                 {
                     "label": "Tipo",
                     "url_name": "produtos:tipos",
-                    "permission": "produtos.view_produto",
+                    "permission": "produtos.view_tipoproduto",
                 },
             ]
         },

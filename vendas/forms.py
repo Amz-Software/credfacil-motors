@@ -252,7 +252,7 @@ class VendaForm(forms.ModelForm):
     class Meta:
         model = Venda
         fields = '__all__'
-        exclude = ['loja','criado_por', 'modificado_por', 'caixa', 'produtos', 'loja']
+        exclude = ['loja','criado_por', 'modificado_por', 'caixa', 'produtos']
 
         widgets = {
             'cliente': forms.Select(attrs={'class': 'form-control'}),
@@ -266,14 +266,14 @@ class VendaForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        loja = kwargs.pop('loja', None)  # Captura o argumento 'loja'
-        user = kwargs.pop('user', None)  # Captura o argumento 'user'
+        loja = kwargs.pop('loja', None)
+        user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs) 
-        if loja:
-            self.fields['cliente'].queryset = Cliente.objects.filter(loja=loja)
-            self.fields['vendedor'].queryset = Loja.objects.get(id=loja).usuarios.all()
-        if user:
-            self.fields['vendedor'].initial = user
+        # if loja:
+            # self.fields['cliente'].queryset = Cliente.objects.filter(loja=loja)
+            # self.fields['vendedor'].queryset = Loja.objects.get(id=loja).usuarios.all()
+        # if user:
+        #     self.fields['vendedor'].initial = user
 
 
 class ProdutoSelectWidget(HeavySelect2Widget):

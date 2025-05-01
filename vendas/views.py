@@ -18,6 +18,8 @@ from django.db import transaction
 from django_select2.views import AutoResponseView
 from django.db.models import Sum
 from django.contrib.auth.decorators import permission_required
+from django.db.models import Count
+
 
 
 logger = logging.getLogger(__name__)
@@ -78,6 +80,30 @@ class IndexView(LoginRequiredMixin, TemplateView):
         return context
     
 
+from django.http import JsonResponse
+from django.views import View
+
+class CaixaKpiCountsView(View):
+    def get(self, request, *args, **kwargs):
+        if request.user.has_perm('vendas.view_all_analise_credito'):
+            qs = AnaliseCreditoCliente.objects.all()
+        else:
+            loja_id = request.session.get('loja_id')
+            qs = AnaliseCreditoCliente.objects.filter(loja_id=loja_id)
+
+        status_counts = (
+            qs.values('status')
+              .annotate(total=Count('id'))
+        )
+        data = {item['status']: item['total'] for item in status_counts}
+        # garantia de zeros
+        for code, _ in AnaliseCreditoCliente.STATUS_CHOICES:
+            data.setdefault(code, 0)
+        return JsonResponse(data)
+
+
+    
+
 class CaixaListView(BaseView, PermissionRequiredMixin, ListView):
     model = Caixa
     template_name = 'caixa/caixa_list.html'
@@ -126,6 +152,7 @@ class CaixaListView(BaseView, PermissionRequiredMixin, ListView):
                 return redirect('vendas:caixa_list')
         
         return self.get(request, *args, **kwargs)
+
 
 
 class CaixaDetailView(PermissionRequiredMixin, DetailView):
@@ -191,13 +218,41 @@ class ClienteListView(BaseView, PermissionRequiredMixin, ListView):
     paginate_by = 10
     permission_required = 'vendas.view_cliente'
     
+
     def get_queryset(self):
-        query = super().get_queryset()
+        qs = super().get_queryset()
         search = self.request.GET.get('search')
         if search:
-            return query.filter(nome__icontains=search)
+            qs = qs.filter(nome__icontains=search)
+        status = self.request.GET.get('status')
+        if status:
+            qs = qs.filter(analise_credito__status=status).distinct()
         
-        return query.order_by('nome')
+        if not self.request.user.has_perm('vendas.view_all_analise_credito'):
+            loja_id = self.request.session.get('loja_id')
+            qs = qs.filter(loja_id=loja_id)    
+        
+        return qs.order_by('-id')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # monta os KPIs conforme permissão
+        if self.request.user.has_perm('vendas.view_all_analise_credito'):
+            analises = AnaliseCreditoCliente.objects.all()
+        else:
+            loja_id = self.request.session.get('loja_id')
+            analises = AnaliseCreditoCliente.objects.filter(loja_id=loja_id)
+
+        counts = analises.values('status').annotate(total=Count('id'))
+        kpis = {item['status']: item['total'] for item in counts}
+        for code, _ in AnaliseCreditoCliente.STATUS_CHOICES:
+            kpis.setdefault(code, 0)
+
+        context['kpis'] = kpis
+        context['status_choices'] = AnaliseCreditoCliente.STATUS_CHOICES
+        context['current_status'] = self.request.GET.get('status', '')
+        return context
     
     # def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
     #     context = super().get_context_data(**kwargs)
@@ -269,8 +324,20 @@ class ClienteCreateView(PermissionRequiredMixin, CreateView):
 
         context['form_cliente'] = kwargs.get('form_cliente', ClienteForm())
         context['form_adicional'] = kwargs.get('form_adicional', ContatoAdicionalForm())
-        context['form_comprovantes'] = kwargs.get('form_comprovantes', ComprovantesClienteForm())
+        context['form_comprovantes'] = kwargs.get('form_comprovantes', ComprovantesClienteForm(user=self.request.user))
         context['form_analise_credito'] = kwargs.get('form_analise_credito', AnaliseCreditoClienteForm(user=self.request.user))
+        
+        produtos = Produto.objects.all().values('id', 'nome', 'valor_4_vezes', 'valor_6_vezes')
+        produtos_list = [
+            {
+                'id': p['id'],
+                'nome': p['nome'],
+                'valor4': float(p['valor_4_vezes']),
+                'valor6': float(p['valor_6_vezes']),
+            }
+            for p in produtos
+        ]
+        context['produtos_json'] = json.dumps(produtos_list)
 
         return context
 
@@ -279,7 +346,7 @@ class ClienteCreateView(PermissionRequiredMixin, CreateView):
 
         form_cliente = ClienteForm(request.POST)
         form_adicional = ContatoAdicionalForm(request.POST)
-        form_comprovantes = ComprovantesClienteForm(request.POST, request.FILES)
+        form_comprovantes = ComprovantesClienteForm(request.POST, request.FILES, user=request.user)
         form_analise_credito = AnaliseCreditoClienteForm(request.POST, user=request.user)
 
         if all([
@@ -351,8 +418,8 @@ class ClienteUpdateView(PermissionRequiredMixin, UpdateView):
 
         context['form_cliente'] = kwargs.get('form_cliente', ClienteForm(instance=cliente))
         context['form_adicional'] = kwargs.get('form_adicional', ContatoAdicionalForm(instance=cliente.contato_adicional))
-        context['form_comprovantes'] = kwargs.get('form_comprovantes', ComprovantesClienteForm(instance=cliente.comprovantes))
-        context['form_analise_credito'] = kwargs.get('form_analise_credito', AnaliseCreditoClienteForm(instance=cliente.analises_credito.first(), user=self.request.user))
+        context['form_comprovantes'] = kwargs.get('form_comprovantes', ComprovantesClienteForm(instance=cliente.comprovantes, user=self.request.user))
+        context['form_analise_credito'] = kwargs.get('form_analise_credito', AnaliseCreditoClienteForm(instance=cliente.analise_credito, user=self.request.user))
         context['cliente_id'] = cliente.id
 
         return context
@@ -362,8 +429,8 @@ class ClienteUpdateView(PermissionRequiredMixin, UpdateView):
 
         form_cliente = ClienteForm(request.POST, instance=self.object)
         form_adicional = ContatoAdicionalForm(request.POST, instance=self.object.contato_adicional)
-        form_comprovantes = ComprovantesClienteForm(request.POST, request.FILES, instance=self.object.comprovantes)
-        form_analise_credito = AnaliseCreditoClienteForm(request.POST, instance=self.object.analises_credito.first(), user=request.user)
+        form_comprovantes = ComprovantesClienteForm(request.POST, request.FILES, instance=self.object.comprovantes, user=request.user)
+        form_analise_credito = AnaliseCreditoClienteForm(request.POST, instance=self.object.analise_credito, user=request.user)
 
         if all([
             form_cliente.is_valid(),
@@ -416,7 +483,7 @@ def gerar_venda(request, cliente_id):
             return redirect('vendas:cliente_list')
 
         # Pega a análise de crédito aprovada mais recente
-        analise_credito = cliente.analises_credito.filter(status='A').order_by('-data_analise').first()
+        analise_credito = cliente.analise_credito.filter(status='A').order_by('-data_analise').first()
         if not analise_credito:
             messages.error(request, "❌ Nenhuma análise de crédito aprovada para o cliente.")
             return redirect('vendas:cliente_list')
@@ -503,7 +570,7 @@ def aprovar_analise_credito(request, analise_id):
 
     return redirect('vendas:cliente_list')
 
-@permission_required('vendas.change_status_analise', raise_exception=True)
+@permission_required('vendas.change_analisecreditocliente', raise_exception=True)
 def cancelar_analise_credito(request, analise_id):
     try:
         analise = AnaliseCreditoCliente.objects.get(id=analise_id)
@@ -540,7 +607,7 @@ def cliente_editar_view(request):
     cliente.nascimento = cliente.nascimento.strftime('%Y-%m-%d')
     form_cliente = ClienteForm(instance=cliente)
     form_adicional = ContatoAdicionalForm(instance=cliente.contato_adicional)
-    form_comprovantes = ComprovantesClienteForm(instance=cliente.comprovantes)
+    form_comprovantes = ComprovantesClienteForm(instance=cliente.comprovantes, user=request.user)
     
     return render(request, 'cliente/form_cliente.html', {
         'form_cliente': form_cliente,
@@ -561,6 +628,10 @@ class VendaListView(BaseView, PermissionRequiredMixin, ListView):
         data_filter = self.request.GET.get('search')
         if data_filter:
             return query.filter(data_venda=data_filter)
+        
+        if not self.request.user.has_perm('vendas.can_view_all_sales'):
+            loja_id = self.request.session.get('loja_id')
+            query = query.filter(loja_id=loja_id)
         
         return query.order_by('-criado_em')
 

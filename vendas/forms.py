@@ -124,6 +124,8 @@ class AnaliseCreditoClienteForm(forms.ModelForm):
             if user and not user.has_perm('vendas.change_status_analise'):
                 # if self.instance.status == 'EA':
                 self.fields['produto'].disabled = True
+                self.fields['imei'].disabled = True
+                self.fields['numero_parcelas'].disabled = True
 
 
 class EnderecoForm(forms.ModelForm):
@@ -144,7 +146,6 @@ class EnderecoForm(forms.ModelForm):
 class ComprovantesClienteForm(forms.ModelForm):
     class Meta:
         model = ComprovantesCliente
-        fields = '__all__'
         exclude = ['cliente', 'loja']
         widgets = {
             'documento_identificacao_frente': forms.FileInput(attrs={'class': 'form-control'}),
@@ -156,7 +157,6 @@ class ComprovantesClienteForm(forms.ModelForm):
             'consulta_serasa': forms.FileInput(attrs={'class': 'form-control'}),
             'consulta_serasa_analise': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
-        
         labels = {
             'documento_identificacao_frente': 'Documento de Identificação Frente*',
             'documento_identificacao_frente_analise': 'Análise Documento de Identificação Frente',
@@ -168,17 +168,37 @@ class ComprovantesClienteForm(forms.ModelForm):
             'consulta_serasa_analise': 'Análise Consulta Serasa',
         }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
-        
-        self.fields['documento_identificacao_frente_analise'].initial = False
-        self.fields['documento_identificacao_verso_analise'].initial = False
-        self.fields['comprovante_residencia_analise'].initial = False
-        self.fields['consulta_serasa_analise'].initial = False
 
+        # 1) Se não tiver permissão, remove todos os campos que terminam em "_analise"
+        if not (user and user.has_perm('vendas.view_all_analise_credito')):
+            for name in list(self.fields):
+                if name.endswith('_analise'):
+                    self.fields.pop(name)
+
+        # 2) Inicializa as checkboxes (se elas existirem)
+        for analise_field in (
+            'documento_identificacao_frente_analise',
+            'documento_identificacao_verso_analise',
+            'comprovante_residencia_analise',
+            'consulta_serasa_analise',
+        ):
+            if analise_field in self.fields:
+                self.fields[analise_field].initial = False
+
+        # 3) Torna obrigatórios todos os outros campos (mesmo lógica que você já tinha)
+        exceptions = {
+            'consulta_serasa',
+            'consulta_serasa_analise',
+            'documento_identificacao_frente_analise',
+            'documento_identificacao_verso_analise',
+            'comprovante_residencia_analise',
+        }
         for name, field in self.fields.items():
-            if name not in ['consulta_serasa', 'consulta_serasa_analise', 'documento_identificacao_frente_analise', 'documento_identificacao_verso_analise', 'comprovante_residencia_analise']:
+            if name not in exceptions:
                 field.required = True
+
 
 
 class TipoPagamentoForm(forms.ModelForm):

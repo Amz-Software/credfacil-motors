@@ -18,6 +18,7 @@ urlpatterns = [
     path('caixa/caixa-total/', CaixaTotalView.as_view(), name='caixa_total'),
     path('caixa/lancamento/<int:pk>/', lancamento_delete_view, name='lancamento_delete'),
     path('caixa/caixa-total/lancamento/<int:pk>/', lancamento_total_delete_view, name='caixa_total_lancamento_delete'),
+    path('caixas/kpis/', CaixaKpiCountsView.as_view(), name='caixa_kpis'),
 
     #cliente
     path('clientes/', ClienteListView.as_view(), name='cliente_list'),
@@ -25,9 +26,9 @@ urlpatterns = [
     path('clientes/cliente_create/', ClienteCreateView.as_view(), name='cliente_create'),
     path('clientes/cliente_editar/<int:pk>/', ClienteUpdateView.as_view(), name='cliente_update'),
     
+    path('cancelar_analise/<int:analise_id>/', cancelar_analise_credito, name='cancelar_analise'),
     path('aprovar_analise/<int:analise_id>/', aprovar_analise_credito, name='aprovar_analise'),
     path('reprovar_analise/<int:analise_id>/', reprovar_analise_credito, name='reprovar_analise'),
-    path('cancelar_analise/<int:analise_id>/', cancelar_analise_credito, name='cancelar_analise'),
     
     #tipo de pagamento
     path('tipopagamento/', tipoPagamentoViews['list_view'].as_view(), name='tipos_pagamento'),

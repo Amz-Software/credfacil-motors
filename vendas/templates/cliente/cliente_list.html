@@ -21,18 +21,50 @@ Clientes
     <div class="col-12">
     <div class="card">
       <div class="card-header d-flex justify-content-between align-items-center">
-      <h4 class="card-title">Clientes</h4>
+      <h4 class="card-title">Clientes {{nome}}</h4>
       <div>
         <form action="" method="get" class="d-inline-block me-2" id="searchForm">
           <input type="text" name="search" value="{{ request.GET.search }}" class="form-control" placeholder="Pesquisar" onchange="document.getElementById('searchForm').submit()">
         </form>
         {% if user|has_perm:"vendas.add_cliente" %}
         <a href="{% url 'vendas:cliente_create' %}" class="btn btn-primary" type="button">
+        <i class="bx bx-plus me-1"></i>
           Solicitar Crédito
         </a>
         {% endif %}
       </div>
       </div>
+      <div class="row mb-4" id="kpi-row">
+        {% for code, label in status_choices %}
+          <div class="col-md-3">
+            <div
+              class="card text-center kpi-card"
+              data-status="{{ code }}"
+              style="
+                background-color:
+                  {% if code == 'A' %}
+                    #d4edda 
+                  {% elif code == 'R' %}
+                    #f8d7da
+                  {% elif code == 'C' %}
+                    #e2e3e5 
+                  {% else %}
+                    #fff3cd 
+                  {% endif %}
+                ;
+                cursor: pointer;
+                border: 1px solid #ddd;
+              "
+            >
+              <div class="card-body">
+                <h6 class="card-title">{{ label }}</h6>
+                <p class="display-6" id="kpi-{{ code }}">{{ kpis|get_item:code }}</p>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+        
       <div class="card-body">
       <div class="table-responsive">
         <table class="table table-hover">
@@ -41,7 +73,11 @@ Clientes
           <th scope="col">Status Solicitação</th>
           <th scope="col">Produto</th>
           <th scope="col">Nome</th>
+          <th scope="col">Parcela</th>
           <th scope="col">Solicitado Em</th>
+          {% if user|has_perm:"vendas.change_status_analise" %}
+          <th scope="col">Loja</th>
+          {% endif %}
           <th scope="col">Contato</th>
           <th scope="col">Ações</th>
           </tr>
@@ -50,20 +86,24 @@ Clientes
           {% for cliente in items %}
           <tr>
             <td>
-                {% if cliente.analises_credito.first.status == 'A' %}
+                {% if cliente.analise_credito.status == 'A' %}
                 <span class="badge bg-label-success">Aprovado</span>
-              {% elif cliente.analises_credito.first.status == 'R' %}
+              {% elif cliente.analise_credito.status == 'R' %}
                 <span class="badge bg-label-danger">Reprovado</span>
-                {% elif cliente.analises_credito.first.status == 'C' %}
+                {% elif cliente.analise_credito.status == 'C' %}
                 <span class="badge bg-label-secondary">Cancelado</span>
               {% else %}
                 <span class="badge bg-label-warning">Em Análise</span>
               {% endif %}
             </td>
-            <td>{{ cliente.analises_credito.first.produto.nome|capfirst }}</td>
+            <td>{{ cliente.analise_credito.produto.nome|capfirst }}</td>
             <td>{{ cliente.nome }}</td>
-            <td>{{ cliente.analises_credito.first.data_analise|date:"d/m/Y H:m" }}</td>
-          <td>{{ cliente.telefone }}</td>
+            <td>{{ cliente.analise_credito.numero_parcelas }}x</td>
+            <td>{{ cliente.analise_credito.data_analise|date:"d/m/Y H:m" }}</td>
+            {% if user|has_perm:"vendas.change_status_analise" %}
+            <td>{{ cliente.loja.nome }}</td>
+            {% endif %}
+            <td>{{ cliente.telefone }}</td>
           <td>
             <div class="dropdown">
               <button
@@ -106,7 +146,7 @@ Clientes
             
           </td>
           {% empty %}
-          <td colspan="5">Nenhum registro encontrado</td>
+          <td colspan="7">Nenhum registro encontrado</td>
           </tr>
           {% endfor %}
         </tbody>
@@ -119,4 +159,56 @@ Clientes
   </div>
 </div>
 
+{% endblock %}
+
+{% block extra_scripts %}
+  {{ status_choices|json_script:"statusChoices" }}
+  <script>
+    const statusChoices = JSON.parse(
+      document.getElementById('statusChoices').textContent
+    );
+    const currentStatus = "{{ current_status }}";
+
+    // atualiza o highlight do card ativo
+    function markActive() {
+      document.querySelectorAll('.kpi-card').forEach(card => {
+        card.classList.toggle('border-primary', card.dataset.status === currentStatus);
+      });
+    }
+
+    // clique num card => seta o GET ?status=<code>
+    document.querySelectorAll('.kpi-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const code = card.dataset.status;
+        const url = new URL(window.location);
+        if (url.searchParams.get('status') === code) {
+          url.searchParams.delete('status');  // clicar de novo limpa o filtro
+        } else {
+          url.searchParams.set('status', code);
+        }
+        window.location = url.toString();
+      });
+    });
+
+    // mantém o card ativo destacado
+    markActive();
+
+    // (opcional) atualização dos KPIs via AJAX continua igual
+    function refreshKpis() {
+      fetch("{% url 'vendas:caixa_kpis' %}", {
+        credentials: 'same-origin',
+        headers: {'X-Requested-With': 'XMLHttpRequest'},
+      })
+      .then(r => r.json())
+      .then(data => {
+        statusChoices.forEach(([code, _]) => {
+          const el = document.getElementById(`kpi-${code}`);
+          if (el) el.textContent = data[code] || 0;
+        });
+      })
+      .catch(console.error);
+    }
+    document.addEventListener('DOMContentLoaded', refreshKpis);
+    setInterval(refreshKpis, 15000);
+  </script>
 {% endblock %}

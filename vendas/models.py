@@ -145,7 +145,7 @@ class Cliente(Base):
 
 class Venda(Base):
     data_venda = models.DateTimeField(auto_now_add=True)
-    cliente = models.ForeignKey('vendas.cliente', on_delete=models.PROTECT, related_name='vendas')
+    cliente = models.ForeignKey('vendas.cliente', on_delete=models.CASCADE, related_name='vendas')
     vendedor = models.ForeignKey('accounts.User', on_delete=models.PROTECT, related_name='vendas_realizadas')
     produtos = models.ManyToManyField('produtos.Produto', through='ProdutoVenda', related_name='vendas')
     caixa = models.ForeignKey('vendas.Caixa', on_delete=models.PROTECT, related_name='vendas')
@@ -179,22 +179,25 @@ class Venda(Base):
             ('can_more_desconto', 'Pode dar mais desconto'),
             ('can_generate_report_sale', 'Pode gerar relatório de vendas'),
             ('change_status_analise', 'Pode alterar status de análise'),
+            ('can_view_all_sales', 'Pode ver todas as vendas'),
         )
 
 
 class AnaliseCreditoCliente(Base):
-    cliente = models.ForeignKey('vendas.Cliente', on_delete=models.PROTECT, related_name='analises_credito')
+    STATUS_CHOICES = [
+        ('EA', 'Em análise'),
+        ('A', 'Aprovado'),
+        ('R', 'Reprovado'),
+        ('C', 'Cancelado'),
+        
+    ]
+    cliente = models.OneToOneField('vendas.Cliente', on_delete=models.PROTECT, related_name='analise_credito')
     data_analise = models.DateTimeField(auto_now_add=True)
     data_aprovacao = models.DateTimeField(null=True, blank=True)
     data_reprovacao = models.DateTimeField(null=True, blank=True)
     data_cancelamento = models.DateTimeField(null=True, blank=True)
     aprovado_por = models.ForeignKey('accounts.User', on_delete=models.PROTECT, related_name='analises_credito_aprovadas', null=True, blank=True)
-    status = models.CharField(max_length=20, choices=(
-        ('EA', 'Em análise'),
-        ('A', 'Aprovado'),
-        ('R', 'Reprovado'),
-        ('C', 'Cancelado'),
-    ), default='EA')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='EA')
     numero_parcelas = models.CharField(max_length=20, null=True, blank=True, choices=(
         ('4', '4x'),
         ('6', '6x'),
@@ -224,6 +227,15 @@ class AnaliseCreditoCliente(Base):
     def __str__(self):
         return f"Análise de crédito para {self.cliente} - {self.data_analise.strftime('%d/%m/%Y')}"
     
+    class Meta:
+        verbose_name_plural = 'Análises de Crédito'
+        permissions = (
+            ('can_approve_credit_analysis', 'Pode aprovar análise de crédito'),
+            ('can_reject_credit_analysis', 'Pode reprovar análise de crédito'),
+            ('can_cancel_credit_analysis', 'Pode cancelar análise de crédito'),
+            ('view_all_analise_credito', 'Pode ver todos os KPIs de análise de crédito')
+        )
+    
     
 
 class ContatoAdicional(Base):
@@ -246,13 +258,13 @@ class Endereco(Base):
         verbose_name_plural = 'Informacoes Clientes'
 
 class ComprovantesCliente(Base):
-    documento_identificacao_frente = models.ImageField(upload_to='comprovantes_clientes/%Y/%m/%d/')
+    documento_identificacao_frente = models.ImageField(upload_to='comprovantes_clientes')
     documento_identificacao_frente_analise = models.BooleanField(default=False)
-    documento_identificacao_verso = models.ImageField(upload_to='comprovantes_clientes/%Y/%m/%d/')
+    documento_identificacao_verso = models.ImageField(upload_to='comprovantes_clientes')
     documento_identificacao_verso_analise = models.BooleanField(default=False)
-    comprovante_residencia = models.ImageField(upload_to='comprovantes_clientes/%Y/%m/%d/')
+    comprovante_residencia = models.ImageField(upload_to='comprovantes_clientes')
     comprovante_residencia_analise = models.BooleanField(default=False)
-    consulta_serasa = models.ImageField(upload_to='comprovantes_clientes/%Y/%m/%d/', null=True, blank=True)
+    consulta_serasa = models.ImageField(upload_to='comprovantes_clientes', null=True, blank=True)
     consulta_serasa_analise = models.BooleanField(default=False)
     
     class Meta:

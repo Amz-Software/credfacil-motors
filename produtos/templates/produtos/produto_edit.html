@@ -9,31 +9,123 @@ Editar Produto
 <div class="container-xxl mt-4">
   <div class="row">
     <div class="col-12">
-    <div class="card">
+      <div class="card">
         <div class="container-xxl flex-grow-1 container-p-y">
-            <h4 class="py-3 mb-4"><span class="text-muted fw-light">Produtos/</span> Editar</h4>
-            <div class="row">
-              <div class="col-xl">
-                <div class="card mb-4">
-                  <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Produto</h5>
-                  </div>
-                  <div class="card-body">
-                    <form method="post">
-                        {% csrf_token %}
-                        {{ form.as_p }}
-                        {% if user|has_perm:"produtos.change_produto" %}
-                        <button type="submit" class="btn btn-primary">Salvar</button>
-                        {% endif %}
-                    </form>
-                  </div>
+          <h4 class="py-3 mb-4"><span class="text-muted fw-light">Produtos/</span> Criar</h4>
+          <div class="row">
+            <div class="col-xl">
+              <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                  <h5 class="mb-0">Produto</h5>
+                </div>
+                <div class="card-body">
+                  <form method="post">
+                    {% csrf_token %}
+
+                    <!-- Campo Código -->
+                    <div class="form-group mb-3">
+                      {{ form.codigo.label_tag }}
+                      {{ form.codigo }}
+                    </div>
+
+                    <!-- Campo Nome -->
+                    <div class="form-group mb-3">
+                      {{ form.nome.label_tag }}
+                      {{ form.nome }}
+                    </div>
+
+                    <!-- Campo Valor Repasse Logista -->
+                    <div class="form-group mb-3">
+                      {{ form.valor_repasse_logista.label_tag }}
+                      {{ form.valor_repasse_logista }}
+                    </div>
+
+                    <!-- Campo Entrada Cliente -->
+                    <div class="form-group mb-3">
+                      {{ form.entrada_cliente.label_tag }}
+                      {{ form.entrada_cliente }}
+                    </div>
+
+                    <!-- Campo Valor 6 Vezes -->
+                    <div class="form-group mb-3">
+                      {{ form.valor_6_vezes.label_tag }}
+                      {{ form.valor_6_vezes }}
+
+                      <!-- Campo calculado 6 vezes -->
+                      <label for="id_valor_6_vezes_calculado" class="mt-2">Valor da parcela 6x</label>
+                      <input type="text" id="id_valor_6_vezes_calculado" class="form-control" readonly>
+                    </div>
+
+                    <!-- Campo Valor 4 Vezes -->
+                    <div class="form-group mb-3">
+                      {{ form.valor_4_vezes.label_tag }}
+                      {{ form.valor_4_vezes }}
+
+                      <!-- Campo calculado 4 vezes -->
+                      <label for="id_valor_4_vezes_calculado" class="mt-2">Valor da parcela 4x</label>
+                      <input type="text" id="id_valor_4_vezes_calculado" class="form-control" readonly>
+                    </div>
+
+                    <!-- Campo Tipo -->
+                    <div class="form-group mb-3">
+                      {{ form.tipo.label_tag }}
+                      {{ form.tipo }}
+                    </div>
+
+                    <!-- Campo Fabricante -->
+                    <div class="form-group mb-3">
+                      {{ form.fabricante.label_tag }}
+                      {{ form.fabricante }}
+                    </div>
+
+                    <!-- Campo Cor -->
+                    <div class="form-group mb-3">
+                      {{ form.cor.label_tag }}
+                      {{ form.cor }}
+                    </div>
+
+                    <!-- Campo Memória -->
+                    <div class="form-group mb-3">
+                      {{ form.memoria.label_tag }}
+                      {{ form.memoria }}
+                    </div>
+
+                    <!-- Campo Estado -->
+                    <div class="form-group mb-3">
+                      {{ form.estado.label_tag }}
+                      {{ form.estado }}
+                    </div>
+
+                    {% if user|has_perm:"produtos.change_produto" %}
+                    <button type="submit" class="btn btn-primary mt-3">Salvar</button>
+                    {% endif %}
+                  </form>
                 </div>
               </div>
             </div>
           </div>
-    </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
+
+<script>
+function updateValues() {
+    const valor6Vezes = parseFloat(document.getElementById('id_valor_6_vezes').value) || 0;
+    const valor4Vezes = parseFloat(document.getElementById('id_valor_4_vezes').value) || 0;
+    
+    document.getElementById('id_valor_6_vezes_calculado').value = (valor6Vezes / 6).toFixed(2);
+    document.getElementById('id_valor_4_vezes_calculado').value = (valor4Vezes / 4).toFixed(2);
+}
+
+// Ativa o update automático ao digitar
+document.addEventListener('DOMContentLoaded', function() {
+    const campo6 = document.getElementById('id_valor_6_vezes');
+    const campo4 = document.getElementById('id_valor_4_vezes');
+    if (campo6) campo6.addEventListener('input', updateValues);
+    if (campo4) campo4.addEventListener('input', updateValues);
+});
+</script>
 
 {% endblock %}

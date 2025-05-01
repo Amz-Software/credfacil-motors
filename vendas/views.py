@@ -483,7 +483,7 @@ def gerar_venda(request, cliente_id):
             return redirect('vendas:cliente_list')
 
         # Pega a análise de crédito aprovada mais recente
-        analise_credito = cliente.analise_credito.filter(status='A').order_by('-data_analise').first()
+        analise_credito = cliente.analise_credito
         if not analise_credito:
             messages.error(request, "❌ Nenhuma análise de crédito aprovada para o cliente.")
             return redirect('vendas:cliente_list')

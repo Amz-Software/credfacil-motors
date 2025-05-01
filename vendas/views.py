@@ -33,7 +33,7 @@ class BaseView(View):
 
     def get_queryset(self):
         loja = self.get_loja()
-        if loja and not self.request.user.has_perm('vendas.view_all_analise_credito'):
+        if loja:
             return super().get_queryset().filter(loja=loja)
         
         if not loja:
@@ -220,13 +220,17 @@ class ClienteListView(BaseView, PermissionRequiredMixin, ListView):
     
 
     def get_queryset(self):
-        qs = super().get_queryset()
+        qs = Cliente.objects.all()
         search = self.request.GET.get('search')
         if search:
             qs = qs.filter(nome__icontains=search)
         status = self.request.GET.get('status')
         if status:
             qs = qs.filter(analise_credito__status=status).distinct()
+            
+        if not self.request.user.has_perm('vendas.view_all_analise_credito'):
+            loja_id = self.request.session.get('loja_id')
+            qs = qs.filter(loja_id=loja_id)
         
         return qs.order_by('-id')
 
@@ -620,7 +624,7 @@ class VendaListView(BaseView, PermissionRequiredMixin, ListView):
     permission_required = 'vendas.view_venda'
     
     def get_queryset(self):
-        query = super().get_queryset()
+        query = Venda.objects.all()
         data_filter = self.request.GET.get('search')
         if data_filter:
             return query.filter(data_venda=data_filter)

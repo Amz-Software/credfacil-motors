@@ -234,7 +234,7 @@ class AnaliseCreditoCliente(Base):
             ('can_approve_credit_analysis', 'Pode aprovar análise de crédito'),
             ('can_reject_credit_analysis', 'Pode reprovar análise de crédito'),
             ('can_cancel_credit_analysis', 'Pode cancelar análise de crédito'),
-            ('view_all_analise_credito', 'Pode ver todos os KPIs de análise de crédito')
+            ('view_all_analise_credito', 'Pode ver todos as análise de crédito')
         )
     
     

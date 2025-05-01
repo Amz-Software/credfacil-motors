@@ -41,7 +41,7 @@ def generate_views(modelo, form=None, paginacao=10, template_dir=''):
 
         def get_queryset(self):
             loja_id = self.request.session.get('loja_id')
-            loja = get_object_or_404(Loja, pk=loja_id)
+
             search = self.request.GET.get('search')
             if search:
                 return modelo.objects.filter(nome__icontains=search)

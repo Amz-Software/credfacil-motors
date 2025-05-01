@@ -90,7 +90,7 @@ def menu_items(request):
                 {
                     "label": "Produtos Vendidos",
                     "url_name": "vendas:produto_vendido_list",
-                    "permission": "vendas.view_venda"
+                    "permission": "vendas.can_view_produtos_vendidos"
                 },
                 {
                     "label": "Clientes",

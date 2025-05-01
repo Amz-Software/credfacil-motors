@@ -180,6 +180,7 @@ class Venda(Base):
             ('can_generate_report_sale', 'Pode gerar relatório de vendas'),
             ('change_status_analise', 'Pode alterar status de análise'),
             ('can_view_all_sales', 'Pode ver todas as vendas'),
+            ('can_view_produtos_vendidos', 'Pode ver aba produtos vendidos'),
         )
 
 

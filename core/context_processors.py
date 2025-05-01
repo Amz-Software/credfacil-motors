@@ -83,7 +83,7 @@ def menu_items(request):
             "section": "Vendas",
             "sub_items": [
                 {
-                    "label": "Iniciar Venda",
+                    "label": "Vendas",
                     "url_name": "vendas:venda_list",
                     "permission": "vendas.view_venda"
                 },
@@ -93,7 +93,7 @@ def menu_items(request):
                     "permission": "vendas.can_view_produtos_vendidos"
                 },
                 {
-                    "label": "Clientes",
+                    "label": "Solicitações de Venda",
                     "url_name": "vendas:cliente_list",
                     "permission": "vendas.view_cliente"
                 },

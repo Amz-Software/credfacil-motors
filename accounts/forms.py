@@ -40,7 +40,7 @@ class ResetPasswordForm(forms.Form):
 class UserForm(forms.ModelForm):
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'email', 'password', 'user_permissions', 'groups']
+        fields = ['username','first_name', 'last_name', 'email', 'password', 'user_permissions', 'groups']
         widgets = {
             'password': forms.PasswordInput(),
             'user_permissions': Select2MultipleWidget(),
@@ -48,6 +48,7 @@ class UserForm(forms.ModelForm):
         }
         
         labels = {
+            'username': 'Usuário',
             'first_name': 'Nome',
             'last_name': 'Sobrenome',
             'email': 'E-mail',

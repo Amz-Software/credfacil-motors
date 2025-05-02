@@ -329,7 +329,6 @@ class ProdutoVendaForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         loja = kwargs.pop('loja', None)
         super().__init__(*args, **kwargs)
-        # Filtra apenas os produtos que estão em estoque (quantidade >  0)
         self.fields['produto'].queryset = Produto.objects.filter(
             Exists(
                 Estoque.objects.filter(
@@ -338,7 +337,7 @@ class ProdutoVendaForm(forms.ModelForm):
                 )
             )
         ).filter(loja=loja)
-        self.fields['imei'].queryset = EstoqueImei.objects.filter(vendido=False).filter(produto__loja=loja)
+        self.fields['imei'].queryset = EstoqueImei.objects.filter(vendido=False)
         
         
 class ProdutoVendaEditForm(forms.ModelForm):

@@ -36,6 +36,7 @@ Usuários
                 <tr>
                   <th scope="col">Nome de Usuário</th>
                   <th scope="col">Email</th>
+                  <th scope="col">Usuário</th>
                   <th scope="col">Data de Criação</th>
                   <th scope="col">Ações</th>
                 </tr>
@@ -45,6 +46,9 @@ Usuários
                 <tr>
                   <td>{{ user_object.get_full_name|capfirst|default:'-' }}</td>
                   <td>{{ user_object.email }}</td>
+                  <td>
+                    {{user_object.username}}
+                  </td>
                   <td>{{ user_object.date_joined|date:"d/m/Y" }}</td>
                   <td>
                     <div class="dropdown">

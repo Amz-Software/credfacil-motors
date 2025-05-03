@@ -9,9 +9,11 @@ from django.urls import reverse_lazy
 from django.views.generic import TemplateView, ListView, DetailView, CreateView, DeleteView, UpdateView, View, FormView
 from django.utils.timezone import localtime, now
 from estoque.models import Estoque, EstoqueImei
+from financeiro.forms import RepasseForm
+from financeiro.models import Repasse
 from produtos.models import Produto
 from vendas.forms import AnaliseCreditoClienteForm, ClienteForm, ComprovantesClienteForm, ContatoAdicionalForm, FormaPagamentoEditFormSet, LojaForm, ProdutoVendaEditFormSet, RelatorioVendasForm, VendaForm, ProdutoVendaFormSet, FormaPagamentoFormSet, LancamentoForm, LancamentoCaixaTotalForm
-from .models import AnaliseCreditoCliente, Caixa, Cliente, Loja, Pagamento, ProdutoVenda, TipoPagamento, Venda, LancamentoCaixa, LancamentoCaixaTotal
+from .models import AnaliseCreditoCliente, Caixa, Cliente, Loja, Pagamento, Parcela, ProdutoVenda, TipoPagamento, Venda, LancamentoCaixa, LancamentoCaixaTotal
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.utils import timezone
 from django.db import transaction
@@ -19,7 +21,9 @@ from django_select2.views import AutoResponseView
 from django.db.models import Sum
 from django.contrib.auth.decorators import permission_required
 from django.db.models import Count
-
+from datetime import date, timedelta
+from dateutil.relativedelta import relativedelta
+from django.core.paginator import Paginator
 
 
 logger = logging.getLogger(__name__)
@@ -465,6 +469,60 @@ class ClienteUpdateView(PermissionRequiredMixin, UpdateView):
 
 
 
+def calcular_data_primeira_parcela(data_pagamento_str):
+    """
+    Recebe o dia de pagamento escolhido ('1', '10' ou '20') e calcula
+    a data da primeira parcela. Se o dia já passou neste mês, a data
+    será no mês seguinte.
+    """
+    hoje = timezone.now().date()
+    dia_pagamento = int(data_pagamento_str)
+
+    # Se o dia de pagamento já passou neste mês, usa o próximo mês
+    if hoje.day > dia_pagamento:
+        data_parcela = hoje.replace(day=1) + relativedelta(months=1)
+        data_parcela = data_parcela.replace(day=dia_pagamento)
+    else:
+        try:
+            # Se o dia ainda não passou, usa esse mês
+            data_parcela = hoje.replace(day=dia_pagamento)
+        except ValueError:
+            # Se o dia não existe no mês (ex: 31 de fevereiro), usa o último dia do próximo mês
+            proximo_mes = hoje.replace(day=1) + relativedelta(months=1)
+            data_parcela = proximo_mes - timedelta(days=1)
+
+    return data_parcela
+
+
+def criar_parcelas(pagamento):
+    """
+    Cria as parcelas para um pagamento, considerando a data da primeira
+    parcela e a quantidade de parcelas, levando em consideração a variação
+    do número de dias nos meses.
+    """
+    # Apaga quaisquer parcelas antigas (por segurança)
+    Parcela.objects.filter(pagamento=pagamento).delete()
+
+    data_primeira_parcela = pagamento.data_primeira_parcela
+
+    for numero in range(1, pagamento.parcelas + 1):
+        data_vencimento = data_primeira_parcela + relativedelta(months=numero-1)
+
+        try:
+            data_vencimento = data_vencimento.replace(day=data_primeira_parcela.day)
+        except ValueError:
+            data_vencimento = data_vencimento + relativedelta(day=31)
+
+        Parcela.objects.create(
+        pagamento=pagamento,
+            numero_parcela=numero,
+            valor=pagamento.valor_parcela,
+            data_vencimento=data_vencimento,
+            criado_por=pagamento.criado_por,
+            modificado_por=pagamento.modificado_por
+        )
+
+
 @transaction.atomic
 def gerar_venda(request, cliente_id):
     if request.method == 'POST':
@@ -472,6 +530,7 @@ def gerar_venda(request, cliente_id):
         loja_id = request.session.get('loja_id')
         loja = get_object_or_404(Loja, id=loja_id)
 
+        # Verificando se o caixa está aberto para a loja no dia atual
         caixa = Caixa.objects.filter(
             loja=loja,
             data_abertura=timezone.now().date(),
@@ -487,9 +546,29 @@ def gerar_venda(request, cliente_id):
         if not analise_credito:
             messages.error(request, "❌ Nenhuma análise de crédito aprovada para o cliente.")
             return redirect('vendas:cliente_list')
+        
+        if analise_credito.status != 'A':
+            messages.error(request, "❌ Análise de crédito não aprovada.")
+            return redirect('vendas:cliente_list')
 
+        if cliente.analise_credito.venda:
+            messages.error(request, "❌ Essa solicitação já foi convertida em venda.")
+            return redirect('vendas:cliente_list')
+        
         produto = analise_credito.produto
         imei = analise_credito.imei
+        
+        # Verifica se o IMEI já foi vendido
+        if imei.vendido:
+            messages.error(request, "❌ IMEI já vendido. Altere o IMEI para continuar.")
+            return redirect('vendas:cliente_list')
+
+        # Verifica se há estoque suficiente para o produto
+        estoque = Estoque.objects.filter(produto=produto, loja=loja).first()
+        if not estoque or estoque.quantidade_disponivel <= 0:
+            messages.error(request, f"❌ Estoque insuficiente para o produto {produto.nome}.")
+            return redirect('vendas:cliente_list')
+        
 
         # Cria a venda
         venda = Venda.objects.create(
@@ -503,7 +582,9 @@ def gerar_venda(request, cliente_id):
             criado_em=timezone.now(),
             modificado_em=timezone.now()
         )
-        # Pagamento de CredFacil (4x ou 6x)
+        
+        analise_credito.venda = venda
+        
         if analise_credito.numero_parcelas == '4':
             valor_credfacil = produto.valor_4_vezes
             valor_unitario = produto.valor_4_vezes
@@ -514,7 +595,7 @@ def gerar_venda(request, cliente_id):
             parcelas = 6
 
         # Cria o ProdutoVenda
-        ProdutoVenda.objects.create(
+        produto_venda = ProdutoVenda.objects.create(
             loja=loja,
             venda=venda,
             produto=produto,
@@ -523,13 +604,23 @@ def gerar_venda(request, cliente_id):
             quantidade=1,
             valor_desconto=0
         )
+        
+        # Marca o IMEI como vendido
+        imei.vendido = True
+        imei.save()
 
-        # Gera os pagamentos
+        estoque.remover_estoque(1) 
+
+        # Tipos de pagamento
         tipo_entrada = TipoPagamento.objects.get(nome__iexact='ENTRADA')
         tipo_credfacil = TipoPagamento.objects.get(nome__iexact='CREDFACIL')
+        
+        # Calcula a data da primeira parcela
+        if analise_credito.data_pagamento:
+            data_primeira_parcela = calcular_data_primeira_parcela(analise_credito.data_pagamento)
 
-        # Pagamento de entrada
-        Pagamento.objects.create(
+        # Cria os pagamentos
+        pagamento_entrada = Pagamento.objects.create(
             loja=loja,
             venda=venda,
             tipo_pagamento=tipo_entrada,
@@ -538,15 +629,18 @@ def gerar_venda(request, cliente_id):
             data_primeira_parcela=timezone.now().date()
         )
 
-
-        Pagamento.objects.create(
+        pagamento_credfacil = Pagamento.objects.create(
             loja=loja,
             venda=venda,
             tipo_pagamento=tipo_credfacil,
             valor=valor_credfacil,
             parcelas=parcelas,
-            data_primeira_parcela=timezone.now().date()
+            data_primeira_parcela=data_primeira_parcela
         )
+
+        # Cria as parcelas para os pagamentos
+        criar_parcelas(pagamento_entrada)
+        criar_parcelas(pagamento_credfacil)
 
         messages.success(request, f"✅ Venda criada para o cliente {cliente.nome}!")
         return redirect('vendas:cliente_list')
@@ -569,6 +663,7 @@ def aprovar_analise_credito(request, id):
         messages.error(request, 'Análise de crédito não encontrada')
 
     return redirect('vendas:cliente_list')
+
 
 @permission_required('vendas.change_analisecreditocliente', raise_exception=True)
 def cancelar_analise_credito(request, id):
@@ -1073,6 +1168,8 @@ class LojaUpdateView(PermissionRequiredMixin, UpdateView):
         return reverse_lazy('vendas:loja_detail', kwargs={'pk': self.object.id})
 
     
+from django.utils.dateparse import parse_date
+
 class LojaDetailView(PermissionRequiredMixin, DetailView):
     model = Loja
     template_name = 'loja/loja_detail.html'
@@ -1081,12 +1178,53 @@ class LojaDetailView(PermissionRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         loja = self.object
+
+        # Contrato JSON
         contrato = loja.contrato
-        ## transformar em json o contrato
-        contrato_json = json.dumps(contrato)
-        context['contrato'] = contrato_json
+        context['contrato'] = json.dumps(contrato) if contrato else None
+
+        # Repasses (paginados)
+        repasses_qs = Repasse.objects.filter(loja=loja).select_related('criado_por')
+        repasse_paginator = Paginator(repasses_qs, 10)
+        repasse_page = self.request.GET.get('repasse_page')
+        context['repasses'] = repasse_paginator.get_page(repasse_page)
+
+        # Vendas com filtros de data
+        vendas_qs = Venda.objects.filter(loja=loja).select_related('cliente')
+        data_inicio = self.request.GET.get('data_inicio')
+        data_fim    = self.request.GET.get('data_fim')
+
+        if data_inicio:
+            vendas_qs = vendas_qs.filter(data_venda__date__gte=parse_date(data_inicio))
+        if data_fim:
+            vendas_qs = vendas_qs.filter(data_venda__date__lte=parse_date(data_fim))
+
+        # KPIs
+        total_vendas = vendas_qs.aggregate(qtd=Count('id'))['qtd'] or 0
+        valor_total  = vendas_qs.aggregate(val=Sum('pagamentos__valor'))['val'] or 0
+
+        # Paginação de vendas
+        venda_paginator = Paginator(vendas_qs.order_by('-data_venda'), 10)
+        venda_page = self.request.GET.get('venda_page')
+        context['vendas']     = venda_paginator.get_page(venda_page)
+        context['data_inicio'] = data_inicio
+        context['data_fim']    = data_fim
+        
+        
+        status_list, atrasados = loja.get_repasses_status(meses_atras=1)
+        context['repasse_status_list'] = status_list
+        context['repasse_atrasados'] = atrasados
+        # Formulário de Repasse
+        context['repasse_form'] = RepasseForm(initial={'loja': loja})
+
+        # Adiciona o dicionário de KPIs
+        context['kpi'] = {
+            'qtd_vendas': total_vendas,
+            'valor_total': valor_total,
+        }
+
         return context
-    
+
 
 def product_information(request):
     product_id = request.GET.get('product_id')

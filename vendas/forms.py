@@ -107,12 +107,11 @@ class AnaliseCreditoClienteForm(forms.ModelForm):
     ))
     class Meta:
         model = AnaliseCreditoCliente
-        fields = ['produto', 'numero_parcelas', 'imei', 'observacao']
+        fields = ['produto','data_pagamento','numero_parcelas', 'imei', 'observacao']
         widgets = {
             'produto': Select2Widget(attrs={'class': 'form-control'}),
-
+            'data_pagamento': forms.Select(attrs={'class': 'form-control'}),
             'numero_parcelas': forms.Select(attrs={'class': 'form-control'}),
-
             'observacao': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }
 
@@ -124,8 +123,9 @@ class AnaliseCreditoClienteForm(forms.ModelForm):
             if user and not user.has_perm('vendas.change_status_analise'):
                 # if self.instance.status == 'EA':
                 self.fields['produto'].disabled = True
-                self.fields['imei'].disabled = True
+                # self.fields['imei'].disabled = True
                 self.fields['numero_parcelas'].disabled = True
+                self.fields['data_pagamento'].disabled = True
 
 
 class EnderecoForm(forms.ModelForm):

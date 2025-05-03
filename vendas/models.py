@@ -1,5 +1,7 @@
 from django.db import models
 from django.utils import timezone
+from datetime import date, timedelta
+
 
 class Base(models.Model):
     loja = models.ForeignKey('vendas.Loja', on_delete=models.PROTECT, related_name='%(class)s_loja', null=True, blank=True)
@@ -114,6 +116,86 @@ class Loja(Base):
     gerentes = models.ManyToManyField('accounts.User', related_name='lojas_gerenciadas')
     chave_pix = models.CharField(max_length=100, null=True, blank=True)
 
+
+    REPASSES_DIAS = (1, 10, 20)
+
+    def get_repasses_status(self, meses_atras=0):
+        """
+        Retorna:
+          - resultados: lista de dict { 'data': dt, 'qtd_vendas': int, 'valor_total': Decimal, 'feito': bool }
+          - atrasados: quantos destes períodos estão atrasados (dt < hoje, feito=False)
+        """
+        hoje = date.today()
+        resultados = []
+
+        # Construir queryset base de vendas para eficiência
+        vendas_qs = self.venda_loja.all()  # usando related_name='vendas' em Venda.loja
+
+        # Para cada mês de meses_atras até o atual
+        for delta in range(meses_atras, -1, -1):
+            ano = hoje.year
+            mes = hoje.month - delta
+            while mes <= 0:
+                mes += 12
+                ano -= 1
+
+            # para cada dia de repasse
+            for idx, dia in enumerate(self.REPASSES_DIAS):
+                # 1) data de repasse atual
+                try:
+                    dt_atual = date(ano, mes, dia)
+                except ValueError:
+                    continue
+
+                # 2) data de repasse anterior (usa o dia anterior na lista, ou volta ao fim do mês anterior)
+                if idx == 0:
+                    # pega o último dia (20) do mês anterior
+                    prev_mes = mes - 1
+                    prev_ano = ano
+                    if prev_mes == 0:
+                        prev_mes = 12
+                        prev_ano -= 1
+                    dia_prev = self.REPASSES_DIAS[-1]
+                    dt_prev = date(prev_ano, prev_mes, dia_prev)
+                else:
+                    # dia anterior dentro do mesmo mês
+                    dt_prev = date(ano, mes, self.REPASSES_DIAS[idx-1])
+
+                # 3) intervalo de vendas: (dt_prev, dt_atual] — excluindo o próprio dia anterior
+                inicio = dt_prev + timedelta(days=1)
+                fim    = dt_atual
+
+                # só consideramos repasse se houver vendas no período
+                vendas_periodo = vendas_qs.filter(
+                    data_venda__date__gte=inicio,
+                    data_venda__date__lte=fim
+                )
+
+                qtd = vendas_periodo.count()
+                if qtd == 0:
+                    continue
+
+                valor = vendas_periodo.aggregate(
+                    total=models.Sum('pagamentos__valor')
+                )['total'] or 0
+
+                # 4) checar se o repasse já foi feito nessa data
+                feito = self.repasse.filter(data__date=dt_atual).exists()
+
+                resultados.append({
+                    'data': dt_atual,
+                    'inicio_periodo': inicio,
+                    'fim_periodo': fim,
+                    'qtd_vendas': qtd,
+                    'valor_total': valor,
+                    'feito': feito,
+                })
+
+        # contar atrasados (data < hoje e not feito)
+        atrasados = sum(1 for rep in resultados if (not rep['feito'] and rep['data'] < hoje))
+
+        return resultados, atrasados
+
     
     def __str__(self):
         return self.nome
@@ -189,8 +271,7 @@ class AnaliseCreditoCliente(Base):
         ('EA', 'Em análise'),
         ('A', 'Aprovado'),
         ('R', 'Reprovado'),
-        ('C', 'Cancelado'),
-        
+        ('C', 'Cancelado'),   
     ]
     cliente = models.OneToOneField('vendas.Cliente', on_delete=models.PROTECT, related_name='analise_credito')
     data_analise = models.DateTimeField(auto_now_add=True)
@@ -199,12 +280,18 @@ class AnaliseCreditoCliente(Base):
     data_cancelamento = models.DateTimeField(null=True, blank=True)
     aprovado_por = models.ForeignKey('accounts.User', on_delete=models.PROTECT, related_name='analises_credito_aprovadas', null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='EA')
-    numero_parcelas = models.CharField(max_length=20, null=True, blank=True, choices=(
+    data_pagamento = models.CharField(max_length=20, null=True, blank=True, choices=(
+        ('1', 'Dia 1'),
+        ('10', 'Dia 10'),
+        ('20', 'Dia 20'),
+    ), verbose_name='Data de pagamento')
+    numero_parcelas = models.CharField(max_length=20, choices=(
         ('4', '4x'),
         ('6', '6x'),
     ))
     produto = models.ForeignKey('produtos.Produto', on_delete=models.PROTECT, related_name='analises_credito')
-    imei = models.ForeignKey('estoque.EstoqueImei', on_delete=models.PROTECT, related_name='analises_credito_imei', null=True, blank=True)
+    imei = models.ForeignKey('estoque.EstoqueImei', on_delete=models.PROTECT, related_name='analises_credito_imei')
+    venda = models.ForeignKey('vendas.Venda', on_delete=models.PROTECT, related_name='analises_credito_venda', null=True, blank=True)
     observacao = models.TextField(null=True, blank=True)
     
     def aprovar(self, user):
@@ -315,6 +402,9 @@ class Pagamento(Base):
     
     class Meta:
         verbose_name_plural = 'Pagamentos'
+        permissions = (
+            ('can_view_all_payments', 'Pode ver todos os pagamentos'),
+        )
     
 
 class TipoPagamento(Base):

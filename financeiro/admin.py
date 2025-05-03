@@ -1,5 +1,5 @@
 from django.contrib import admin
-from financeiro.models import CaixaMensal, GastosAleatorios, GastoFixo, CaixaMensalGastoFixo, CaixaMensalFuncionario
+from financeiro.models import CaixaMensal, GastosAleatorios, GastoFixo, CaixaMensalGastoFixo, CaixaMensalFuncionario, Repasse
 
 class FuncionarioInline(admin.TabularInline):
     model = CaixaMensalFuncionario
@@ -28,4 +28,10 @@ class CaixaMensalAdmin(admin.ModelAdmin):
 class GastoFixoAdmin(admin.ModelAdmin):
     list_display = ['nome']
     search_fields = ['nome']
-    
+
+
+@admin.register(Repasse)
+class RepasseAdmin(admin.ModelAdmin):
+    list_display = ['loja', 'valor', 'data']
+    search_fields = ['loja__nome', 'valor']
+    list_filter = ['loja']

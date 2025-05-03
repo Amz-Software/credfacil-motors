@@ -148,3 +148,44 @@ class RelatorioSaidaForm(forms.Form):
         required=True,
         widget=Select2MultipleWidget(attrs={'class': 'form-control'})
     )
+
+
+class RepasseForm(forms.ModelForm):
+    class Meta:
+        model = Repasse
+        fields = ['loja', 'valor', 'data','status', 'observacao']
+        widgets = {
+            'loja': forms.HiddenInput(),
+            'data': forms.DateInput(
+            attrs={
+                'class': 'form-control',
+                'type': 'date',
+                'placeholder': 'Selecione a data'
+            },
+            format='%Y-%m-%d'
+            ),
+            'valor': forms.TextInput(
+            attrs={
+                'class': 'form-control money',
+                'placeholder': 'Digite o valor'
+            }
+            ),
+            'status': forms.Select(
+            attrs={
+                'class': 'form-select',
+                'placeholder': 'Selecione o status'
+            }
+            ),
+            'observacao': forms.Textarea(
+            attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Adicione uma observação'
+            }
+            ),
+        }
+        labels = {
+            'valor': 'Valor do Repasse',
+            'status': 'Status',
+            'observacao': 'Observação',
+        }

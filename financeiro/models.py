@@ -101,3 +101,19 @@ class GastosAleatorios(Base):
         verbose_name = 'Gasto Aleatório'
 
 
+
+class Repasse(models.Model):
+    loja = models.ForeignKey('vendas.Loja', on_delete=models.PROTECT, related_name='repasse')
+    valor = models.DecimalField(max_digits=10, decimal_places=2)
+    data = models.DateTimeField()
+    status = models.CharField(max_length=20, choices=[('pendente', 'Pendente'), ('pago', 'Pago'), ('cancelado', 'Cancelado')], default='pendente')
+    # Perguntar
+    # dias_repasse = models.CharField(max_length=10, choices=[('1', '1 dia'), ('10', '10 dias'), ('20', '20 dias')])
+    observacao = models.TextField(blank=True, null=True)
+    criado_por = models.ForeignKey('accounts.User', on_delete=models.PROTECT, related_name='repasse_criado_por')
+    criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_por = models.ForeignKey('accounts.User', on_delete=models.PROTECT, related_name='repasse_atualizado_por')
+    atualizado_em = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f'{self.loja} - {self.funcionario} - {self.valor}'

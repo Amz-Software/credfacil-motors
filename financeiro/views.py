@@ -1,16 +1,11 @@
+from django.urls import reverse_lazy
 from django.views.generic import CreateView, UpdateView, ListView, DetailView, TemplateView
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils import timezone
-from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import redirect, render
-from django.forms import inlineformset_factory, modelformset_factory
+from django.shortcuts import redirect
 from django.shortcuts import get_object_or_404
 from accounts.views import logout_view
-from django.shortcuts import get_object_or_404
-from django.forms import modelformset_factory
-from django.http import HttpResponseRedirect
-from django.urls import reverse
 from vendas.views import BaseView
 from .models import CaixaMensal, CaixaMensalGastoFixo, CaixaMensalFuncionario, GastosAleatorios
 from financeiro.forms import RelatorioSaidaForm
@@ -19,7 +14,7 @@ from .models import CaixaMensal, CaixaMensalFuncionario, CaixaMensalGastoFixo, G
 from datetime import datetime, timedelta
 from django.db import transaction
 from financeiro.forms import *
-from vendas.models import Pagamento, Parcela
+from vendas.models import Pagamento
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.auth.decorators import permission_required
 
@@ -377,8 +372,15 @@ class ContasAReceberListView(BaseView, PermissionRequiredMixin, ListView):
     permission_required = 'vendas.view_pagamento'
 
     def get_queryset(self):
+        queryset = Pagamento.objects.all()
         loja_id = self.request.session.get('loja_id')
-        return Pagamento.objects.order_by('-criado_em').filter(loja_id=loja_id).exclude(tipo_pagamento__caixa=True).filter(tipo_pagamento__parcelas=True)
+        user = self.request.user
+        
+        if not user.has_perm('vendas.can_view_all_payments'):
+            queryset = queryset.filter(loja_id=loja_id)
+        
+        
+        return queryset.order_by('-criado_em').filter(loja_id=loja_id).exclude(tipo_pagamento__caixa=True).filter(tipo_pagamento__parcelas=True)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -463,3 +465,43 @@ class FolhaRelatorioSaidaView(BaseView, PermissionRequiredMixin, TemplateView):
         context['quantidade_saida'] = len(saidas)
 
         return context
+    
+    
+    
+
+class RepasseCreateView(PermissionRequiredMixin, CreateView):
+    model = Repasse
+    form_class = RepasseForm
+    permission_required = 'vendas.add_repasse'
+
+    def form_valid(self, form):
+        form.instance.criado_por = self.request.user
+        form.instance.criado_em = timezone.now()
+        form.instance.atualizado_por = self.request.user
+        form.instance.atualizado_em = timezone.now()
+        messages.success(self.request, "Repasse criado com sucesso!")
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse_lazy('vendas:loja_detail', kwargs={'pk': self.object.loja.pk})
+    
+
+class RepasseUpdateView(PermissionRequiredMixin, UpdateView):
+    model = Repasse
+    form_class = RepasseForm
+    template_name = 'repasse/repasse_form.html'
+    permission_required = 'vendas.change_repasse'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['loja'] = self.object.loja
+        return context
+
+    def form_valid(self, form):
+        form.instance.atualizado_por = self.request.user
+        form.instance.atualizado_em = timezone.now()
+        messages.success(self.request, "Repasse atualizado com sucesso!")
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse_lazy('vendas:loja_detail', kwargs={'pk': self.object.loja.pk})

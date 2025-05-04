@@ -74,7 +74,7 @@ SELECT2_CACHE_BACKEND = "select2"
 STORAGES = {
     'default': {
         'BACKEND': 'django.core.files.storage.FileSystemStorage',
-        'LOCATION': os.path.join(BASE_DIR, 'media'),
+        'LOCATION': os.path.join(BASE_DIR, 'mediafiles'),
     },
     'staticfiles': {
         'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage',
@@ -236,8 +236,8 @@ LOGIN_REDIRECT_URL = 'vendas:index'
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/mediafiles/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'mediafiles')
 
 STATIC_URL = '/static/'
 # Add these new lines

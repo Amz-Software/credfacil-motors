@@ -73,9 +73,8 @@ class ClienteForm(forms.ModelForm):
             'cidade': 'Cidade*',
         }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self,user = None, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        user = kwargs.pop('user', None)
         for name, field in self.fields.items():
             if name not in ['email']:
                 field.required = True
@@ -116,9 +115,8 @@ class ContatoAdicionalForm(forms.ModelForm):
         }
         
     
-    def __init__(self, *args, **kwargs):
+    def __init__(self,user = None, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        user = kwargs.pop('user', None)
         for name, field in self.fields.items():
             if name not in ['email']:
                 field.required = True
@@ -156,8 +154,7 @@ class AnaliseCreditoClienteForm(forms.ModelForm):
             'observacao': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }
 
-    def __init__(self, *args, **kwargs):
-        user = kwargs.pop('user', None)
+    def __init__(self,user = None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
         if self.instance and self.instance.pk:

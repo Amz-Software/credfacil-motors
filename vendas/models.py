@@ -290,7 +290,7 @@ class AnaliseCreditoCliente(Base):
         ('6', '6x'),
     ))
     produto = models.ForeignKey('produtos.Produto', on_delete=models.PROTECT, related_name='analises_credito')
-    imei = models.ForeignKey('estoque.EstoqueImei', on_delete=models.PROTECT, related_name='analises_credito_imei')
+    imei = models.ForeignKey('estoque.EstoqueImei', on_delete=models.PROTECT, related_name='analises_credito_imei', null=True, blank=True)
     venda = models.ForeignKey('vendas.Venda', on_delete=models.PROTECT, related_name='analises_credito_venda', null=True, blank=True)
     observacao = models.TextField(null=True, blank=True)
     

@@ -31,6 +31,15 @@ Produtos Vendidos
                                 <label for="data_fim" class="form-label">Data Fim</label>
                                 <input type="date" name="data_fim" id="data_fim" class="form-control" value="{{ request.GET.data_fim }}" placeholder="Data Venda">
                             </div>
+                            <div class="col-md-12">
+                                <label for="imei" class="form-label">Lojas</label>
+                                <select name="loja" id="loja" class="form-select">
+                                    <option value="">Selecione uma loja</option>
+                                    {% for loja in lojas %}
+                                    <option value="{{ loja.pk }}" {% if loja_selecionada == loja.pk %}selected{% endif %}>{{ loja.nome }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
                         </div>
                         <div class="row g-3 mt-3">
                             <div class="col-md-6 d-flex align-items-end">
@@ -47,6 +56,9 @@ Produtos Vendidos
                                     <th scope="col">Produto</th>
                                     <th scope="col">Imei</th>
                                     <th scope="col">Venda</th>
+                                    {% if user|has_perm:"venda.can_view_all_products_sold" %}
+                                    <th scope="col">Loja</th>
+                                    {% endif %}
                                     <th scope="col">Vendedor</th>
                                     <th scope="col">Ações</th>
                                 </tr>
@@ -58,7 +70,10 @@ Produtos Vendidos
                                     <td>{{ item.produto|title }}</td>
                                     <td>{{ item.imei|default:"-" }}</td>
                                     <td>{{ item.venda }}</td>
-                                    <td>{{ item.venda.vendedor }}</td>
+                                    {% if user|has_perm:"venda.can_view_all_products_sold" %}
+                                    <td>{{ item.venda.loja.nome|title }}</td>
+                                    {% endif %}
+                                    <td>{{ item.venda.vendedor|title }}</td>
                                     <td>
                                         <div class="dropdown">
                                             <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">

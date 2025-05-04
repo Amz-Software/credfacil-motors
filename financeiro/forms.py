@@ -13,7 +13,7 @@ class PagamentoForm(forms.ModelForm):
 class ParcelaForm(forms.ModelForm):
     class Meta:
         model = Parcela
-        fields = '__all__'
+        exclude = ['desconto']
         widgets = {
             'data_vencimento': forms.DateInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
             'valor': forms.TextInput(attrs={ 'class': 'form-control', 'readonly': 'readonly'}),
@@ -21,12 +21,9 @@ class ParcelaForm(forms.ModelForm):
             'tipo_pagamento': forms.Select(attrs={'class': 'form-select'}),
             'pago': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'numero_parcela': forms.NumberInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
-            'desconto': forms.TextInput(attrs={'class': 'form-control money'}),
+            'data_pagamento': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}, format='%Y-%m-%d'),
+            # 'desconto': forms.TextInput(attrs={'class': 'form-control money'}),
         }
-
-    def __init__(self, *args, **kwargs):
-        super(ParcelaForm, self).__init__(*args, **kwargs)
-        self.fields['tipo_pagamento'].queryset = TipoPagamento.objects.filter(loja=self.instance.pagamento.loja)
 
 class GastosAleatoriosForm(forms.ModelForm):
     class Meta:

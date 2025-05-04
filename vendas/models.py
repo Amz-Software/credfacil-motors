@@ -358,6 +358,7 @@ class Venda(Base):
             ('change_status_analise', 'Pode alterar status de análise'),
             ('can_view_all_sales', 'Pode ver todas as vendas'),
             ('can_view_produtos_vendidos', 'Pode ver aba produtos vendidos'),
+            ('can_edit_finished_sale', 'Pode editar venda finalizada'),
         )
 
 
@@ -484,6 +485,10 @@ class ProdutoVenda(Base):
     
     class Meta:
         verbose_name_plural = 'Produtos Vendas'
+        ordering = ['-id']
+        permissions = (
+            ('can_view_all_products_sold', 'Pode ver todos os produtos vendidos'),
+        )
         
 
 class Pagamento(Base):
@@ -530,6 +535,7 @@ class Parcela(Base):
     valor_pago = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, default=0)
     tipo_pagamento = models.ForeignKey('vendas.TipoPagamento', on_delete=models.PROTECT, related_name='parcelas_tipo_pagamento', null=True, blank=True)
     desconto = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, default=0)
+    data_pagamento = models.DateField(null=True, blank=True)
     data_vencimento = models.DateField()
     pago = models.BooleanField(default=False)
 

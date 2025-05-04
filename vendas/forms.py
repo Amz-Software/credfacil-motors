@@ -75,9 +75,34 @@ class ClienteForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        user = kwargs.pop('user', None)
         for name, field in self.fields.items():
             if name not in ['email']:
                 field.required = True
+                
+        if self.instance and self.instance.pk:
+            if user and not user.has_perm('vendas.can_edit_finished_sale'):
+                if not self.instance.analise_credito.status == 'EA':
+                    self.fields['nome'].disabled = True
+                    self.fields['telefone'].disabled = True
+                    self.fields['cpf'].disabled = True
+                    self.fields['nascimento'].disabled = True
+                    self.fields['rg'].disabled = True
+                    self.fields['cep'].disabled = True
+                    self.fields['bairro'].disabled = True
+                    self.fields['endereco'].disabled = True
+                    self.fields['cidade'].disabled = True
+            
+            if user and not user.has_perm('vendas.change_status_analise'):
+                self.fields['nome'].disabled = True
+                self.fields['telefone'].disabled = True
+                self.fields['cpf'].disabled = True
+                self.fields['nascimento'].disabled = True
+                self.fields['rg'].disabled = True
+                self.fields['cep'].disabled = True
+                self.fields['bairro'].disabled = True
+                self.fields['endereco'].disabled = True
+                self.fields['cidade'].disabled = True
 
 class ContatoAdicionalForm(forms.ModelForm):
     class Meta:
@@ -89,6 +114,26 @@ class ContatoAdicionalForm(forms.ModelForm):
             'contato': forms.TextInput(attrs={'class': 'form-control'}),
             'endereco_adicional': forms.TextInput(attrs={'class': 'form-control'}),
         }
+        
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        user = kwargs.pop('user', None)
+        for name, field in self.fields.items():
+            if name not in ['email']:
+                field.required = True
+                
+        if self.instance and self.instance.pk:
+            if user and not user.has_perm('vendas.change_status_analise'):
+                self.fields['nome_adicional'].disabled = True
+                self.fields['contato'].disabled = True
+                self.fields['endereco_adicional'].disabled = True
+                
+            if user and not user.has_perm('vendas.can_edit_finished_sale'):
+                if not self.instance.cliente.analise_credito.status == 'EA':
+                    self.fields['nome_adicional'].disabled = True
+                    self.fields['contato'].disabled = True
+                    self.fields['endereco_adicional'].disabled = True
         
 
 class AnaliseCreditoClienteForm(forms.ModelForm):
@@ -122,6 +167,14 @@ class AnaliseCreditoClienteForm(forms.ModelForm):
                 # self.fields['imei'].disabled = True
                 self.fields['numero_parcelas'].disabled = True
                 self.fields['data_pagamento'].disabled = True
+            
+            if user and not user.has_perm('vendas.can_edit_finished_sale'):
+                if not self.instance.cliente.analise_credito.status == 'EA':
+                    self.fields['produto'].disabled = True
+                    # self.fields['imei'].disabled = True
+                    self.fields['numero_parcelas'].disabled = True
+                    self.fields['data_pagamento'].disabled = True
+                    self.fields['observacao'].disabled = True
 
 
 class EnderecoForm(forms.ModelForm):
@@ -194,6 +247,13 @@ class ComprovantesClienteForm(forms.ModelForm):
         for name, field in self.fields.items():
             if name not in exceptions:
                 field.required = True
+        
+        if self.instance and self.instance.pk:
+            if user and not user.has_perm('vendas.change_status_analise'):
+                self.fields['documento_identificacao_frente'].disabled = True
+                self.fields['documento_identificacao_verso'].disabled = True
+                self.fields['comprovante_residencia'].disabled = True
+                self.fields['consulta_serasa'].disabled = True
 
 
 

@@ -326,8 +326,8 @@ class ClienteCreateView(PermissionRequiredMixin, CreateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        context['form_cliente'] = kwargs.get('form_cliente', ClienteForm())
-        context['form_adicional'] = kwargs.get('form_adicional', ContatoAdicionalForm())
+        context['form_cliente'] = kwargs.get('form_cliente', ClienteForm(user=self.request.user))
+        context['form_adicional'] = kwargs.get('form_adicional', ContatoAdicionalForm(user=self.request.user))
         context['form_comprovantes'] = kwargs.get('form_comprovantes', ComprovantesClienteForm(user=self.request.user))
         context['form_analise_credito'] = kwargs.get('form_analise_credito', AnaliseCreditoClienteForm(user=self.request.user))
         
@@ -348,8 +348,8 @@ class ClienteCreateView(PermissionRequiredMixin, CreateView):
     def post(self, request, *args, **kwargs):
         self.object = None
 
-        form_cliente = ClienteForm(request.POST)
-        form_adicional = ContatoAdicionalForm(request.POST)
+        form_cliente = ClienteForm(request.POST, user=request.user)
+        form_adicional = ContatoAdicionalForm(request.POST, user=request.user)
         form_comprovantes = ComprovantesClienteForm(request.POST, request.FILES, user=request.user)
         form_analise_credito = AnaliseCreditoClienteForm(request.POST, user=request.user)
 
@@ -420,7 +420,7 @@ class ClienteUpdateView(PermissionRequiredMixin, UpdateView):
         context = super().get_context_data(**kwargs)
         cliente = self.get_object()
 
-        context['form_cliente'] = kwargs.get('form_cliente', ClienteForm(instance=cliente))
+        context['form_cliente'] = kwargs.get('form_cliente', ClienteForm(instance=cliente, user=self.request.user))
         context['form_adicional'] = kwargs.get('form_adicional', ContatoAdicionalForm(instance=cliente.contato_adicional))
         context['form_comprovantes'] = kwargs.get('form_comprovantes', ComprovantesClienteForm(instance=cliente.comprovantes, user=self.request.user))
         context['form_analise_credito'] = kwargs.get('form_analise_credito', AnaliseCreditoClienteForm(instance=cliente.analise_credito, user=self.request.user))
@@ -430,8 +430,13 @@ class ClienteUpdateView(PermissionRequiredMixin, UpdateView):
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
+        user = request.user
 
-        form_cliente = ClienteForm(request.POST, instance=self.object)
+        if not user.has_perm('vendas.can_edit_finished_sale') and not self.object.analise_credito.status == 'EA':
+            messages.warning(request, "❌ Somente clientes com análise de crédito em andamento podem ser editados.")
+            return redirect(self.success_url)
+
+        form_cliente = ClienteForm(request.POST, instance=self.object, user=user)
         form_adicional = ContatoAdicionalForm(request.POST, instance=self.object.contato_adicional)
         form_comprovantes = ComprovantesClienteForm(request.POST, request.FILES, instance=self.object.comprovantes, user=request.user)
         form_analise_credito = AnaliseCreditoClienteForm(request.POST, instance=self.object.analise_credito, user=request.user)
@@ -524,6 +529,7 @@ def criar_parcelas(pagamento):
 
 
 @transaction.atomic
+@permission_required('vendas.add_venda', raise_exception=True)
 def gerar_venda(request, cliente_id):
     if request.method == 'POST':
         cliente = get_object_or_404(Cliente, id=cliente_id)
@@ -656,8 +662,12 @@ def gerar_venda(request, cliente_id):
 
 @permission_required('vendas.change_status_analise', raise_exception=True)
 def aprovar_analise_credito(request, id):
+    user = request.user
     try:
         analise = AnaliseCreditoCliente.objects.get(id=id)
+        if not analise.status == 'EA' and user.has_perm('vendas.can_edit_finished_sale'):
+            messages.error(request, 'Somente soliticitações em análise podem ser aprovadas')
+            return redirect('vendas:cliente_list')
         analise.aprovar(user=request.user)
         analise.modificado_por = request.user
         analise.modificado_em = timezone.now()
@@ -671,8 +681,12 @@ def aprovar_analise_credito(request, id):
 
 @permission_required('vendas.change_analisecreditocliente', raise_exception=True)
 def cancelar_analise_credito(request, id):
+    user = request.user
     try:
         analise = AnaliseCreditoCliente.objects.get(id=id)
+        if not analise.status == 'EA' and user.has_perm('vendas.can_edit_finished_sale'):
+            messages.error(request, 'Somente solicitações em análise podem ser canceladas')
+            return redirect('vendas:cliente_list')
         analise.cancelar()
         analise.modificado_por = request.user
         analise.modificado_em = timezone.now()
@@ -685,8 +699,12 @@ def cancelar_analise_credito(request, id):
 
 @permission_required('vendas.change_status_analise', raise_exception=True)
 def reprovar_analise_credito(request, id):
+    user = request.user
     try:
         analise = AnaliseCreditoCliente.objects.get(id=id)
+        if not analise.status == 'EA' and user.has_perm('vendas.can_edit_finished_sale'):
+            messages.error(request, 'Somente solicitações em análise podem ser reprovadas')
+            return redirect('vendas:cliente_list')
         analise.reprovar()
         analise.modificado_por = request.user
         analise.modificado_em = timezone.now()
@@ -697,14 +715,12 @@ def reprovar_analise_credito(request, id):
 
     return redirect('vendas:cliente_list')
     
-    
-
 
 def cliente_editar_view(request):
     cliente_id = request.GET.get('cliente_id')
     cliente = get_object_or_404(Cliente, id=cliente_id)
     cliente.nascimento = cliente.nascimento.strftime('%Y-%m-%d')
-    form_cliente = ClienteForm(instance=cliente)
+    form_cliente = ClienteForm(instance=cliente, user=request.user)
     form_adicional = ContatoAdicionalForm(instance=cliente.contato_adicional)
     form_comprovantes = ComprovantesClienteForm(instance=cliente.comprovantes, user=request.user)
     
@@ -725,6 +741,10 @@ class VendaListView(BaseView, PermissionRequiredMixin, ListView):
     def get_queryset(self):
         query = Venda.objects.all()
         data_filter = self.request.GET.get('search')
+        loja = self.request.GET.get('loja_id')
+        
+        if loja:
+            query = query.filter(loja__id=loja)
         if data_filter:
             return query.filter(data_venda=data_filter)
         
@@ -733,6 +753,13 @@ class VendaListView(BaseView, PermissionRequiredMixin, ListView):
             query = query.filter(loja_id=loja_id)
         
         return query.order_by('-criado_em')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        loja_id = self.request.session.get('loja_id')
+        context['lojas'] = Loja.objects.all()
+        context['loja_selecionada'] = loja_id
+        return context
 
 class VendaCreateView(PermissionRequiredMixin, CreateView):
     model = Venda
@@ -1545,12 +1572,22 @@ class ProdutoVendidoListView(PermissionRequiredMixin, ListView):
     
     def get_queryset(self):
         query = super().get_queryset()
+        user = self.request.user
         nome = self.request.GET.get('nome')
         imei = self.request.GET.get('imei')
         data = self.request.GET.get('data')
         data_fim = self.request.GET.get('data_fim')
-        loja_id = self.request.session.get('loja_id')
-        loja = Loja.objects.get(id=loja_id)
+        loja = self.request.GET.get('loja')
+        
+        if loja and user.has_perm('vendas.can_view_all_products_sold'):
+            loja_id = loja
+        elif user.has_perm('vendas.can_view_all_products_sold'):
+            loja_id = None
+        else:
+            loja_id = self.request.session.get('loja_id')
+            
+        if loja_id:
+            loja = Loja.objects.get(id=loja_id)
 
         if nome:
             query = query.filter(produto__nome__icontains=nome)
@@ -1558,8 +1595,10 @@ class ProdutoVendidoListView(PermissionRequiredMixin, ListView):
             query = query.filter(imei__icontains=imei)
         if data and data_fim:
             query = query.filter(venda__data_venda__range=[data, data_fim])
+        if loja:
+            query = query.filter(venda__loja=loja)
         
-        return query.filter(venda__loja=loja).order_by('-venda__data_venda')
+        return query.order_by('-venda__data_venda')
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -1567,4 +1606,7 @@ class ProdutoVendidoListView(PermissionRequiredMixin, ListView):
         context['imei'] = self.request.GET.get('imei')
         context['data'] = self.request.GET.get('data')
         context['data_fim'] = self.request.GET.get('data_fim')
+        context['loja'] = self.request.GET.get('loja')
+        
+        context['lojas'] = Loja.objects.all()
         return context

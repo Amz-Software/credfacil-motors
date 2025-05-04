@@ -30,6 +30,9 @@ Contas a Receber
                         <div class="col-md-4">
                             <h5>Parcelas: {{ conta_a_receber.parcelas }}</h5>
                         </div>
+                        <div class="col-md-4">
+                            <h5>Produto Vendido: {{ conta_a_receber.venda.itens_venda.first.produto.nome|title }}</h5>
+                        </div>
                     </div>
                     <div class="table-responsive">
                         <form action="" method="post">
@@ -39,8 +42,8 @@ Contas a Receber
                             <thead>
                                 <tr>
                                     <th scope="col">Número da Parcela</th>
+                                    <th scope="col">Data do Pagamento</th>
                                     <th scope="col">Valor</th>
-                                    <th scope="col">Desconto</th>
                                     <th scope="col">Valor Pago</th>
                                     <th scope="col">Valor Restante</th>
                                     <th scope="col">Tipo de Pagamento</th>
@@ -57,8 +60,8 @@ Contas a Receber
                                 {% endif %}
                                     {{ parcela.id }}
                                     <td>{{ parcela.numero_parcela }}</td>
+                                    <td>{{ parcela.data_pagamento }}</td>
                                     <td>{{ parcela.valor }}</td>
-                                    <td>{{ parcela.desconto }}</td>
                                     <td>{{ parcela.valor_pago }}</td>
                                     <td><input type="text" class="form-control valor-restante" disabled></td>
                                     <td>{{ parcela.tipo_pagamento }}</td>
@@ -105,35 +108,33 @@ $(document).ready(function() {
         const row = $(this).closest('tr');
         const valorInput = row.find('[name$="-valor"]');
         const valorPagoInput = row.find('[name$="-valor_pago"]');
-        const valorDescontoInput = row.find('[name$="-desconto"]');
         const valorRestanteInput = $(this);
 
-        if (valorInput && valorPagoInput && valorDescontoInput && valorRestanteInput) {
+        if (valorInput && valorPagoInput && valorRestanteInput) {
             const valor = parseFloat(valorInput.val());
             let valorPago = obterValorSemMascara(valorPagoInput)
-            let desconto = obterValorSemMascara(valorDescontoInput)
 
-            const valorRestante = valor - valorPago - desconto;
+            const valorRestante = valor - valorPago;
             valorRestanteInput.val(valorRestante.toFixed(2))
         }
     });
 
-    $('input[name$="-valor"], input[name$="-valor_pago"], input[name$="-desconto"]').on('input', function() {
+    $('input[name$="-valor"], input[name$="-valor_pago"]').on('input', function() {
         const row = $(this).closest('tr');
         const valorInput = row.find('[name$="-valor"]');
         const valorPagoInput = row.find('[name$="-valor_pago"]');
-        const valorDescontoInput = row.find('[name$="-desconto"]');
         const valorRestanteInput = row.find('.valor-restante');
 
-        if (valorInput && valorPagoInput && valorDescontoInput) {
+        if (valorInput && valorPagoInput) {
             const valor = parseFloat(valorInput.val());
             let valorPago = obterValorSemMascara(valorPagoInput)
-            let desconto = obterValorSemMascara(valorDescontoInput)
 
-            const valorRestante = valor - valorPago - desconto;
+            const valorRestante = valor - valorPago;
             valorRestanteInput.val(valorRestante.toFixed(2))
         }
     });
 });
+
+
 </script>
 {% endblock %}

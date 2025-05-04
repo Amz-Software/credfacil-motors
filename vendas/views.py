@@ -556,6 +556,10 @@ def gerar_venda(request, cliente_id):
         if analise_credito.status != 'A':
             messages.error(request, "❌ Análise de crédito não aprovada.")
             return redirect('vendas:cliente_list')
+        
+        if not analise_credito.imei:
+            messages.error(request, "❌ Nenhum IMEI associado à análise de crédito.")
+            return redirect('vendas:cliente_list')
 
         if cliente.analise_credito.venda:
             messages.error(request, "❌ Essa solicitação já foi convertida em venda.")

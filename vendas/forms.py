@@ -73,7 +73,8 @@ class ClienteForm(forms.ModelForm):
             'cidade': 'Cidade*',
         }
 
-    def __init__(self,user = None, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
         for name, field in self.fields.items():
             if name not in ['email']:
@@ -105,6 +106,7 @@ class ClienteForm(forms.ModelForm):
                 self.fields['endereco'].disabled = True
                 self.fields['cidade'].disabled = True
 
+
 class ContatoAdicionalForm(forms.ModelForm):
     class Meta:
         model = ContatoAdicional
@@ -117,8 +119,9 @@ class ContatoAdicionalForm(forms.ModelForm):
         }
         
     
-    def __init__(self,user = None, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        user = kwargs.pop('user', None)
         for name, field in self.fields.items():
             if name not in ['email']:
                 field.required = True
@@ -156,7 +159,8 @@ class AnaliseCreditoClienteForm(forms.ModelForm):
             'observacao': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }
 
-    def __init__(self,user = None, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
         
         if self.instance and self.instance.pk:
@@ -175,20 +179,6 @@ class AnaliseCreditoClienteForm(forms.ModelForm):
                     self.fields['data_pagamento'].disabled = True
                     self.fields['observacao'].disabled = True
 
-
-class EnderecoForm(forms.ModelForm):
-    class Meta:
-        model = Endereco
-        fields = '__all__'
-        exclude = ['loja']
-        widgets = {
-            'cep': forms.TextInput(attrs={'class': 'form-control'}),
-            'bairro': forms.TextInput(attrs={'class': 'form-control'}),
-            'cidade': forms.TextInput(attrs={'class': 'form-control'}),
-            'endereco': forms.TextInput(attrs={'class': 'form-control'}),
-            'numero': forms.TextInput(attrs={'class': 'form-control'}),
-            'complemento': forms.TextInput(attrs={'class': 'form-control'}),
-        }
 
 
 class ComprovantesClienteForm(forms.ModelForm):
@@ -216,7 +206,8 @@ class ComprovantesClienteForm(forms.ModelForm):
             'consulta_serasa_analise': 'Análise Consulta Serasa',
         }
 
-    def __init__(self, *args, user=None, **kwargs):
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
 
         # 1) Se não tiver permissão, remove todos os campos que terminam em "_analise"
@@ -261,6 +252,20 @@ class ComprovantesClienteForm(forms.ModelForm):
                 self.fields['comprovante_residencia'].disabled = True
                 self.fields['consulta_serasa'].disabled = True
             
+
+class EnderecoForm(forms.ModelForm):
+    class Meta:
+        model = Endereco
+        fields = '__all__'
+        exclude = ['loja']
+        widgets = {
+            'cep': forms.TextInput(attrs={'class': 'form-control'}),
+            'bairro': forms.TextInput(attrs={'class': 'form-control'}),
+            'cidade': forms.TextInput(attrs={'class': 'form-control'}),
+            'endereco': forms.TextInput(attrs={'class': 'form-control'}),
+            'numero': forms.TextInput(attrs={'class': 'form-control'}),
+            'complemento': forms.TextInput(attrs={'class': 'form-control'}),
+        }
 
 
 

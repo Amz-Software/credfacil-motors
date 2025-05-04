@@ -304,8 +304,8 @@ class Cliente(Base):
     endereco = models.CharField(max_length=200)
     bairro = models.CharField(max_length=100)
     cidade = models.CharField(max_length=100)
-    comprovantes = models.ForeignKey('vendas.ComprovantesCliente', on_delete=models.PROTECT, related_name='clientes')
-    contato_adicional = models.ForeignKey('vendas.ContatoAdicional', on_delete=models.PROTECT, related_name='clientes', null=True, blank=True)
+    comprovantes = models.OneToOneField('vendas.ComprovantesCliente', on_delete=models.PROTECT, related_name='cliente')
+    contato_adicional = models.OneToOneField('vendas.ContatoAdicional', on_delete=models.PROTECT, related_name='cliente', null=True, blank=True)
     
     def __str__(self):
         return self.nome

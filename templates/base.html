@@ -18,7 +18,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
     <title>
-    {% block title%}{{loja_atual}}{% endblock %}
+    {% block title%}{{loja_atual}} - CredFácil{% endblock %}
     </title>
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="{% static '/images/logo.png' %}" />
@@ -77,7 +77,7 @@
           <div class="app-brand demo d-flex align-items-center justify-content-between">
             <a href="{% url 'vendas:index' %}" class="app-brand-link d-flex align-items-center">
               <span>
-                <img src="{% static 'images/logo.png' %}" style="width: 60px; position: relative; right: 10px;">
+                <img src="{% static 'images/credfacil-logo-preta.png' %}" style="width: 100px; position: relative; right: 30px;">
               </span>
               <span 
                 class="app-brand-text text-truncate fw-medium text-capitalize" 

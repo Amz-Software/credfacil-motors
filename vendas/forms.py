@@ -615,12 +615,6 @@ class RelatorioVendasForm(forms.Form):
         required=False,
         widget=Select2MultipleWidget(attrs={'class': 'form-control'})
     )
-    tipos_venda = forms.ModelMultipleChoiceField(
-        queryset=TipoPagamento.objects.all().distinct(),
-        label='Tipos de Pagamento',
-        required=False,
-        widget=Select2MultipleWidget(attrs={'class': 'form-control'})
-    )
 
     def __init__(self, *args, **kwargs):
         loja = kwargs.pop('loja', None)

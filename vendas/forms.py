@@ -83,6 +83,7 @@ class ClienteForm(forms.ModelForm):
             if user and not user.has_perm('vendas.can_edit_finished_sale'):
                 if not self.instance.analise_credito.status == 'EA':
                     self.fields['nome'].disabled = True
+                    self.fields['email'].disabled = True
                     self.fields['telefone'].disabled = True
                     self.fields['cpf'].disabled = True
                     self.fields['nascimento'].disabled = True
@@ -94,6 +95,7 @@ class ClienteForm(forms.ModelForm):
             
             if user and not user.has_perm('vendas.change_status_analise'):
                 self.fields['nome'].disabled = True
+                self.fields['email'].disabled = True
                 self.fields['telefone'].disabled = True
                 self.fields['cpf'].disabled = True
                 self.fields['nascimento'].disabled = True
@@ -246,11 +248,19 @@ class ComprovantesClienteForm(forms.ModelForm):
                 field.required = True
         
         if self.instance and self.instance.pk:
+            if user and not user.has_perm('vendas.can_edit_finished_sale'):
+                if not self.instance.cliente.analise_credito.status == 'EA':
+                    self.fields['documento_identificacao_frente'].disabled = True
+                    self.fields['documento_identificacao_verso'].disabled = True
+                    self.fields['comprovante_residencia'].disabled = True
+                    self.fields['consulta_serasa'].disabled = True
+                    
             if user and not user.has_perm('vendas.change_status_analise'):
                 self.fields['documento_identificacao_frente'].disabled = True
                 self.fields['documento_identificacao_verso'].disabled = True
                 self.fields['comprovante_residencia'].disabled = True
                 self.fields['consulta_serasa'].disabled = True
+            
 
 
 

@@ -249,7 +249,7 @@ class ComprovantesClienteForm(forms.ModelForm):
         
         if self.instance and self.instance.pk:
             if user and not user.has_perm('vendas.can_edit_finished_sale'):
-                if not self.instance.cliente.analise_credito.status == 'EA':
+                if not self.instance.comprovantes_clientes.analise_credito.status == 'EA':
                     self.fields['documento_identificacao_frente'].disabled = True
                     self.fields['documento_identificacao_verso'].disabled = True
                     self.fields['comprovante_residencia'].disabled = True

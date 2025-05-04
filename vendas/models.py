@@ -1,7 +1,9 @@
 from django.db import models
 from django.utils import timezone
 from datetime import date, timedelta
-
+from django.db.models import F, Sum, DecimalField
+from decimal import Decimal
+from django.utils.functional import cached_property
 
 class Base(models.Model):
     loja = models.ForeignKey('vendas.Loja', on_delete=models.PROTECT, related_name='%(class)s_loja', null=True, blank=True)
@@ -116,22 +118,30 @@ class Loja(Base):
     gerentes = models.ManyToManyField('accounts.User', related_name='lojas_gerenciadas')
     chave_pix = models.CharField(max_length=100, null=True, blank=True)
 
-
     REPASSES_DIAS = (1, 10, 20)
 
-    def get_repasses_status(self, meses_atras=0):
+    def get_repasses_status(self, meses_atras=0, limite_meses=6):
         """
         Retorna:
-          - resultados: lista de dict { 'data': dt, 'qtd_vendas': int, 'valor_total': Decimal, 'feito': bool }
-          - atrasados: quantos destes períodos estão atrasados (dt < hoje, feito=False)
+          - resultados: lista de dict { 
+                'data': dt,
+                'inicio_periodo': date,
+                'fim_periodo': date,
+                'qtd_vendas': int,
+                'valor_total_repasse': Decimal,
+                'feito': bool 
+            }
+          - atrasados: int (quantos períodos estão em atraso)
         """
         hoje = date.today()
         resultados = []
 
-        # Construir queryset base de vendas para eficiência
-        vendas_qs = self.venda_loja.all()  # usando related_name='vendas' em Venda.loja
+        # Limita quantos meses olhar para trás
+        meses_atras = min(meses_atras, limite_meses)
 
-        # Para cada mês de meses_atras até o atual
+        # Queryset base de Vendas
+        vendas_qs = self.venda_loja.all()
+
         for delta in range(meses_atras, -1, -1):
             ano = hoje.year
             mes = hoje.month - delta
@@ -139,47 +149,50 @@ class Loja(Base):
                 mes += 12
                 ano -= 1
 
-            # para cada dia de repasse
             for idx, dia in enumerate(self.REPASSES_DIAS):
-                # 1) data de repasse atual
+                # Data do repasse atual
                 try:
                     dt_atual = date(ano, mes, dia)
                 except ValueError:
                     continue
 
-                # 2) data de repasse anterior (usa o dia anterior na lista, ou volta ao fim do mês anterior)
+                # Data do repasse anterior
                 if idx == 0:
-                    # pega o último dia (20) do mês anterior
-                    prev_mes = mes - 1
-                    prev_ano = ano
+                    prev_mes, prev_ano = (mes-1, ano)
                     if prev_mes == 0:
-                        prev_mes = 12
-                        prev_ano -= 1
+                        prev_mes, prev_ano = 12, ano-1
                     dia_prev = self.REPASSES_DIAS[-1]
                     dt_prev = date(prev_ano, prev_mes, dia_prev)
                 else:
-                    # dia anterior dentro do mesmo mês
                     dt_prev = date(ano, mes, self.REPASSES_DIAS[idx-1])
 
-                # 3) intervalo de vendas: (dt_prev, dt_atual] — excluindo o próprio dia anterior
+                # Intervalo de vendas (exclusive dt_prev, inclusive dt_atual)
                 inicio = dt_prev + timedelta(days=1)
                 fim    = dt_atual
 
-                # só consideramos repasse se houver vendas no período
                 vendas_periodo = vendas_qs.filter(
                     data_venda__date__gte=inicio,
-                    data_venda__date__lte=fim
+                    data_venda__date__lte=fim,
+                    is_deleted=False
                 )
 
                 qtd = vendas_periodo.count()
                 if qtd == 0:
                     continue
 
-                valor = vendas_periodo.aggregate(
-                    total=models.Sum('pagamentos__valor')
-                )['total'] or 0
+                # Soma de valor_repasse_logista * quantidade
+                valor = (
+                    ProdutoVenda.objects
+                    .filter(venda__in=vendas_periodo)
+                    .aggregate(
+                        total=Sum(
+                            F('quantidade') * F('produto__valor_repasse_logista'),
+                            output_field=DecimalField(max_digits=14, decimal_places=2)
+                        )
+                    )['total']
+                    or Decimal('0.00')
+                )
 
-                # 4) checar se o repasse já foi feito nessa data
                 feito = self.repasse.filter(data__date=dt_atual).exists()
 
                 resultados.append({
@@ -187,15 +200,33 @@ class Loja(Base):
                     'inicio_periodo': inicio,
                     'fim_periodo': fim,
                     'qtd_vendas': qtd,
-                    'valor_total': valor,
+                    'valor_total_repasse': valor,
                     'feito': feito,
                 })
 
-        # contar atrasados (data < hoje e not feito)
-        atrasados = sum(1 for rep in resultados if (not rep['feito'] and rep['data'] < hoje))
-
+        atrasados = sum(1 for rep in resultados if not rep['feito'] and rep['data'] < hoje)
         return resultados, atrasados
-
+    
+    
+    def calcular_valor_repasse(self, data_inicio, data_fim):
+        if data_inicio and data_fim:
+            vendas = self.venda_loja.filter(data_venda__date__gte=data_inicio, data_venda__date__lte=data_fim, is_deleted=False)
+            valor_repasse = sum(produto.produto.valor_repasse_logista * produto.quantidade for produto in ProdutoVenda.objects.filter(venda__in=vendas))
+            return valor_repasse
+        
+        elif data_inicio:
+            vendas = self.venda_loja.filter(data_venda__date__gte=data_inicio, is_deleted=False)
+            valor_repasse = sum(produto.produto.valor_repasse_logista * produto.quantidade for produto in ProdutoVenda.objects.filter(venda__in=vendas))
+            return valor_repasse
+        elif data_fim:
+            vendas = self.venda_loja.filter(data_venda__date__lte=data_fim, is_deleted=False)
+            valor_repasse = sum(produto.produto.valor_repasse_logista * produto.quantidade for produto in ProdutoVenda.objects.filter(venda__in=vendas))
+            return valor_repasse
+        else:
+            vendas = self.venda_loja.filter(is_deleted=False)
+            valor_repasse = sum(produto.produto.valor_repasse_logista * produto.quantidade for produto in ProdutoVenda.objects.filter(venda__in=vendas))
+            return valor_repasse
+        
     
     def __str__(self):
         return self.nome
@@ -251,6 +282,10 @@ class Venda(Base):
     
     def lucro_total(self):
         return sum(produto.lucro() for produto in self.itens_venda.all())
+    
+    @cached_property
+    def valor_repasse(self):
+        return sum(produto.produto.valor_repasse_logista * produto.quantidade for produto in self.itens_venda.all())
     
     def __str__(self):
         return f"{self.cliente} - {self.data_venda.strftime('%d/%m/%Y')}"

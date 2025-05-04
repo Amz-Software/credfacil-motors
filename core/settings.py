@@ -26,8 +26,6 @@ if DEBUG:
 # Application definition
 
 INSTALLED_APPS = [
-    'crispy_forms',
-    'crispy_bootstrap5', 
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -40,8 +38,10 @@ INSTALLED_APPS = [
     'produtos.apps.ProdutosConfig',
     'estoque.apps.EstoqueConfig',
     'assistencia.apps.AssistenciaConfig',
-    'django_select2',
+    'crispy_forms',
+    'crispy_bootstrap5', 
     'redis',
+    'django_select2',
 ]
 
 MIDDLEWARE = [
@@ -55,6 +55,20 @@ MIDDLEWARE = [
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "accounts.middleware.LojaMiddleware",
 ]
+
+CACHES = {
+    # … default cache config and others
+    "select2": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/2",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    }
+}
+
+# Tell select2 which cache configuration to use:
+SELECT2_CACHE_BACKEND = "select2"
 
 STORAGES = {
     "default": {

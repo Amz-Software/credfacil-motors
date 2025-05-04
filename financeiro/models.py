@@ -117,3 +117,8 @@ class Repasse(models.Model):
     
     def __str__(self):
         return f'{self.loja} - {self.funcionario} - {self.valor}'
+    
+    class Meta:
+        verbose_name_plural = 'Repasse'
+        verbose_name = 'Repasse'
+        ordering = ['-data']

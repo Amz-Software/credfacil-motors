@@ -1168,6 +1168,7 @@ class LojaUpdateView(PermissionRequiredMixin, UpdateView):
         return reverse_lazy('vendas:loja_detail', kwargs={'pk': self.object.id})
 
     
+from django.db.models import Count, Sum
 from django.utils.dateparse import parse_date
 
 class LojaDetailView(PermissionRequiredMixin, DetailView):
@@ -1179,51 +1180,54 @@ class LojaDetailView(PermissionRequiredMixin, DetailView):
         context = super().get_context_data(**kwargs)
         loja = self.object
 
-        # Contrato JSON
         contrato = loja.contrato
         context['contrato'] = json.dumps(contrato) if contrato else None
 
-        # Repasses (paginados)
-        repasses_qs = Repasse.objects.filter(loja=loja).select_related('criado_por')
+        repasses_qs    = Repasse.objects.filter(loja=loja).select_related('criado_por')
         repasse_paginator = Paginator(repasses_qs, 10)
-        repasse_page = self.request.GET.get('repasse_page')
-        context['repasses'] = repasse_paginator.get_page(repasse_page)
+        context['repasses'] = repasse_paginator.get_page(self.request.GET.get('repasse_page'))
 
-        # Vendas com filtros de data
-        vendas_qs = Venda.objects.filter(loja=loja).select_related('cliente')
+        vendas_qs = Venda.objects.filter(loja=loja, is_deleted=False).select_related('cliente')
         data_inicio = self.request.GET.get('data_inicio')
         data_fim    = self.request.GET.get('data_fim')
-
         if data_inicio:
-            vendas_qs = vendas_qs.filter(data_venda__date__gte=parse_date(data_inicio))
+            di = parse_date(data_inicio)
+            vendas_qs = vendas_qs.filter(data_venda__date__gte=di)
         if data_fim:
-            vendas_qs = vendas_qs.filter(data_venda__date__lte=parse_date(data_fim))
+            df = parse_date(data_fim)
+            vendas_qs = vendas_qs.filter(data_venda__date__lte=df)
 
-        # KPIs
         total_vendas = vendas_qs.aggregate(qtd=Count('id'))['qtd'] or 0
         valor_total  = vendas_qs.aggregate(val=Sum('pagamentos__valor'))['val'] or 0
 
-        # Paginação de vendas
         venda_paginator = Paginator(vendas_qs.order_by('-data_venda'), 10)
-        venda_page = self.request.GET.get('venda_page')
-        context['vendas']     = venda_paginator.get_page(venda_page)
+        context['vendas']      = venda_paginator.get_page(self.request.GET.get('venda_page'))
         context['data_inicio'] = data_inicio
         context['data_fim']    = data_fim
-        
-        
+
         status_list, atrasados = loja.get_repasses_status(meses_atras=1)
+        if data_inicio:
+            status_list = [r for r in status_list if r['data'] >= parse_date(data_inicio)]
+        if data_fim:
+            status_list = [r for r in status_list if r['data'] <= parse_date(data_fim)]
         context['repasse_status_list'] = status_list
-        context['repasse_atrasados'] = atrasados
-        # Formulário de Repasse
+        context['repasse_atrasados']   = sum(1 for r in status_list if not r['feito'] and r['data'] < date.today())
+        context['today'] = date.today()
+
+        di = parse_date(data_inicio) if data_inicio else None
+        df = parse_date(data_fim)    if data_fim    else None
+        context['kpi_valor_repasse'] = loja.calcular_valor_repasse(di, df)
+
         context['repasse_form'] = RepasseForm(initial={'loja': loja})
 
-        # Adiciona o dicionário de KPIs
         context['kpi'] = {
-            'qtd_vendas': total_vendas,
-            'valor_total': valor_total,
+            'qtd_vendas':    total_vendas,
+            'valor_total':   valor_total,
+            'valor_repasse': context['kpi_valor_repasse'],
         }
 
         return context
+
 
 
 def product_information(request):

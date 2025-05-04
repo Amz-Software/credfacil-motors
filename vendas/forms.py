@@ -92,19 +92,6 @@ class ContatoAdicionalForm(forms.ModelForm):
         
 
 class AnaliseCreditoClienteForm(forms.ModelForm):
-    imei = forms.ModelChoiceField(
-    queryset=EstoqueImei.objects.filter(vendido=False),
-    label='imei',
-    required=False,
-    widget=EstoqueImeiSelectWidget(
-        max_results=10,
-        attrs={
-            'class': 'form-control',
-            'data-minimum-input-length': '0',
-            'data-placeholder': 'Selecione um IMEI',
-            'data-allow-clear': 'true',
-        }
-    ))
     class Meta:
         model = AnaliseCreditoCliente
         fields = ['produto','data_pagamento','numero_parcelas', 'imei', 'observacao']
@@ -112,6 +99,15 @@ class AnaliseCreditoClienteForm(forms.ModelForm):
             'produto': Select2Widget(attrs={'class': 'form-control'}),
             'data_pagamento': forms.Select(attrs={'class': 'form-control'}),
             'numero_parcelas': forms.Select(attrs={'class': 'form-control'}),
+            'imei': EstoqueImeiSelectWidget(
+                max_results=10,
+                attrs={
+                    'class': 'form-control',
+                    'data-minimum-input-length': '0',
+                    'data-placeholder': 'Selecione um IMEI',
+                    'data-allow-clear': 'true',
+                }
+            ),
             'observacao': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }
 

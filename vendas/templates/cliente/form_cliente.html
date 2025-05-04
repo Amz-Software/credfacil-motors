@@ -2,8 +2,8 @@
 {% load static iam_tags l10n %}
 
 {% block extra_head %}
+  {{ form_analise_credito.media.css }}
   <style>
-    /* Sticky footer com botões de ação */
     .card-footer {
       position: sticky;
       bottom: 0;
@@ -166,13 +166,13 @@
 {% endblock content %}
 
 {% block extra_scripts %}
-  <script src="{% static 'js/cliente.js' %}"></script>
+  {{ form_analise_credito.media.js }}
   <script>
     // Parcelamento dinâmico
-    const produtos    = JSON.parse('{{ produtos_json|escapejs }}');
-    const selProduto  = document.getElementById('id_produto');
+    const produtos = JSON.parse('{{ produtos_json|escapejs }}');
+    const selProduto = document.getElementById('id_produto');
     const selParcelas = document.getElementById('id_numero_parcelas');
-    const infoDiv     = document.getElementById('parcelas-info');
+    const infoDiv = document.getElementById('parcelas-info');
 
     function formatBRL(v) {
       return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -180,7 +180,7 @@
 
     function atualizaInfo() {
       const prodId = selProduto.value;
-      const np     = selParcelas.value; // '4' ou '6'
+      const np = selParcelas.value;
       if (!prodId || !np) {
         infoDiv.textContent = '';
         return;
@@ -190,7 +190,7 @@
         infoDiv.textContent = '';
         return;
       }
-      const total   = np === '4' ? p.valor4 : p.valor6;
+      const total = np === '4' ? p.valor4 : p.valor6;
       const parcela = total / parseInt(np, 10);
       infoDiv.innerHTML = `
         Valor total (${np}×): <strong>${formatBRL(total)}</strong><br>

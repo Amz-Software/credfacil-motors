@@ -1515,29 +1515,39 @@ class RelatorioVendasView(PermissionRequiredMixin, FormView):
     form_class = RelatorioVendasForm
     permission_required = 'vendas.can_generate_report_sale'
 
-    def form_valid(self, form):
-        print("Dados do formulário: %s" % form.cleaned_data)
-        
-        data_inicial = form.cleaned_data.get('data_inicial')
-        data_final = form.cleaned_data.get('data_final')
-        produtos = form.cleaned_data.get('produtos')
-        vendedores = form.cleaned_data.get('vendedores')
-        lojas = form.cleaned_data.get('lojas')
-        
-        # Se nenhuma loja for selecionada, utiliza a loja da sessão
-        if not lojas:
-            loja_id = self.request.session.get('loja_id')
-            loja = Loja.objects.get(id=loja_id)
-            lojas = [loja]
-        
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['loja'] = self.request.session.get('loja_id')
+        return kwargs
+
+
+from datetime import datetime, timedelta
+
+class FolhaRelatorioVendasView(PermissionRequiredMixin, TemplateView):
+    template_name = 'relatorios/folha_relatorio_vendas.html'
+    permission_required = 'vendas.can_generate_report_sale'
+
+    def get_context_data(self, **kwargs):
+        data_inicial = self.request.GET.get('data_inicial')
+        data_final = self.request.GET.get('data_final')
+        produtos = self.request.GET.get('produtos')
+        vendedores = self.request.GET.get('vendedores')
+        loja = self.request.GET.get('lojas')
+        tipos_venda = self.request.GET.get('tipos_venda')
+
         filtros = {}
 
         # Adiciona filtros para datas, se informadas
         if data_inicial and data_final:
+            data_final = datetime.strptime(data_final, '%Y-%m-%d')
+            data_inicial = datetime.strptime(data_inicial, '%Y-%m-%d')
+            
+            data_final = data_final + timedelta(days=1)
             filtros['data_venda__range'] = [data_inicial, data_final]
         elif data_inicial:
             filtros['data_venda__gte'] = data_inicial
         elif data_final:
+            data_final = datetime.strptime(data_final, '%Y-%m-%d')  # Converte data_final para datetime
             filtros['data_venda__lte'] = data_final
         
         if vendedores:
@@ -1545,33 +1555,50 @@ class RelatorioVendasView(PermissionRequiredMixin, FormView):
 
         if produtos:
             filtros['produtos__in'] = produtos
+            
+        if tipos_venda:
+            filtros['pagamentos__tipo_pagamento__in'] = tipos_venda
 
-        filtros['loja__in'] = lojas
+        if loja:
+            filtros['loja__id'] = loja
+            loja = Loja.objects.filter(id=loja).first()
 
         vendas = Venda.objects.filter(**filtros).distinct()
         
         if not vendas:
             messages.warning(self.request, 'Nenhuma venda encontrada com os filtros informados')
-            return self.form_invalid(form)
+            return redirect('vendas:venda_relatorio')
 
         total_vendas = vendas.count()
-        total_valor = vendas.aggregate(Sum('pagamentos__valor'))['pagamentos__valor__sum']
+        total_valor = 0
+        total_lucro = 0
+        
+        if tipos_venda:
+            for venda in vendas:
+                    for pagamento in venda.pagamentos.filter(tipo_pagamento__in=tipos_venda):
+                        if not pagamento.tipo_pagamento.nao_contabilizar:
+                            total_valor += pagamento.valor
+                            total_lucro += venda.lucro_total()
+        else:
+            total_valor = sum(venda.pagamentos_valor_total for venda in vendas)
+            total_lucro = sum(venda.lucro_total() for venda in vendas)
 
-        context = {
-            'form': form,
-            'vendas': vendas,
-            'total_vendas': total_vendas,
-            'total_valor': total_valor,
-            'data_inicial': data_inicial,
-            'data_final': data_final,
-            'lojas': lojas,
-        }
-        return render(self.request, self.template_name, context)
+        if data_final:
+            data_final = data_final - timedelta(days=1)  # Subtrai o timedelta apenas se data_final for datetime
 
-    def form_invalid(self, form):
-        messages.error(self.request, 'Erro ao gerar relatório')
-        return super().form_invalid(form)
-    
+        context = super().get_context_data(**kwargs)
+
+        context['vendas'] = vendas
+        context['total_vendas'] = total_vendas
+        context['total_valor'] = total_valor
+        context['data_inicial'] = f'{data_inicial.strftime("%d/%m/%Y")}' if data_inicial else None
+        context['data_final'] = f'{data_final.strftime("%d/%m/%Y")}' if data_final else None
+        context['lojas'] = loja
+        context['lucro'] = total_lucro
+
+        return context
+
+        
 class ProdutoVendidoListView(PermissionRequiredMixin, ListView):
     model = ProdutoVenda
     template_name = 'produto_vendido/produto_vendido_list.html'

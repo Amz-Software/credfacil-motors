@@ -64,5 +64,6 @@ urlpatterns = [
     path('gerar-carne/<int:pk>/<str:tipo>/', folha_carne_view, name='gerar_carne'),
     
     path('vendas/relatorio/', RelatorioVendasView.as_view(), name='venda_relatorio'),
+    path('vendas/relatorio/folha/', FolhaRelatorioVendasView.as_view(), name='folha_venda_relatorio'),
     path('produtos-vendidos/', ProdutoVendidoListView.as_view(), name='produto_vendido_list'),
 ]

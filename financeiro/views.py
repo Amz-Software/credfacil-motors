@@ -428,7 +428,7 @@ class ContasAReceberDetailView(PermissionRequiredMixin, DetailView):
     
 class RelatorioSaidaView(BaseView, PermissionRequiredMixin, TemplateView):
     template_name = 'relatorio/relatorio_saida.html'
-    permission_required = 'financeiro.view_caixamensal'
+    permission_required = 'financeiro.can_generate_report_sale'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

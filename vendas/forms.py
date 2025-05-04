@@ -580,7 +580,6 @@ class LojaForm(forms.ModelForm):
             self.save_m2m()
         return instance
     
-    
 class RelatorioVendasForm(forms.Form):
     data_inicial = forms.DateField(
         label='Data Inicial',
@@ -616,3 +615,23 @@ class RelatorioVendasForm(forms.Form):
         required=False,
         widget=Select2MultipleWidget(attrs={'class': 'form-control'})
     )
+    tipos_venda = forms.ModelMultipleChoiceField(
+        queryset=TipoPagamento.objects.all().distinct(),
+        label='Tipos de Pagamento',
+        required=False,
+        widget=Select2MultipleWidget(attrs={'class': 'form-control'})
+    )
+
+    def __init__(self, *args, **kwargs):
+        loja = kwargs.pop('loja', None)
+        print(f'Loja no form: {loja}')
+        super().__init__(*args, **kwargs)
+        if loja:
+            self.fields['produtos'].queryset = Produto.objects.filter(loja=loja)
+            self.fields['cliente'].queryset = Cliente.objects.filter(loja=loja)
+            self.fields['vendedores'].queryset = User.objects.filter(loja=loja)
+            self.fields['lojas'].queryset = Loja.objects.filter(id=loja)
+            self.fields['tipos_venda'].queryset = TipoPagamento.objects.filter(loja=loja)
+
+            self.fields['lojas'].initial = loja
+

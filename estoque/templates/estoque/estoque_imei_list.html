@@ -44,6 +44,9 @@ Estoque
                                     <th scope="col" class="text-center">IMEI</th>
                                     <th scope="col" class="text-end">Vendido</th>
                                     <th scope="col" class="text-end">Preço de Venda (R$)</th>
+                                    {% if user|has_perm:"estoque.can_view_all_imei" %}
+                                    <th scope="col" class="text-end">Loja</th>
+                                    {% endif %}
                                     <th scope="col" class="text-center">Ações</th>
                                 </tr>
                             </thead>
@@ -60,6 +63,11 @@ Estoque
                                         {% endif %}
                                     </td>
                                     <td class="text-end">{{ produto.produto_entrada.venda_unitaria|floatformat:2 }}</td>
+                                    {% if user|has_perm:"estoque.can_view_all_imei" %}
+                                    <td class="text-end">
+                                        {{ produto.produto_entrada.loja.nome|title }}
+                                    </td>
+                                    {% endif %}
                                     <td class="text-center">
                                         <div class="dropdown">
                                             <button type="button" class="btn p-0 dropdown-toggle hide-arrow"

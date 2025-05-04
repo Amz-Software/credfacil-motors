@@ -1,9 +1,10 @@
 from django.db import models
 from django.utils import timezone
 from datetime import date, timedelta
-from django.db.models import F, Sum, DecimalField
 from decimal import Decimal
 from django.utils.functional import cached_property
+from django.db.models import Count, Q, Case, When, Value, IntegerField
+from datetime import date, timedelta
 
 class Base(models.Model):
     loja = models.ForeignKey('vendas.Loja', on_delete=models.PROTECT, related_name='%(class)s_loja', null=True, blank=True)
@@ -102,6 +103,43 @@ class LancamentoCaixa(Base):
         verbose_name_plural = 'Lancamentos Caixa'
 
 
+from django.db.models import Count, Case, When, Value, IntegerField
+from datetime import date
+
+class LojaQuerySet(models.QuerySet):
+    def com_repasse_pendente(self):
+        hoje = date.today()
+        return self.annotate(
+            repasses_pendentes=Count(
+                Case(
+                    When(
+                        repasse__status='pendente',  # Apenas repasses com status 'pendente'
+                        repasse__data__lte=hoje,  # E com data do repasse até hoje
+                        then=Value(1)
+                    ),
+                    default=Value(0),
+                    output_field=IntegerField()
+                )
+            )
+        ).filter(repasses_pendentes__gt=0)  # Apenas lojas com repasses pendentes
+
+    def sem_repasse_pendente(self):
+        hoje = date.today()
+        return self.annotate(
+            repasses_pendentes=Count(
+                Case(
+                    When(
+                        repasse__status='pendente',  # Apenas repasses com status 'pendente'
+                        repasse__data__lte=hoje,  # E com data do repasse até hoje
+                        then=Value(1)
+                    ),
+                    default=Value(0),
+                    output_field=IntegerField()
+                )
+            )
+        ).filter(repasses_pendentes=0)  # Apenas lojas sem repasses pendentes
+
+
 class Loja(Base):
     nome = models.CharField(max_length=100)
     cnpj = models.CharField(max_length=14, null=True, blank=True)
@@ -117,22 +155,12 @@ class Loja(Base):
     usuarios = models.ManyToManyField('accounts.User', related_name='lojas')
     gerentes = models.ManyToManyField('accounts.User', related_name='lojas_gerenciadas')
     chave_pix = models.CharField(max_length=100, null=True, blank=True)
+    objects = LojaQuerySet.as_manager()
+
 
     REPASSES_DIAS = (1, 10, 20)
 
     def get_repasses_status(self, meses_atras=0, limite_meses=6):
-        """
-        Retorna:
-          - resultados: lista de dict { 
-                'data': dt,
-                'inicio_periodo': date,
-                'fim_periodo': date,
-                'qtd_vendas': int,
-                'valor_total_repasse': Decimal,
-                'feito': bool 
-            }
-          - atrasados: int (quantos períodos estão em atraso)
-        """
         hoje = date.today()
         resultados = []
 
@@ -180,20 +208,25 @@ class Loja(Base):
                 if qtd == 0:
                     continue
 
-                # Soma de valor_repasse_logista * quantidade
-                valor = (
-                    ProdutoVenda.objects
-                    .filter(venda__in=vendas_periodo)
-                    .aggregate(
-                        total=Sum(
-                            F('quantidade') * F('produto__valor_repasse_logista'),
-                            output_field=DecimalField(max_digits=14, decimal_places=2)
-                        )
-                    )['total']
-                    or Decimal('0.00')
-                )
+                # Soma de valor_repasse_logista de cada venda
+                valor = Decimal('0.00')
+                for venda in vendas_periodo:
+                    valor_repasse = venda.repasse_logista or sum(
+                        produto.produto.valor_repasse_logista * produto.quantidade
+                        for produto in ProdutoVenda.objects.filter(venda=venda)
+                    )
+                    valor += valor_repasse
 
                 feito = self.repasse.filter(data__date=dt_atual).exists()
+
+                # Verifica se o valor do repasse é menor que o calculado
+                if feito:
+                    repasses = self.repasse.filter(data__date=dt_atual)
+                    for repasse in repasses:
+                        if repasse.valor < valor:
+                            # Se o valor do repasse for menor que o calculado, marca como parcial
+                            repasse.status = 'parcial'
+                            repasse.save()
 
                 resultados.append({
                     'data': dt_atual,
@@ -206,33 +239,59 @@ class Loja(Base):
 
         atrasados = sum(1 for rep in resultados if not rep['feito'] and rep['data'] < hoje)
         return resultados, atrasados
-    
-    
+
+        
     def calcular_valor_repasse(self, data_inicio, data_fim):
         if data_inicio and data_fim:
             vendas = self.venda_loja.filter(data_venda__date__gte=data_inicio, data_venda__date__lte=data_fim, is_deleted=False)
-            valor_repasse = sum(produto.produto.valor_repasse_logista * produto.quantidade for produto in ProdutoVenda.objects.filter(venda__in=vendas))
+            valor_repasse = sum(
+                venda.repasse_logista if venda.repasse_logista else sum(
+                    produto.produto.valor_repasse_logista * produto.quantidade
+                    for produto in ProdutoVenda.objects.filter(venda=venda)
+                )
+                for venda in vendas
+            )
             return valor_repasse
-        
+
         elif data_inicio:
             vendas = self.venda_loja.filter(data_venda__date__gte=data_inicio, is_deleted=False)
-            valor_repasse = sum(produto.produto.valor_repasse_logista * produto.quantidade for produto in ProdutoVenda.objects.filter(venda__in=vendas))
+            valor_repasse = sum(
+                venda.repasse_logista if venda.repasse_logista else sum(
+                    produto.produto.valor_repasse_logista * produto.quantidade
+                    for produto in ProdutoVenda.objects.filter(venda=venda)
+                )
+                for venda in vendas
+            )
             return valor_repasse
+
         elif data_fim:
             vendas = self.venda_loja.filter(data_venda__date__lte=data_fim, is_deleted=False)
-            valor_repasse = sum(produto.produto.valor_repasse_logista * produto.quantidade for produto in ProdutoVenda.objects.filter(venda__in=vendas))
+            valor_repasse = sum(
+                venda.repasse_logista if venda.repasse_logista else sum(
+                    produto.produto.valor_repasse_logista * produto.quantidade
+                    for produto in ProdutoVenda.objects.filter(venda=venda)
+                )
+                for venda in vendas
+            )
             return valor_repasse
+
         else:
             vendas = self.venda_loja.filter(is_deleted=False)
-            valor_repasse = sum(produto.produto.valor_repasse_logista * produto.quantidade for produto in ProdutoVenda.objects.filter(venda__in=vendas))
+            valor_repasse = sum(
+                venda.repasse_logista if venda.repasse_logista else sum(
+                    produto.produto.valor_repasse_logista * produto.quantidade
+                    for produto in ProdutoVenda.objects.filter(venda=venda)
+                )
+                for venda in vendas
+            )
             return valor_repasse
-        
-    
+
     def __str__(self):
         return self.nome
     
     class Meta:
         verbose_name_plural = 'Lojas'
+
 
 class Cliente(Base):
     nome = models.CharField(max_length=100)
@@ -263,6 +322,7 @@ class Venda(Base):
     produtos = models.ManyToManyField('produtos.Produto', through='ProdutoVenda', related_name='vendas')
     caixa = models.ForeignKey('vendas.Caixa', on_delete=models.PROTECT, related_name='vendas')
     observacao = models.TextField(null=True, blank=True)
+    repasse_logista = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     is_deleted = models.BooleanField(default=False)
 
     @property
@@ -328,6 +388,12 @@ class AnaliseCreditoCliente(Base):
     imei = models.ForeignKey('estoque.EstoqueImei', on_delete=models.PROTECT, related_name='analises_credito_imei', null=True, blank=True)
     venda = models.ForeignKey('vendas.Venda', on_delete=models.PROTECT, related_name='analises_credito_venda', null=True, blank=True)
     observacao = models.TextField(null=True, blank=True)
+    
+    def venda_gerada(self):
+        if self.venda:
+            return True
+        return False
+    
     
     def aprovar(self, user):
         self.status = 'A'

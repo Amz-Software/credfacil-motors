@@ -256,20 +256,29 @@ def check_produtos(request, produto_id):
 class EstoqueImeiSearchView(View):
     def get(self, request, *args, **kwargs):
         term = request.GET.get('term', '')
+        user = request.user
         produto_id = request.GET.get('produto_id', None)
         loja_id = self.request.session.get('loja_id')
         loja = get_object_or_404(Loja, pk=loja_id)
         queryset = EstoqueImei.objects.filter(vendido=False).filter(
-            Q(imei__icontains=term) | Q(produto__nome__icontains=term)
-        ).filter(produto__loja=loja)
+            Q(imei__icontains=term) | Q(produto__nome__icontains=term) | Q(loja__nome__icontains=term)
+        )
+        
+        if not user.has_perm('estoque.can_view_all_imei'):
+            queryset = queryset.filter(produto__loja=loja)
+        
         if produto_id:
             queryset = queryset.filter(produto_id=produto_id)
         
         results = []
         for imei in queryset:
+            if not user.has_perm('estoque.can_view_all_imei'):
+                text = f'{imei.imei} - {imei.produto.nome}'
+            else:
+                text = f'{imei.imei} - {imei.produto.nome} | {imei.produto.loja.nome}'
             results.append({
                 'id': imei.id,
-                'text': f'{imei.imei} - {imei.produto.nome}'
+                'text': text
             })
         return JsonResponse({'results': results})
     

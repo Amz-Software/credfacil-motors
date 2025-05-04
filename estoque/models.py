@@ -71,6 +71,9 @@ class EstoqueImei(Base):
         unique_together = ['imei', 'produto', 'loja']
         verbose_name = 'Estoque IMEI'
         verbose_name_plural = 'Estoques IMEI'
+        permissions = (
+            ('can_view_all_imei', 'Pode visualizar todos os IMEI'),
+        )
 
 
 class Estoque(Base):

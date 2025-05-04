@@ -116,7 +116,7 @@ class Repasse(models.Model):
     atualizado_em = models.DateTimeField(auto_now=True)
     
     def __str__(self):
-        return f'{self.loja} - {self.funcionario} - {self.valor}'
+        return f'{self.loja} - {self.valor}'
     
     class Meta:
         verbose_name_plural = 'Repasse'

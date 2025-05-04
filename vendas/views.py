@@ -576,6 +576,7 @@ def gerar_venda(request, cliente_id):
             cliente=cliente,
             vendedor=request.user,
             caixa=caixa,
+            repasse_logista=produto.valor_repasse_logista,
             observacao=analise_credito.observacao,
             criado_por=request.user,
             modificado_por=request.user,
@@ -584,6 +585,7 @@ def gerar_venda(request, cliente_id):
         )
         
         analise_credito.venda = venda
+        analise_credito.save()
         
         if analise_credito.numero_parcelas == '4':
             valor_credfacil = produto.valor_4_vezes
@@ -604,6 +606,8 @@ def gerar_venda(request, cliente_id):
             quantidade=1,
             valor_desconto=0
         )
+        
+        produto_venda.save()
         
         # Marca o IMEI como vendido
         imei.vendido = True
@@ -1124,15 +1128,35 @@ class LojaListView(BaseView, PermissionRequiredMixin, ListView):
     template_name = 'loja/loja_list.html'
     context_object_name = 'lojas'
     permission_required = 'vendas.view_loja'
-    
+
     def get_queryset(self):
         user = self.request.user
         query = user.lojas.all()
         search = self.request.GET.get('search')
+        filter_type = self.request.GET.get('filter')  # Filtro de repasse (pendente ou não)
+
         if search:
-            return query.filter(nome__icontains=search)
+            query = query.filter(nome__icontains=search)
+        
+        # Filtro para repasses pendentes
+        if filter_type == 'pendente':
+            query = query.com_repasse_pendente()  # Lojas com repasses pendentes
+        elif filter_type == 'sem_pendente':
+            query = query.sem_repasse_pendente()  # Lojas sem repasses pendentes
         
         return query.order_by('nome')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Adiciona as informações de repasses para cada loja no contexto
+        for loja in context['lojas']:
+            repasses, atrasados = loja.get_repasses_status()
+            loja.repasses_info = {
+                'repasses': repasses,
+                'atrasados': atrasados
+            }
+        context['filter'] = self.request.GET.get('filter', '')  # Passa o filtro para o template
+        return context
 
 
 class LojaCreateView(PermissionRequiredMixin, CreateView):

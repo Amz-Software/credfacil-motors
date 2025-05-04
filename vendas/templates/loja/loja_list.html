@@ -5,7 +5,6 @@ Lojas
 {% endblock title %}
 
 {% block content %}
-
 <div class="container-xxl mt-4">
   <div class="row">
     <div class="col-12">
@@ -21,6 +20,15 @@ Lojas
                 </a>
               </div>
             </form>
+            <!-- <form action="" method="get" class="d-inline-block me-2" id="filterForm">
+              <div class="input-group">
+                <select name="filter" class="form-control" onchange="this.form.submit()">
+                  <option value="">Filtrar por repasse</option>
+                  <option value="pendente" {% if filter == 'pendente' %}selected{% endif %}>Com repasse pendente</option>
+                  <option value="sem_pendente" {% if filter == 'sem_pendente' %}selected{% endif %}>Sem repasse pendente</option>
+                </select>
+              </div>
+            </form>             -->
             {% if user|has_perm:"vendas.add_loja" %}
             <a href="{% url 'vendas:loja_create' %}" class="btn btn-primary">
               <i class="bx bx-plus me-1"></i> Criar Loja
@@ -37,6 +45,7 @@ Lojas
                   <th scope="col">CNPJ</th>
                   <th scope="col">Telefone</th>
                   <th scope="col">Endereço</th>
+                  <th scope="col">Repasse Pendente</th>
                   <th scope="col">Ações</th>
                 </tr>
               </thead>
@@ -47,6 +56,24 @@ Lojas
                   <td>{{ loja.cnpj|default:"-" }}</td>
                   <td>{{ loja.telefone|default:"-" }}</td>
                   <td>{{ loja.endereco|default:"-" }}</td>
+                  <td>
+                    {% if loja.repasses_info %}
+                      {% if loja.repasses_info.repasses %}
+                        {% if loja.repasses_info.atrasados > 0 %}
+                          <span class="badge bg-danger">Repasse Pendente</span>
+                        {% elif loja.repasses_info.repasses.status == 'parcial' %}
+                          <span class="badge bg-warning">Repasse Parcial</span>
+                        {% else %}
+                          <span class="badge bg-success">Sem Pendências</span>
+                        {% endif %}
+                      {% else %}
+                        <span class="badge bg-secondary">Sem Dados de Repasse</span>
+                      {% endif %}
+                    {% else %}
+                      <span class="badge bg-secondary">Sem Dados de Repasse</span>
+                    {% endif %}
+                  </td>
+                  
                   <td>
                     <div class="dropdown">
                       <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
@@ -69,7 +96,7 @@ Lojas
                 </tr>
                 {% empty %}
                 <tr>
-                  <td colspan="5">Nenhum registro encontrado</td>
+                  <td colspan="6">Nenhum registro encontrado</td>
                 </tr>
                 {% endfor %}
               </tbody>
@@ -81,5 +108,4 @@ Lojas
     </div>
   </div>
 </div>
-
 {% endblock %}

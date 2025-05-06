@@ -17,11 +17,37 @@
             table {
                 width: 100%;
                 margin: 5px auto;
+                page-break-inside: avoid; 
             }
             td {
                 padding: 4px;
             }
+            .header, .content, .footer {
+                page-break-inside: avoid; 
+            }
+            .footer {
+                font-size: 10px;
+                text-align: center;
+                color: #777;
+                margin-top: 10px;
+            }
+            .qr-code {
+                page-break-inside: avoid; 
+            }
+            .header {
+                background-color: #ffcc00;
+                color: #333;
+                font-size: 14px;
+                font-weight: bold;
+                text-align: left;
+                padding: 8px;
+                border-radius: 4px 4px 0 0;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
         }
+        
 
         body {
             font-family: 'Arial', sans-serif;

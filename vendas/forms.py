@@ -45,7 +45,7 @@ class ClienteForm(forms.ModelForm):
     class Meta:
         model = Cliente
         fields = '__all__'
-        exclude = ['comprovantes', 'contato_adicional', 'loja']
+        exclude = ['comprovantes', 'contato_adicional', 'informacao_pessoal','loja']
         widgets = {
             'nome': forms.TextInput(attrs={'class': 'form-control'}),
             'email': forms.EmailInput(attrs={'class': 'form-control'}),
@@ -137,6 +137,37 @@ class ContatoAdicionalForm(forms.ModelForm):
                     self.fields['nome_adicional'].disabled = True
                     self.fields['contato'].disabled = True
                     self.fields['endereco_adicional'].disabled = True
+
+class InformacaoPessoalForm(forms.ModelForm):
+    class Meta:
+        model = InformacaoPessoal
+        fields = '__all__'
+        exclude = ['cliente', 'loja']
+        widgets = {
+            'nome': forms.TextInput(attrs={'class': 'form-control'}),
+            'contato': forms.TextInput(attrs={'class': 'form-control'}),
+            'endereco': forms.TextInput(attrs={'class': 'form-control'}),
+        }
+        
+    
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+        for name, field in self.fields.items():
+            if name not in ['email']:
+                field.required = True
+                
+        if self.instance and self.instance.pk:
+            if user and not user.has_perm('vendas.change_status_analise'):
+                self.fields['nome'].disabled = True
+                self.fields['contato'].disabled = True
+                self.fields['endereco'].disabled = True
+                
+            if user and not user.has_perm('vendas.can_edit_finished_sale'):
+                if not self.instance.cliente.analise_credito.status == 'EA':
+                    self.fields['nome'].disabled = True
+                    self.fields['contato'].disabled = True
+                    self.fields['endereco'].disabled = True
         
 
 class AnaliseCreditoClienteForm(forms.ModelForm):

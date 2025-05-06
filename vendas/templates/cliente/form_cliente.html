@@ -86,10 +86,23 @@
               {% endfor %}
             </div>
 
-            <h3 class="mt-3">Informações Adicionais</h3>
+            <h3 class="mt-3">Informações Comerciais</h3>
             <hr>
             <div class="row">
                 {% for field in form_adicional %}
+                    <div class="col-md-6">
+                        <div class="form-group mt-3">
+                            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            {{ field }}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <h3 class="mt-3">Informações Pessoais</h3>
+            <hr>
+            <div class="row">
+                {% for field in form_informacao %}
                     <div class="col-md-6">
                         <div class="form-group mt-3">
                             <label for="{{ field.id_for_label }}">{{ field.label }}</label>

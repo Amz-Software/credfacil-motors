@@ -12,7 +12,7 @@ from estoque.models import Estoque, EstoqueImei
 from financeiro.forms import RepasseForm
 from financeiro.models import Repasse
 from produtos.models import Produto
-from vendas.forms import AnaliseCreditoClienteForm, ClienteForm, ComprovantesClienteForm, ContatoAdicionalForm, FormaPagamentoEditFormSet, LojaForm, ProdutoVendaEditFormSet, RelatorioVendasForm, VendaForm, ProdutoVendaFormSet, FormaPagamentoFormSet, LancamentoForm, LancamentoCaixaTotalForm
+from vendas.forms import AnaliseCreditoClienteForm, ClienteForm, ComprovantesClienteForm, ContatoAdicionalForm, FormaPagamentoEditFormSet, InformacaoPessoalForm, LojaForm, ProdutoVendaEditFormSet, RelatorioVendasForm, VendaForm, ProdutoVendaFormSet, FormaPagamentoFormSet, LancamentoForm, LancamentoCaixaTotalForm
 from .models import AnaliseCreditoCliente, Caixa, Cliente, Loja, Pagamento, Parcela, ProdutoVenda, TipoPagamento, Venda, LancamentoCaixa, LancamentoCaixaTotal
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.utils import timezone
@@ -334,6 +334,7 @@ class ClienteCreateView(PermissionRequiredMixin, CreateView):
 
         context['form_cliente'] = kwargs.get('form_cliente', ClienteForm(user=self.request.user))
         context['form_adicional'] = kwargs.get('form_adicional', ContatoAdicionalForm(user=self.request.user))
+        context['form_informacao'] = kwargs.get('form_informacao', InformacaoPessoalForm(user=self.request.user))
         context['form_comprovantes'] = kwargs.get('form_comprovantes', ComprovantesClienteForm(user=self.request.user))
         context['form_analise_credito'] = kwargs.get('form_analise_credito', AnaliseCreditoClienteForm(user=self.request.user))
         
@@ -357,12 +358,14 @@ class ClienteCreateView(PermissionRequiredMixin, CreateView):
         # Passando o user para os formulários
         form_cliente = ClienteForm(request.POST, user=request.user)
         form_adicional = ContatoAdicionalForm(request.POST, user=request.user)
+        form_informacao = InformacaoPessoalForm(request.POST, user=request.user)
         form_comprovantes = ComprovantesClienteForm(request.POST, request.FILES, user=request.user)
         form_analise_credito = AnaliseCreditoClienteForm(request.POST, user=request.user)
 
         if all([
             form_cliente.is_valid(),
-            # form_adicional.is_valid(),
+            form_adicional.is_valid(),
+            form_informacao.is_valid(),
             form_comprovantes.is_valid(),
             form_analise_credito.is_valid()
         ]):
@@ -370,6 +373,7 @@ class ClienteCreateView(PermissionRequiredMixin, CreateView):
             # Primeiro salva os comprovantes
             comprovantes = form_comprovantes.save()
             contato_adicional = form_adicional.save()
+            informacao = form_informacao.save()
             loja_id = request.session.get('loja_id')
 
             # Atribui os comprovantes ao form_cliente antes de salvar
@@ -379,6 +383,7 @@ class ClienteCreateView(PermissionRequiredMixin, CreateView):
             cliente.loja = Loja.objects.get(id=loja_id)
             
             cliente.contato_adicional = contato_adicional
+            cliente.informacao_pessoal = informacao
             cliente.comprovantes = comprovantes
             cliente.save()
 
@@ -403,6 +408,7 @@ class ClienteCreateView(PermissionRequiredMixin, CreateView):
             print("❌ Um ou mais formulários são inválidos:")
             print("form_cliente errors:", form_cliente.errors)
             print("form_adicional errors:", form_adicional.errors)
+            print("form_informacao errors:", form_informacao.errors)
             print("form_comprovantes errors:", form_comprovantes.errors)
             print("form_analise_credito errors:", form_analise_credito.errors)
             
@@ -412,6 +418,7 @@ class ClienteCreateView(PermissionRequiredMixin, CreateView):
         context = self.get_context_data(
             form_cliente=form_cliente,
             form_adicional=form_adicional,
+            form_informacao=form_informacao,
             form_comprovantes=form_comprovantes,
             form_analise_credito=form_analise_credito,
         )
@@ -430,7 +437,8 @@ class ClienteUpdateView(PermissionRequiredMixin, UpdateView):
         cliente = self.get_object()
 
         context['form_cliente'] = kwargs.get('form_cliente', ClienteForm(instance=cliente, user=self.request.user))  # Alteração aqui
-        context['form_adicional'] = kwargs.get('form_adicional', ContatoAdicionalForm(instance=cliente.contato_adicional))
+        context['form_adicional'] = kwargs.get('form_adicional', ContatoAdicionalForm(instance=cliente.contato_adicional, user=self.request.user))
+        context['form_informacao'] = kwargs.get('form_informacao', InformacaoPessoalForm(instance=cliente.informacao_pessoal, user=self.request.user))
         context['form_comprovantes'] = kwargs.get('form_comprovantes', ComprovantesClienteForm(instance=cliente.comprovantes, user=self.request.user))
         context['form_analise_credito'] = kwargs.get('form_analise_credito', AnaliseCreditoClienteForm(instance=cliente.analise_credito, user=self.request.user))
         context['cliente_id'] = cliente.id
@@ -446,17 +454,20 @@ class ClienteUpdateView(PermissionRequiredMixin, UpdateView):
             return redirect(self.success_url)
 
         form_cliente = ClienteForm(request.POST, instance=self.object, user=user)
-        form_adicional = ContatoAdicionalForm(request.POST, instance=self.object.contato_adicional)
+        form_adicional = ContatoAdicionalForm(request.POST, instance=self.object.contato_adicional, user=user)
+        form_informacao = InformacaoPessoalForm(request.POST, instance=self.object.informacao_pessoal, user=user)
         form_comprovantes = ComprovantesClienteForm(request.POST, request.FILES, instance=self.object.comprovantes, user=user)
         form_analise_credito = AnaliseCreditoClienteForm(request.POST, instance=self.object.analise_credito, user=request.user)
 
         if all([
             form_cliente.is_valid(),
             form_adicional.is_valid(),
+            form_informacao.is_valid(),
             form_comprovantes.is_valid(),
             form_analise_credito.is_valid()
         ]):
             contato_adicional = form_adicional.save()
+            informacao = form_informacao.save()
             comprovantes = form_comprovantes.save()
             analise_credito = form_analise_credito.save()
 
@@ -1552,7 +1563,6 @@ def folha_carne_view(request, pk, tipo):
             'data_vencimento': datas_vencimento[i]
         })
 
-    # Contexto para o template
     context = {
         'venda': venda,
         'valor_total': valor_total,
@@ -1562,9 +1572,9 @@ def folha_carne_view(request, pk, tipo):
         'endereco_cliente': endereco_cliente,
         'data_atual': localtime(now()).date(),
         'cpf': cpf,
-        'parcelas_info': parcelas_info,  # Passa as informações combinadas para o template
+        'parcelas_info': parcelas_info,
+        'loja': loja,
     }
-
     return render(request, "venda/folha_carne.html", context)
 
 
@@ -1753,3 +1763,52 @@ def gerar_qrcode_pix(request, loja_id):
     response['Content-Disposition'] = 'inline; filename="qrcode_pix.png"'
 
     return response
+
+
+def contrato_view(request, pk):
+    
+    # Busca a venda
+    venda = Venda.objects.get(pk=pk)
+    valor_total = venda.pagamentos_valor_total
+    pagamento_carne = Pagamento.objects.filter(venda=venda, tipo_pagamento__carne=True).first()
+    aparelho = venda.itens_venda.first()
+    imei = aparelho.imei if aparelho else None
+    loja = Loja.objects.get(id=request.session.get('loja_id'))
+    cliente = venda.cliente
+    contrato = loja.contrato
+    contrato = json.dumps(contrato)
+    primeira_parcela = pagamento_carne.data_primeira_parcela if pagamento_carne else None
+    parcelas = pagamento_carne.parcelas if pagamento_carne else 0
+    parcelas_meses = []
+
+    for i in range(parcelas):
+        # somar 1 meses a data de vencimento
+        mes = primeira_parcela.month + i
+        ano = primeira_parcela.year
+        if mes > 12:
+            mes -= 12
+            ano += 1
+        data_vencimento = primeira_parcela.replace(month=mes, year=ano)
+        parcelas_meses.append(data_vencimento.strftime('%d/%m/%Y'))
+
+    ultima_parcela = parcelas_meses[-1] if parcelas_meses else None
+
+    context = {
+        'venda': venda,
+        'valor_total': valor_total,
+        'tipo_pagamento': 'Carnê' if pagamento_carne else 'À vista',
+        'cliente': cliente,
+        'data_atual': localtime(now()).date(),
+        'loja': loja,
+        'contrato': contrato,
+        'aparelho': aparelho,
+        'imei': imei,
+        'valor_parcela': pagamento_carne.valor_parcela if pagamento_carne else None,
+        'quantidade_parcelas': parcelas,
+        'parcelas_meses': parcelas_meses,
+        'primeira_parcela': primeira_parcela.strftime('%d/%m/%Y') if primeira_parcela else None,
+        'ultima_parcela': ultima_parcela,
+
+    }
+
+    return render(request, "venda/contrato.html", context)

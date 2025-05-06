@@ -65,6 +65,7 @@ urlpatterns = [
     
     path('vendas/relatorio/', RelatorioVendasView.as_view(), name='venda_relatorio'),
     path('vendas/relatorio/folha/', FolhaRelatorioVendasView.as_view(), name='folha_venda_relatorio'),
+    path('venda/contrato/<int:pk>/', contrato_view, name='gerar_contrato'),
     path('produtos-vendidos/', ProdutoVendidoListView.as_view(), name='produto_vendido_list'),
     
     path('gerar_qrcode_pix/<int:loja_id>/', gerar_qrcode_pix, name='gerar_qrcode_pix'),

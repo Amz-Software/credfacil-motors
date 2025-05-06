@@ -71,11 +71,11 @@
 <body>
 
 <h2>CONTRATO DE LOCAÇÃO DE CELULAR</h2>
-<p>Este Contrato de Locação de Celular ("Contrato") é celebrado entre: {{loja.nome}}, inscrito no CNPJ {{loja.cnpj}}, com endereço registrado em {{loja.endereco}} referido como "Locador", {{cliente.nome}}, inscrito no CPF {{cliente.cpf}}, REGISTRO GERAL {{cliente.rg}}, com endereço registrado em {{cliente.endereco}} referido como "Locatário".</p>
+<p>Este Contrato de Locação de Celular ("Contrato") é celebrado entre: {{loja.nome|title}}, inscrito no CNPJ {{loja.cnpj|default:"-"}}, com endereço registrado em {{loja.endereco}} referido como "Locador", {{cliente.nome|title}}, inscrito no CPF {{cliente.cpf}}, REGISTRO GERAL {{cliente.rg}}, com endereço registrado em {{cliente.endereco}} referido como "Locatário".</p>
 <p><strong>1. Objeto do Contrato</strong></p>
 <p>O Locador concorda em alugar ao Locatário o seguinte celular:</p>
 <ul>
-    <li>Modelo de Celular: {{aparelho.produto.nome}}</li>
+    <li>Modelo de Celular: {{aparelho.produto.nome|title}}</li>
     <li>Número de Série/IMEI: {{imei}}</li>
 </ul>
 <p><strong>2. Período de Locação</strong></p>
@@ -83,7 +83,7 @@
 <p><strong>3. Taxa de Locação</strong></p>
 <p>O Locatário concorda em pagar uma taxa de locação de R$ {{valor_parcela}} por {{quantidade_parcelas}} MESES durante o período de locação. O pagamento deverá ser efetuado no máximo com 5 dias de atraso de cada parcela para não ocorrer bloqueio.</p>
 <div id="texto_contrato" data-texto="{{contrato}}"></div>
-<p>Locador: {{loja.nome}}<br>
+<p>Locador: {{loja.nome|title}}<br>
 CNPJ: {{loja.cnpj}}<br>
 Locatário: ____________________________________<br>
 CPF: ____________________________________<br>

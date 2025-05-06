@@ -306,6 +306,7 @@ class Cliente(Base):
     cidade = models.CharField(max_length=100)
     comprovantes = models.OneToOneField('vendas.ComprovantesCliente', on_delete=models.PROTECT, related_name='cliente')
     contato_adicional = models.OneToOneField('vendas.ContatoAdicional', on_delete=models.PROTECT, related_name='cliente', null=True, blank=True)
+    informacao_pessoal = models.OneToOneField('vendas.InformacaoPessoal', on_delete=models.PROTECT, related_name='cliente', null=True, blank=True)
     
     def __str__(self):
         return self.nome
@@ -432,6 +433,13 @@ class ContatoAdicional(Base):
     nome_adicional = models.CharField(max_length=100, null=True, blank=True)
     contato = models.CharField(max_length=20, null=True, blank=True)
     endereco_adicional = models.CharField(max_length=200, null=True, blank=True)
+    
+
+class InformacaoPessoal(Base):
+    nome = models.CharField(max_length=100, null=True, blank=True)
+    contato = models.CharField(max_length=20, null=True, blank=True)
+    endereco = models.CharField(max_length=200, null=True, blank=True)
+    
 
 class Endereco(Base):
     cep = models.CharField(max_length=8)

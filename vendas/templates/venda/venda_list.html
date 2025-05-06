@@ -92,12 +92,10 @@ Vendas
                   <i class="bx bx-file
                   me-1"></i> Gerar Carnê
                   </a>
-                  {% if item.carne %}
                   <a class="dropdown-item" href="{% url 'vendas:gerar_contrato' pk=item.pk %}" target="_blank">
                   <i class="bx bx-file
                   me-1"></i> Gerar Contrato
                   </a>
-                  {% endif %}
               </div>
             </div>
           </td>

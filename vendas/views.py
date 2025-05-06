@@ -22,8 +22,14 @@ from django.db.models import Sum
 from django.contrib.auth.decorators import permission_required
 from django.db.models import Count
 from datetime import date, timedelta
-from dateutil.relativedelta import relativedelta
 from django.core.paginator import Paginator
+import base64
+from django.http import HttpResponse
+from pixqrcode import PixQrCode
+from io import BytesIO
+import qrcode
+from dateutil.relativedelta import relativedelta
+
 
 
 logger = logging.getLogger(__name__)
@@ -1469,18 +1475,6 @@ class FolhaProdutoPDFView(PermissionRequiredMixin, View):
         return render(request, 'caixa/folha_produtos.html', context)
 
 
-import base64
-from django.http import HttpResponse
-from django.shortcuts import render, get_object_or_404
-from .models import Venda, Pagamento, Loja
-from pixqrcode import PixQrCode
-from io import BytesIO
-import qrcode
-
-from dateutil.relativedelta import relativedelta
-from django.utils.timezone import localtime
-from datetime import datetime
-
 def folha_carne_view(request, pk, tipo):
     # Busca a venda
     venda = Venda.objects.get(pk=pk)
@@ -1513,7 +1507,7 @@ def folha_carne_view(request, pk, tipo):
         valores_parcelas.append(valor_parcela)
         
         try:
-            loja = Loja.objects.filter(name__icontains="CredFácil").first()
+            loja = Loja.objects.filter(nome__icontains="CredFácil").first()
         except Loja.DoesNotExist:
             messages.error(request, 'Loja CredFácil não encontrada')
             return redirect('vendas:venda_list')

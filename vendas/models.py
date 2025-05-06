@@ -448,17 +448,23 @@ class Endereco(Base):
         verbose_name_plural = 'Informacoes Clientes'
 
 class ComprovantesCliente(Base):
-    documento_identificacao_frente = models.ImageField(upload_to='comprovantes_clientes')
+    documento_identificacao_frente = models.FileField(upload_to='comprovantes_clientes', null=True, blank=True)
     documento_identificacao_frente_analise = models.BooleanField(default=False)
-    documento_identificacao_verso = models.ImageField(upload_to='comprovantes_clientes')
+    
+    documento_identificacao_verso = models.FileField(upload_to='comprovantes_clientes', null=True, blank=True)
     documento_identificacao_verso_analise = models.BooleanField(default=False)
-    comprovante_residencia = models.ImageField(upload_to='comprovantes_clientes')
+    
+    comprovante_residencia = models.FileField(upload_to='comprovantes_clientes', null=True, blank=True)
     comprovante_residencia_analise = models.BooleanField(default=False)
-    consulta_serasa = models.ImageField(upload_to='comprovantes_clientes', null=True, blank=True)
+    
+    consulta_serasa = models.FileField(upload_to='comprovantes_clientes', null=True, blank=True)
     consulta_serasa_analise = models.BooleanField(default=False)
     
     class Meta:
         verbose_name_plural = 'Comprovantes Clientes'
+
+    def __str__(self):
+        return f"Comprovantes para {self.cliente.nome if self.cliente else 'Cliente'}"
 
 class ProdutoVenda(Base):
     produto = models.ForeignKey('produtos.Produto', on_delete=models.PROTECT, related_name='produto_vendas')

@@ -1469,10 +1469,17 @@ class FolhaProdutoPDFView(PermissionRequiredMixin, View):
         return render(request, 'caixa/folha_produtos.html', context)
 
 
-from django.shortcuts import render
-from django.utils.timezone import now
-from .models import Caixa, Venda, LancamentoCaixa
+import base64
+from django.http import HttpResponse
+from django.shortcuts import render, get_object_or_404
+from .models import Venda, Pagamento, Loja
+from pixqrcode import PixQrCode
+from io import BytesIO
+import qrcode
 
+from dateutil.relativedelta import relativedelta
+from django.utils.timezone import localtime
+from datetime import datetime
 
 def folha_carne_view(request, pk, tipo):
     # Busca a venda
@@ -1485,7 +1492,6 @@ def folha_carne_view(request, pk, tipo):
         return redirect('vendas:venda_list')
     
     quantidade_parcelas = pagamento_carne.parcelas
-    valor_parcela = f'{pagamento_carne.valor_parcela:.2f}'
     nome_cliente = venda.cliente.nome.title()
     tipo_pagamento = 'Carnê' if tipo == 'carne' else 'Promissória'
     endereco_cliente = venda.cliente.endereco
@@ -1494,18 +1500,61 @@ def folha_carne_view(request, pk, tipo):
     # Lista de parcelas (1 a quantidade_parcelas)
     parcelas = list(range(1, quantidade_parcelas + 1))
     datas_vencimento = []
+    valores_parcelas = []
+    parcelas_info = []  # Lista para armazenar as informações combinadas (parcela, valor, qr_code)
 
     for i in range(quantidade_parcelas):
-        # somar 1 meses a data de vencimento
-        data_vencimento = pagamento_carne.data_primeira_parcela
-        mes = data_vencimento.month + i
-        ano = data_vencimento.year
-        if mes > 12:
-            mes -= 12
-            ano += 1
-        data_vencimento = data_vencimento.replace(month=mes, year=ano)
+        # Calcular a data de vencimento corretamente
+        data_vencimento = pagamento_carne.data_primeira_parcela + relativedelta(months=i)
         datas_vencimento.append(data_vencimento.strftime('%d/%m/%Y'))
 
+        # Adicionar o valor da parcela
+        valor_parcela = f'{pagamento_carne.valor_parcela:.2f}'
+        valores_parcelas.append(valor_parcela)
+
+        # Buscar a loja com nome "CREDFACIL"
+        loja_id = request.session.get('loja_id')
+        loja = get_object_or_404(Loja, id=loja_id)
+        
+        if not loja.chave_pix:
+            messages.error(request, 'Loja não possui chave Pix cadastrada')
+            return redirect('vendas:venda_list')
+
+        # Gerar o QR Code Pix para a parcela com o valor correspondente
+        chave_pix = loja.chave_pix
+        nome_loja = loja.nome
+        cidade_loja = loja.endereco or "Cidade não especificada"
+
+        # Criando a instância da classe PixQrCode com o valor da parcela
+        pix_qrcode = PixQrCode(
+            name=nome_loja, 
+            key=chave_pix, 
+            city=cidade_loja, 
+            amount=str(valor_parcela)  # O valor precisa ser passado como string
+        )
+
+        # Gerar o código QR Pix
+        qr_code_data = pix_qrcode.generate_code()
+
+        # Gerar a imagem do QR Code
+        qr = qrcode.make(qr_code_data)
+
+        # Salvar o QR Code em memória usando BytesIO
+        buffer = BytesIO()
+        qr.save(buffer, format="PNG")
+        buffer.seek(0)
+
+        # Codificar o QR Code em base64
+        qr_code_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+
+        # Adicionar as informações da parcela, valor e QR Code à lista
+        parcelas_info.append({
+            'parcela': i + 1,
+            'valor_parcela': valor_parcela,
+            'qr_code_base64': qr_code_base64,
+            'chave_pix': chave_pix,
+            'data_vencimento': datas_vencimento[i]
+        })
 
     # Contexto para o template
     context = {
@@ -1513,13 +1562,11 @@ def folha_carne_view(request, pk, tipo):
         'valor_total': valor_total,
         'tipo_pagamento': tipo_pagamento,
         'quantidade_parcelas': quantidade_parcelas,
-        'valor_parcela': valor_parcela,
         'nome_cliente': nome_cliente,
         'endereco_cliente': endereco_cliente,
-        'cpf': cpf,
-        'parcelas': parcelas,  # Envia a lista de parcelas
-        'datas_vencimento': datas_vencimento,  # Envia as datas de vencimento
         'data_atual': localtime(now()).date(),
+        'cpf': cpf,
+        'parcelas_info': parcelas_info,  # Passa as informações combinadas para o template
     }
 
     return render(request, "venda/folha_carne.html", context)
@@ -1661,3 +1708,52 @@ class ProdutoVendidoListView(PermissionRequiredMixin, ListView):
         
         context['lojas'] = Loja.objects.all()
         return context
+
+
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
+from pixqrcode import PixQrCode
+from io import BytesIO
+import qrcode
+from .models import Loja
+
+def gerar_qrcode_pix(request, loja_id):
+    # Obter a loja pelo ID
+    loja = get_object_or_404(Loja, id=loja_id)
+
+    # Verificar se a chave Pix está presente
+    if not loja.chave_pix:
+        return HttpResponse("Chave Pix não encontrada para esta loja.", status=400)
+
+    # Definir o valor fixo para o QR Code (R$10,00)
+    valor = 10.00
+
+    # Definindo a chave Pix da loja
+    chave_pix = loja.chave_pix
+    nome_loja = loja.nome
+    cidade_loja = loja.endereco or "Cidade não especificada"
+
+    # Criando a instância da classe PixQrCode
+    pix_qrcode = PixQrCode(
+        name=nome_loja, 
+        key=chave_pix, 
+        city=cidade_loja, 
+        amount=str(valor)  # O valor precisa ser passado como string
+    )
+
+    # Gerar o código QR Pix
+    qr_code_data = pix_qrcode.generate_code()
+
+    # Gerar a imagem do QR Code
+    qr = qrcode.make(qr_code_data)
+
+    # Salvar o QR Code em memória usando BytesIO
+    buffer = BytesIO()
+    qr.save(buffer, format="PNG")
+    buffer.seek(0)
+
+    # Criar a resposta HTTP com o QR Code gerado
+    response = HttpResponse(buffer, content_type="image/png")
+    response['Content-Disposition'] = 'inline; filename="qrcode_pix.png"'
+
+    return response

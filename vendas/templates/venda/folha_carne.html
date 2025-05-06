@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -7,86 +8,192 @@
     <style>
         @media print {
             * {
-                -webkit-print-color-adjust: exact; /* Para navegadores baseados em Webkit, como o Chrome */
-                print-color-adjust: exact;         /* Para outros navegadores que suportem */
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            body {
+                font-size: 12px;
+            }
+
+            table {
+                width: 100%;
             }
         }
 
         body {
-            font-family: Arial, Helvetica, sans-serif;
+            font-family: 'Arial', sans-serif;
             margin: 0;
             padding: 0;
-            font-size: 12px; /* Reduz o tamanho geral da fonte */
+            background-color: #f9f9f9;
+            font-size: 14px;
+            line-height: 1.5;
         }
+
         table {
             border-collapse: collapse;
-            width: 90%; /* Aumenta a largura da tabela */
-            margin: 10px auto; /* Centraliza a tabela e dá margem em volta */
-            page-break-inside: avoid; /* Evita quebra dentro de uma tabela */
+            width: 100%;
+            margin: 20px auto;
+            background-color: #fff;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            padding: 10px;
         }
+
         td {
-            border: 1px solid #000;
+            border: 1px solid #ddd;
             vertical-align: top;
-            padding: 5px; /* Reduz o espaçamento interno das células */
+            padding: 12px;
         }
+
         .header {
-            background-color: #fff000;
+            background-color: #ffcc00;
+            color: #333;
+            font-size: 18px;
+            font-weight: bold;
+            text-align: left;
+            padding: 15px;
+            border-radius: 8px 8px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header .logo {
+            max-width: 150px;
+            height: auto;
+        }
+
+        .header .info {
+            text-align: right;
+        }
+
+        .header .info p {
+            margin: 5px 0;
+            font-size: 16px;
+            line-height: 1.2;
+        }
+
+        .content {
+            background-color: #f9f9f9;
+            padding: 15px;
+        }
+
+        .content .section {
+            margin-bottom: 20px;
+        }
+
+        .content .section p {
+            margin: 8px 0;
+            font-size: 16px;
+        }
+
+        .qr-code {
+            display: flex;
+            flex-direction: column;
+            justify-content: center; /* Centraliza o conteúdo verticalmente */
+            align-items: center;
+            height: 100%;
+            padding: 20px 0;
+        }
+
+        .qr-code img {
+            max-width: 180px;
+            max-height: 180px;
+        }
+
+        .qr-text {
+            margin-top: 10px;
+            font-size: 14px;
             font-weight: bold;
         }
-        .content {
-            background-color: #fef9c8;
-        }
-        .center {
+
+        .pix-key {
+            font-size: 14px;
+            color: #333;
+            margin-top: 10px;
+            word-wrap: break-word;
             text-align: center;
         }
-        .left {
-            text-align: left;
+
+        .footer {
+            font-size: 12px;
+            text-align: center;
+            color: #777;
+            margin-top: 30px;
         }
+
+        .title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .price {
+            font-size: 22px;
+            font-weight: bold;
+            color: #2d2d2d;
+        }
+
     </style>
 </head>
 <body>
 
-    {% for parcela in datas_vencimento %}
-    <!-- Tabela para cada parcela -->
+    {% for info in parcelas_info %}
     <table>
+        <!-- Cabeçalho -->
         <tr>
-            <td class="header" style="width: 35%;">
-                <p>{{ venda.loja.nome }} | Nº {{ venda.id }}</p>
-                <p>Vencimento: {{ parcela }}</p>
-                <p><strong>R$ {{ valor_parcela }}</strong></p>
-                <p class="center">PARCELA {{ forloop.counter }} DE {{ quantidade_parcelas }}</p>
-                <p class="center">{{nome_cliente}}</p>
-                <p>CPF/CNPJ: {{ cpf }}</p>
-                <p>ENDEREÇO: <strong>{{ endereco_cliente }}</strong></p>
-                <p>VALOR PARCIAL ..........................</p>
+            <td class="header" colspan="2">
+                <img src="{% static 'images/logo-branca-transparente.png' %}" alt="Logo da CredFacil" class="logo">
+                <div class="info">
+                    <p><strong>{{ venda.loja.nome }}</strong> | Nº {{ venda.id }}</p>
+                    <p class="title">Vencimento: {{ info.data_vencimento }}</p>
+                    <p class="price">R$ {{ info.valor_parcela }}</p>
+                    <p>PARCELA {{ info.parcela }} DE {{ quantidade_parcelas }}</p>
+                    <p>{{ nome_cliente }}</p>
+                </div>
             </td>
-            <td class="content">
-                <p>{{ venda.loja.nome }} | Nº {{ venda.id }}</p>
-                <p>Vencimento: {{ parcela }} <strong>R$ {{ valor_parcela }}</strong></p>
-                <p>Ao <strong>{{ nome_cliente }}</strong> pagar <strong>R$ {{ valor_parcela }}</strong> por esta única via de {{ tipo_pagamento }} à <strong>{{ venda.loja.nome }}</strong>, CPF/CNPJ {{ venda.loja.cnpj }}, ou à sua ordem a quantia de {{ valor_parcela|floatformat:2 }} reais, em moeda corrente desse país, pagável em DINHEIRO.</p>
-                <p>EMITENTE: <strong>{{ nome_cliente }}</strong></p>
-                <p>DATA DA EMISSÃO: <strong>{{ data_atual|date:"d/m/Y" }}</strong></p>
-                <p>CPF/CNPJ: <strong>{{ cpf }}</strong></p>
-                <p>ENDEREÇO: <strong>{{ endereco_cliente }}</strong></p>
-                <p>ASS. DO EMITENTE .............................................................</p>
+        </tr>
+        
+        <!-- Conteúdo da Tabela -->
+        <tr>
+            <td class="content" style="width: 60%;">
+                <div class="section">
+                    <p><strong>CPF/CNPJ:</strong> {{ cpf }}</p>
+                    <p><strong>ENDEREÇO:</strong> {{ endereco_cliente }}</p>
+                    <p><strong>VALOR PARCIAL:</strong> ..........................</p>
+                </div>
+                <div class="section">
+                    <p>Ao <strong>{{ nome_cliente }}</strong> pagar <strong>R$ {{ info.valor_parcela }}</strong> por esta única via de {{ tipo_pagamento }} à <strong>{{ venda.loja.nome }}</strong>, CPF/CNPJ {{ venda.loja.cnpj }}, ou à sua ordem a quantia de {{ info.valor_parcela|floatformat:2 }} reais, em moeda corrente desse país, pagável em DINHEIRO.</p>
+                    <p>EMITENTE: <strong>{{ nome_cliente }}</strong></p>
+                    <p>DATA DA EMISSÃO: <strong>{{ data_atual|date:"d/m/Y" }}</strong></p>
+                </div>
+            </td>
+            <td class="qr-code">
+                <p class="qr-text">QR code do pagamento</p>
+                <img src="data:image/png;base64,{{ info.qr_code_base64 }}" alt="QR Code Pix" />
+                <p class="pix-key"><strong>Chave Pix:</strong> {{ info.chave_pix }}</p>
             </td>
         </tr>
     </table>
     {% endfor %}
-    
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.2/html2pdf.bundle.min.js"></script>
-<script>
-    const element = document.body;
-    const opt = {
-        margin: [10, 10, 10, 10],
-        filename: `parcelas.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 3 },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-    };
-    print()
-</script>
+    <div class="footer">
+        <p>Este documento é gerado automaticamente pelo sistema da {{ venda.loja.nome }}</p>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.2/html2pdf.bundle.min.js"></script>
+    <script>
+        const element = document.body;
+        const opt = {
+            margin: [10, 10, 10, 10],
+            filename: `parcelas.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 3 },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        };
+        print();
+    </script>
 
 </body>
 </html>

@@ -58,6 +58,10 @@
                 <label for="id_logo_loja" class="form-label">Logo da Loja</label>
                 <input type="file" class="form-control" id="id_logo_loja" name="logo_loja">
               </div>
+              <div class="col-md-6 mb-3">
+                <label for="id_email" class="form-label">Chave Pix</label>
+                <input type="text" class="form-control" id="id_email" name="chave_pix" value="{{ form.chave_pix.value|default_if_none:'' }}">
+              </div>
             </div>
             <div class="row">
               <div class="col-md-12 mb-3">

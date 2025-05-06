@@ -1511,10 +1511,12 @@ def folha_carne_view(request, pk, tipo):
         # Adicionar o valor da parcela
         valor_parcela = f'{pagamento_carne.valor_parcela:.2f}'
         valores_parcelas.append(valor_parcela)
-
-        # Buscar a loja com nome "CREDFACIL"
-        loja_id = request.session.get('loja_id')
-        loja = get_object_or_404(Loja, id=loja_id)
+        
+        try:
+            loja = Loja.objects.filter(name__icontains="CredFácil").first()
+        except Loja.DoesNotExist:
+            messages.error(request, 'Loja CredFácil não encontrada')
+            return redirect('vendas:venda_list')
         
         if not loja.chave_pix:
             messages.error(request, 'Loja não possui chave Pix cadastrada')

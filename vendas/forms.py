@@ -120,8 +120,8 @@ class ContatoAdicionalForm(forms.ModelForm):
         
     
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
         user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
         for name, field in self.fields.items():
             if name not in ['email']:
                 field.required = True

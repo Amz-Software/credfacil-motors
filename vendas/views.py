@@ -327,7 +327,7 @@ class ClienteCreateView(PermissionRequiredMixin, CreateView):
         context = super().get_context_data(**kwargs)
 
         context['form_cliente'] = kwargs.get('form_cliente', ClienteForm(user=self.request.user))
-        # context['form_adicional'] = kwargs.get('form_adicional', ContatoAdicionalForm(user=self.request.user))
+        context['form_adicional'] = kwargs.get('form_adicional', ContatoAdicionalForm(user=self.request.user))
         context['form_comprovantes'] = kwargs.get('form_comprovantes', ComprovantesClienteForm(user=self.request.user))
         context['form_analise_credito'] = kwargs.get('form_analise_credito', AnaliseCreditoClienteForm(user=self.request.user))
         
@@ -350,7 +350,7 @@ class ClienteCreateView(PermissionRequiredMixin, CreateView):
 
         # Passando o user para os formulários
         form_cliente = ClienteForm(request.POST, user=request.user)
-        # form_adicional = ContatoAdicionalForm(request.POST, user=request.user)
+        form_adicional = ContatoAdicionalForm(request.POST, user=request.user)
         form_comprovantes = ComprovantesClienteForm(request.POST, request.FILES, user=request.user)
         form_analise_credito = AnaliseCreditoClienteForm(request.POST, user=request.user)
 
@@ -363,7 +363,7 @@ class ClienteCreateView(PermissionRequiredMixin, CreateView):
 
             # Primeiro salva os comprovantes
             comprovantes = form_comprovantes.save()
-            # contato_adicional = form_adicional.save()
+            contato_adicional = form_adicional.save()
             loja_id = request.session.get('loja_id')
 
             # Atribui os comprovantes ao form_cliente antes de salvar
@@ -372,7 +372,7 @@ class ClienteCreateView(PermissionRequiredMixin, CreateView):
             cliente.modificado_por = request.user
             cliente.loja = Loja.objects.get(id=loja_id)
             
-            # cliente.contato_adicional = contato_adicional
+            cliente.contato_adicional = contato_adicional
             cliente.comprovantes = comprovantes
             cliente.save()
 
@@ -396,7 +396,7 @@ class ClienteCreateView(PermissionRequiredMixin, CreateView):
         else:
             print("❌ Um ou mais formulários são inválidos:")
             print("form_cliente errors:", form_cliente.errors)
-            # print("form_adicional errors:", form_adicional.errors)
+            print("form_adicional errors:", form_adicional.errors)
             print("form_comprovantes errors:", form_comprovantes.errors)
             print("form_analise_credito errors:", form_analise_credito.errors)
             
@@ -405,7 +405,7 @@ class ClienteCreateView(PermissionRequiredMixin, CreateView):
         # Renderiza novamente com os erros
         context = self.get_context_data(
             form_cliente=form_cliente,
-            # form_adicional=form_adicional,
+            form_adicional=form_adicional,
             form_comprovantes=form_comprovantes,
             form_analise_credito=form_analise_credito,
         )
@@ -424,7 +424,7 @@ class ClienteUpdateView(PermissionRequiredMixin, UpdateView):
         cliente = self.get_object()
 
         context['form_cliente'] = kwargs.get('form_cliente', ClienteForm(instance=cliente, user=self.request.user))  # Alteração aqui
-        # context['form_adicional'] = kwargs.get('form_adicional', ContatoAdicionalForm(instance=cliente.contato_adicional))
+        context['form_adicional'] = kwargs.get('form_adicional', ContatoAdicionalForm(instance=cliente.contato_adicional))
         context['form_comprovantes'] = kwargs.get('form_comprovantes', ComprovantesClienteForm(instance=cliente.comprovantes, user=self.request.user))
         context['form_analise_credito'] = kwargs.get('form_analise_credito', AnaliseCreditoClienteForm(instance=cliente.analise_credito, user=self.request.user))
         context['cliente_id'] = cliente.id
@@ -440,22 +440,22 @@ class ClienteUpdateView(PermissionRequiredMixin, UpdateView):
             return redirect(self.success_url)
 
         form_cliente = ClienteForm(request.POST, instance=self.object, user=user)
-        # form_adicional = ContatoAdicionalForm(request.POST, instance=self.object.contato_adicional)
+        form_adicional = ContatoAdicionalForm(request.POST, instance=self.object.contato_adicional)
         form_comprovantes = ComprovantesClienteForm(request.POST, request.FILES, instance=self.object.comprovantes, user=user)
         form_analise_credito = AnaliseCreditoClienteForm(request.POST, instance=self.object.analise_credito, user=request.user)
 
         if all([
             form_cliente.is_valid(),
-            # form_adicional.is_valid(),
+            form_adicional.is_valid(),
             form_comprovantes.is_valid(),
             form_analise_credito.is_valid()
         ]):
-            # contato_adicional = form_adicional.save()
+            contato_adicional = form_adicional.save()
             comprovantes = form_comprovantes.save()
             analise_credito = form_analise_credito.save()
 
             cliente = form_cliente.save(commit=False)
-            # cliente.contato_adicional = contato_adicional
+            cliente.contato_adicional = contato_adicional
             cliente.comprovantes = comprovantes
             cliente.save()
             messages.success(request, "✅ Soliticitação atualizada com sucesso")
@@ -463,14 +463,14 @@ class ClienteUpdateView(PermissionRequiredMixin, UpdateView):
         else:
             print("❌ Formulários inválidos")
             print("form_cliente errors:", form_cliente.errors)
-            # print("form_adicional errors:", form_adicional.errors)
+            print("form_adicional errors:", form_adicional.errors)
             print("form_comprovantes errors:", form_comprovantes.errors)
             print("form_analise_credito errors:", form_analise_credito.errors)
             messages.error(request, "❌ Erro ao atualizar Soliticitação. Verifique os dados e tente novamente.")
 
         context = self.get_context_data(
             form_cliente=form_cliente,
-            # form_adicional=form_adicional,
+            form_adicional=form_adicional,
             form_comprovantes=form_comprovantes,
             form_analise_credito=form_analise_credito,
         )

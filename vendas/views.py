@@ -1473,6 +1473,7 @@ from django.shortcuts import render
 from django.utils.timezone import now
 from .models import Caixa, Venda, LancamentoCaixa
 
+
 def folha_carne_view(request, pk, tipo):
     # Busca a venda
     venda = Venda.objects.get(pk=pk)
@@ -1484,7 +1485,7 @@ def folha_carne_view(request, pk, tipo):
         return redirect('vendas:venda_list')
     
     quantidade_parcelas = pagamento_carne.parcelas
-    valor_parcela = pagamento_carne.valor_parcela
+    valor_parcela = f'{pagamento_carne.valor_parcela:.2f}'
     nome_cliente = venda.cliente.nome.title()
     tipo_pagamento = 'Carnê' if tipo == 'carne' else 'Promissória'
     endereco_cliente = venda.cliente.endereco
@@ -1492,6 +1493,19 @@ def folha_carne_view(request, pk, tipo):
 
     # Lista de parcelas (1 a quantidade_parcelas)
     parcelas = list(range(1, quantidade_parcelas + 1))
+    datas_vencimento = []
+
+    for i in range(quantidade_parcelas):
+        # somar 1 meses a data de vencimento
+        data_vencimento = pagamento_carne.data_primeira_parcela
+        mes = data_vencimento.month + i
+        ano = data_vencimento.year
+        if mes > 12:
+            mes -= 12
+            ano += 1
+        data_vencimento = data_vencimento.replace(month=mes, year=ano)
+        datas_vencimento.append(data_vencimento.strftime('%d/%m/%Y'))
+
 
     # Contexto para o template
     context = {
@@ -1504,10 +1518,11 @@ def folha_carne_view(request, pk, tipo):
         'endereco_cliente': endereco_cliente,
         'cpf': cpf,
         'parcelas': parcelas,  # Envia a lista de parcelas
+        'datas_vencimento': datas_vencimento,  # Envia as datas de vencimento
+        'data_atual': localtime(now()).date(),
     }
 
     return render(request, "venda/folha_carne.html", context)
-
 
 
 class RelatorioVendasView(PermissionRequiredMixin, FormView):

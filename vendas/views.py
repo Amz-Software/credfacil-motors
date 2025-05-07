@@ -29,6 +29,8 @@ from pixqrcode import PixQrCode
 from io import BytesIO
 import qrcode
 from dateutil.relativedelta import relativedelta
+import calendar
+from datetime import date
 
 
 
@@ -498,192 +500,158 @@ class ClienteUpdateView(PermissionRequiredMixin, UpdateView):
 
 def calcular_data_primeira_parcela(data_pagamento_str):
     """
-    Recebe o dia de pagamento escolhido ('1', '10' ou '20') e calcula
-    a data da primeira parcela. Se o dia já passou neste mês, a data
-    será no mês seguinte.
+    Sempre joga a 1ª parcela pro próximo mês no dia escolhido.
     """
     hoje = timezone.now().date()
-    dia_pagamento = int(data_pagamento_str)
+    dia = int(data_pagamento_str)
 
-    # Se o dia de pagamento já passou neste mês, usa o próximo mês
-    if hoje.day > dia_pagamento:
-        data_parcela = hoje.replace(day=1) + relativedelta(months=1)
-        data_parcela = data_parcela.replace(day=dia_pagamento)
-    else:
-        try:
-            # Se o dia ainda não passou, usa esse mês
-            data_parcela = hoje.replace(day=dia_pagamento)
-        except ValueError:
-            # Se o dia não existe no mês (ex: 31 de fevereiro), usa o último dia do próximo mês
-            proximo_mes = hoje.replace(day=1) + relativedelta(months=1)
-            data_parcela = proximo_mes - timedelta(days=1)
-
-    return data_parcela
+    # próximo mês
+    ano = hoje.year + (hoje.month // 12)
+    mes = hoje.month % 12 + 1
+    ultimo = calendar.monthrange(ano, mes)[1]
+    dia = min(dia, ultimo)
+    return date(ano, mes, dia)
 
 
-def criar_parcelas(pagamento):
+def criar_parcelas(pagamento, loja):
     """
-    Cria as parcelas para um pagamento, considerando a data da primeira
-    parcela e a quantidade de parcelas, levando em consideração a variação
-    do número de dias nos meses.
+    Gera cada vencimento mantendo o dia fixo (ou último do mês se faltar).
     """
-    # Apaga quaisquer parcelas antigas (por segurança)
     Parcela.objects.filter(pagamento=pagamento).delete()
+    dia = pagamento.data_primeira_parcela.day
 
-    data_primeira_parcela = pagamento.data_primeira_parcela
+    for n in range(1, pagamento.parcelas + 1):
+        # calcula ano/mes de cada parcela
+        month_offset = pagamento.data_primeira_parcela.month - 1 + (n - 1)
+        ano = pagamento.data_primeira_parcela.year + month_offset // 12
+        mes = month_offset % 12 + 1
 
-    for numero in range(1, pagamento.parcelas + 1):
-        data_vencimento = data_primeira_parcela + relativedelta(months=numero-1)
-
-        try:
-            data_vencimento = data_vencimento.replace(day=data_primeira_parcela.day)
-        except ValueError:
-            data_vencimento = data_vencimento + relativedelta(day=31)
+        ultimo = calendar.monthrange(ano, mes)[1]
+        venc_dia = min(dia, ultimo)
+        data_venc = date(ano, mes, venc_dia)
 
         Parcela.objects.create(
-        pagamento=pagamento,
-            numero_parcela=numero,
+            loja=loja,
+            pagamento=pagamento,
+            numero_parcela=n,
             valor=pagamento.valor_parcela,
-            data_vencimento=data_vencimento,
+            data_vencimento=data_venc,
             criado_por=pagamento.criado_por,
             modificado_por=pagamento.modificado_por
         )
-
+        
 
 @transaction.atomic
 @permission_required('vendas.add_venda', raise_exception=True)
 def gerar_venda(request, cliente_id):
-    if request.method == 'POST':
-        cliente = get_object_or_404(Cliente, id=cliente_id)
-        loja_id = request.session.get('loja_id')
-        loja = get_object_or_404(Loja, id=loja_id)
-
-        # Verificando se o caixa está aberto para a loja no dia atual
-        caixa = Caixa.objects.filter(
-            loja=loja,
-            data_abertura=timezone.now().date(),
-            data_fechamento__isnull=True
-        ).first()
-
-        if not caixa:
-            messages.error(request, "❌ Nenhum caixa aberto encontrado para hoje.")
-            return redirect('vendas:cliente_list')
-
-        # Pega a análise de crédito aprovada mais recente
-        analise_credito = cliente.analise_credito
-        if not analise_credito:
-            messages.error(request, "❌ Nenhuma análise de crédito aprovada para o cliente.")
-            return redirect('vendas:cliente_list')
-        
-        if analise_credito.status != 'A':
-            messages.error(request, "❌ Análise de crédito não aprovada.")
-            return redirect('vendas:cliente_list')
-        
-        if not analise_credito.imei:
-            messages.error(request, "❌ Nenhum IMEI associado à análise de crédito.")
-            return redirect('vendas:cliente_list')
-
-        if cliente.analise_credito.venda:
-            messages.error(request, "❌ Essa solicitação já foi convertida em venda.")
-            return redirect('vendas:cliente_list')
-        
-        produto = analise_credito.produto
-        imei = analise_credito.imei
-        
-        # Verifica se o IMEI já foi vendido
-        if imei.vendido:
-            messages.error(request, "❌ IMEI já vendido. Altere o IMEI para continuar.")
-            return redirect('vendas:cliente_list')
-
-        # Verifica se há estoque suficiente para o produto
-        estoque = Estoque.objects.filter(produto=produto, loja=loja).first()
-        if not estoque or estoque.quantidade_disponivel <= 0:
-            messages.error(request, f"❌ Estoque insuficiente para o produto {produto.nome}.")
-            return redirect('vendas:cliente_list')
-        
-
-        # Cria a venda
-        venda = Venda.objects.create(
-            loja=loja,
-            cliente=cliente,
-            vendedor=request.user,
-            caixa=caixa,
-            repasse_logista=produto.valor_repasse_logista,
-            observacao=analise_credito.observacao,
-            criado_por=request.user,
-            modificado_por=request.user,
-            criado_em=timezone.now(),
-            modificado_em=timezone.now()
-        )
-        
-        analise_credito.venda = venda
-        analise_credito.save()
-        
-        if analise_credito.numero_parcelas == '4':
-            valor_credfacil = produto.valor_4_vezes
-            valor_unitario = produto.valor_4_vezes
-            parcelas = 4
-        else:
-            valor_credfacil = produto.valor_6_vezes
-            valor_unitario = produto.valor_6_vezes
-            parcelas = 6
-
-        # Cria o ProdutoVenda
-        produto_venda = ProdutoVenda.objects.create(
-            loja=loja,
-            venda=venda,
-            produto=produto,
-            imei=imei.imei if imei else None,
-            valor_unitario=valor_unitario,
-            quantidade=1,
-            valor_desconto=0
-        )
-        
-        produto_venda.save()
-        
-        # Marca o IMEI como vendido
-        imei.vendido = True
-        imei.save()
-
-        estoque.remover_estoque(1) 
-
-        # Tipos de pagamento
-        tipo_entrada = TipoPagamento.objects.get(nome__iexact='ENTRADA')
-        tipo_credfacil = TipoPagamento.objects.get(nome__iexact='CREDFACIL')
-        
-        # Calcula a data da primeira parcela
-        if analise_credito.data_pagamento:
-            data_primeira_parcela = calcular_data_primeira_parcela(analise_credito.data_pagamento)
-
-        # Cria os pagamentos
-        pagamento_entrada = Pagamento.objects.create(
-            loja=loja,
-            venda=venda,
-            tipo_pagamento=tipo_entrada,
-            valor=produto.entrada_cliente,
-            parcelas=1,
-            data_primeira_parcela=timezone.now().date()
-        )
-
-        pagamento_credfacil = Pagamento.objects.create(
-            loja=loja,
-            venda=venda,
-            tipo_pagamento=tipo_credfacil,
-            valor=valor_credfacil,
-            parcelas=parcelas,
-            data_primeira_parcela=data_primeira_parcela
-        )
-
-        # Cria as parcelas para os pagamentos
-        criar_parcelas(pagamento_entrada)
-        criar_parcelas(pagamento_credfacil)
-
-        messages.success(request, f"✅ Venda criada para o cliente {cliente.nome}!")
+    if request.method != 'POST':
         return redirect('vendas:cliente_list')
 
+    cliente = get_object_or_404(Cliente, id=cliente_id)
+    loja = get_object_or_404(Loja, id=request.session.get('loja_id'))
+
+    # Verifica caixa aberto
+    caixa = Caixa.objects.filter(
+        loja=loja,
+        data_abertura=timezone.now().date(),
+        data_fechamento__isnull=True
+    ).first()
+    if not caixa:
+        messages.error(request, "❌ Nenhum caixa aberto encontrado para hoje.")
+        return redirect('vendas:cliente_list')
+
+    # Valida análise de crédito
+    analise = cliente.analise_credito
+    if not analise or analise.status != 'A':
+        messages.error(request, "❌ Análise de crédito não aprovada para o cliente.")
+        return redirect('vendas:cliente_list')
+    if not analise.imei:
+        messages.error(request, "❌ Nenhum IMEI associado à análise de crédito.")
+        return redirect('vendas:cliente_list')
+    if analise.venda:
+        messages.error(request, "❌ Essa solicitação já foi convertida em venda.")
+        return redirect('vendas:cliente_list')
+
+    produto = analise.produto
+    imei = analise.imei
+    if imei.vendido:
+        messages.error(request, "❌ IMEI já vendido. Altere o IMEI para continuar.")
+        return redirect('vendas:cliente_list')
+
+    estoque = Estoque.objects.filter(produto=produto, loja=loja).first()
+    if not estoque or estoque.quantidade_disponivel <= 0:
+        messages.error(request, f"❌ Estoque insuficiente para o produto {produto.nome}.")
+        return redirect('vendas:cliente_list')
+
+    # Cria venda
+    venda = Venda.objects.create(
+        loja=loja,
+        cliente=cliente,
+        vendedor=request.user,
+        caixa=caixa,
+        repasse_logista=produto.valor_repasse_logista,
+        observacao=analise.observacao,
+        criado_por=request.user,
+        modificado_por=request.user,
+        criado_em=timezone.now(),
+        modificado_em=timezone.now()
+    )
+    analise.venda = venda
+    analise.save()
+
+    # Define valores e número de parcelas
+    if analise.numero_parcelas == '4':
+        valor_credfacil = produto.valor_4_vezes
+        parcelas = 4
     else:
-        return redirect('vendas:cliente_list')
+        valor_credfacil = produto.valor_6_vezes
+        parcelas = 6
 
+    # Cria ProdutoVenda
+    ProdutoVenda.objects.create(
+        loja=loja,
+        venda=venda,
+        produto=produto,
+        imei=imei.imei,
+        valor_unitario=valor_credfacil,
+        quantidade=1,
+        valor_desconto=0
+    )
+
+    # Atualiza IMEI e estoque
+    imei.vendido = True
+    imei.save()
+    estoque.remover_estoque(1)
+
+    # Pagamentos
+    tipo_entrada = TipoPagamento.objects.get(nome__iexact='ENTRADA')
+    tipo_credfacil = TipoPagamento.objects.get(nome__iexact='CREDFACIL')
+
+    pagamento_entrada = Pagamento.objects.create(
+        loja=loja,
+        venda=venda,
+        tipo_pagamento=tipo_entrada,
+        valor=produto.entrada_cliente,
+        parcelas=1,
+        data_primeira_parcela=timezone.now().date()
+    )
+
+    data1 = calcular_data_primeira_parcela(analise.data_pagamento)
+    pagamento_credfacil = Pagamento.objects.create(
+        loja=loja,
+        venda=venda,
+        tipo_pagamento=tipo_credfacil,
+        valor=valor_credfacil,
+        parcelas=parcelas,
+        data_primeira_parcela=data1
+    )
+
+    # Gera parcelas
+    criar_parcelas(pagamento_entrada, loja)
+    criar_parcelas(pagamento_credfacil, loja)
+
+    messages.success(request, f"✅ Venda criada para o cliente {cliente.nome}!")
+    return redirect('vendas:cliente_list')
 
 
 @permission_required('vendas.change_status_analise', raise_exception=True)

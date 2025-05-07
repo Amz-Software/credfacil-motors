@@ -29,7 +29,8 @@ class MemoriaProdutoAdmin(AdminBase):
 
 @admin.register(Produto)
 class ProdutoAdmin(AdminBase):
-    pass
+    list_display = ('nome', 'loja',)
+    search_fields = ('nome',)
 
 @admin.register(TipoProduto)
 class TipoProdutoAdmin(AdminBase):

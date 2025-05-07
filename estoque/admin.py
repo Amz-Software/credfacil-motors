@@ -71,7 +71,7 @@ class EstoqueImeiAdmin(AdminBase):
       for entrada in queryset:
           nome = entrada.produto.nome
           try:
-              novo = Produto.objects.get(nome_icontains=nome, loja__nome__icontains='CredFácil')
+              novo = Produto.objects.get(nome__icontains=nome, loja__nome__icontains='CredFácil')
           except Produto.DoesNotExist:
               self.message_user(
                   request,

@@ -14,12 +14,11 @@ class ProdutoListView(PermissionRequiredMixin, ListView):
     permission_required = 'produtos.view_produto'
 
     def get_queryset(self):
-        loja_id = self.request.session.get('loja_id')
-        loja = get_object_or_404(Loja, pk=loja_id)
+        queryset = Produto.objects.all()
         search = self.request.GET.get('search')
         if search:
-            return Produto.objects.filter(nome__icontains=search).filter(loja=loja)
-        return Produto.objects.filter(loja=loja)
+            return queryset.filter(nome__icontains=search)
+        return queryset
 
 def generate_views(modelo, form=None, paginacao=10, template_dir=''):
     """

@@ -1,5 +1,9 @@
 from django.contrib import admin
+
+from produtos.models import Produto
 from .models import *
+from django.contrib import messages
+
 # Register your models here.
 
 
@@ -36,6 +40,24 @@ class ProdutoEntradaAdmin(AdminBase):
   list_display = ('entrada', 'produto', 'imei', 'custo_unitario', 'venda_unitaria', 'quantidade', 'custo_total', 'venda_total') + AdminBase.list_display
   search_fields = ('produto__nome', 'imei')
   list_filter = ('entrada', 'produto')
+  actions = ['trocar_para_credfacil']
+
+  def trocar_para_credfacil(self, request, queryset):
+      for entrada in queryset:
+          nome = entrada.produto.nome
+          try:
+              novo = Produto.objects.get(nome=nome, loja__nome='CredFácil')
+          except Produto.DoesNotExist:
+              self.message_user(
+                  request,
+                  f"Produto CredFácil não encontrado p/ '{nome}'",
+                  level=messages.ERROR
+              )
+              continue
+          entrada.produto = novo
+          entrada.save()
+      self.message_user(request, "Produtos trocados para CredFácil com sucesso.")
+  trocar_para_credfacil.short_description = "Trocar produto para loja CredFácil"
   
 @admin.register(EstoqueImei)
 class EstoqueImeiAdmin(AdminBase):

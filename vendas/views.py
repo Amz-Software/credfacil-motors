@@ -646,7 +646,6 @@ def gerar_venda(request, cliente_id):
         data_primeira_parcela=data1
     )
 
-    # Gera parcelas
     criar_parcelas(pagamento_entrada, loja)
     criar_parcelas(pagamento_credfacil, loja)
 

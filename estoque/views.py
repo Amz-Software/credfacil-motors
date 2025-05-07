@@ -31,7 +31,7 @@ class EstoqueListView(BaseView, PermissionRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         loja_id = self.request.session.get('loja_id')
         loja = get_object_or_404(Loja, pk=loja_id)
-        tipos_produtos = TipoProduto.objects.all().filter(produtos_tipo__loja=loja).distinct()
+        tipos_produtos = TipoProduto.objects.all()
         context['loja_id'] = loja_id
         context['tipos'] = tipos_produtos
         return context
@@ -39,10 +39,10 @@ class EstoqueListView(BaseView, PermissionRequiredMixin, ListView):
     def get_queryset(self):
         loja_id = self.request.session.get('loja_id')
         loja = get_object_or_404(Loja, pk=loja_id)
-        query = super().get_queryset().filter(produto__loja=loja)
+        query = super().get_queryset().filter(loja=loja)
         search = self.request.GET.get('search', None)
         if search:
-            query = query.filter(produto__nome__icontains=search).filter(produto__loja=loja)
+            query = query.filter(produto__nome__icontains=search)
             
         return query
 

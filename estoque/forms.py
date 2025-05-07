@@ -66,8 +66,6 @@ class ProdutoEntradaForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         loja = kwargs.pop('loja', None)
         super().__init__(*args, **kwargs)
-        if loja:
-            self.fields['produto'].queryset = Produto.objects.filter(loja=loja) 
 
 
 class EstoqueImeiForm(forms.ModelForm):

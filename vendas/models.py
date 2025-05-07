@@ -7,11 +7,11 @@ from django.db.models import Count, Q, Case, When, Value, IntegerField
 from datetime import date, timedelta
 
 class Base(models.Model):
-    loja = models.ForeignKey('vendas.Loja', on_delete=models.PROTECT, related_name='%(class)s_loja', null=True, blank=True)
+    loja = models.ForeignKey('vendas.Loja', on_delete=models.CASCADE, related_name='%(class)s_loja', null=True, blank=True)
     criado_em = models.DateTimeField(auto_now_add=True,editable=False)
     modificado_em = models.DateTimeField(auto_now=True,editable=False)
-    criado_por = models.ForeignKey('accounts.User', on_delete=models.PROTECT, related_name='%(class)s_criadas',editable=False, null=True, blank=True)
-    modificado_por = models.ForeignKey('accounts.User', on_delete=models.PROTECT, related_name='%(class)s_modificadas',editable=False, null=True, blank=True)
+    criado_por = models.ForeignKey('accounts.User', on_delete=models.CASCADE, related_name='%(class)s_criadas',editable=False, null=True, blank=True)
+    modificado_por = models.ForeignKey('accounts.User', on_delete=models.CASCADE, related_name='%(class)s_modificadas',editable=False, null=True, blank=True)
     
     def save(self, *args, user=None, **kwargs):
         if user:
@@ -91,7 +91,7 @@ class LancamentoCaixa(Base):
         ('2', 'Débito'),
     )
 
-    caixa = models.ForeignKey('vendas.Caixa', on_delete=models.PROTECT, related_name='lancamentos_caixa')
+    caixa = models.ForeignKey('vendas.Caixa', on_delete=models.CASCADE, related_name='lancamentos_caixa')
     motivo = models.CharField(max_length=100)
     tipo_lancamento = models.CharField(max_length=1, choices=tipo_lancamento_opcoes)
     valor = models.DecimalField(max_digits=10, decimal_places=2)
@@ -304,9 +304,9 @@ class Cliente(Base):
     endereco = models.CharField(max_length=200)
     bairro = models.CharField(max_length=100)
     cidade = models.CharField(max_length=100)
-    comprovantes = models.OneToOneField('vendas.ComprovantesCliente', on_delete=models.PROTECT, related_name='cliente')
-    contato_adicional = models.OneToOneField('vendas.ContatoAdicional', on_delete=models.PROTECT, related_name='cliente', null=True, blank=True)
-    informacao_pessoal = models.OneToOneField('vendas.InformacaoPessoal', on_delete=models.PROTECT, related_name='cliente', null=True, blank=True)
+    comprovantes = models.OneToOneField('vendas.ComprovantesCliente', on_delete=models.CASCADE, related_name='cliente')
+    contato_adicional = models.OneToOneField('vendas.ContatoAdicional', on_delete=models.CASCADE, related_name='cliente', null=True, blank=True)
+    informacao_pessoal = models.OneToOneField('vendas.InformacaoPessoal', on_delete=models.CASCADE, related_name='cliente', null=True, blank=True)
     
     def __str__(self):
         return self.nome
@@ -319,9 +319,9 @@ class Cliente(Base):
 class Venda(Base):
     data_venda = models.DateTimeField(auto_now_add=True)
     cliente = models.ForeignKey('vendas.cliente', on_delete=models.CASCADE, related_name='vendas')
-    vendedor = models.ForeignKey('accounts.User', on_delete=models.PROTECT, related_name='vendas_realizadas')
+    vendedor = models.ForeignKey('accounts.User', on_delete=models.CASCADE, related_name='vendas_realizadas')
     produtos = models.ManyToManyField('produtos.Produto', through='ProdutoVenda', related_name='vendas')
-    caixa = models.ForeignKey('vendas.Caixa', on_delete=models.PROTECT, related_name='vendas')
+    caixa = models.ForeignKey('vendas.Caixa', on_delete=models.CASCADE, related_name='vendas')
     observacao = models.TextField(null=True, blank=True)
     repasse_logista = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     is_deleted = models.BooleanField(default=False)
@@ -370,12 +370,12 @@ class AnaliseCreditoCliente(Base):
         ('R', 'Reprovado'),
         ('C', 'Cancelado'),   
     ]
-    cliente = models.OneToOneField('vendas.Cliente', on_delete=models.PROTECT, related_name='analise_credito')
+    cliente = models.OneToOneField('vendas.Cliente', on_delete=models.CASCADE, related_name='analise_credito')
     data_analise = models.DateTimeField(auto_now_add=True)
     data_aprovacao = models.DateTimeField(null=True, blank=True)
     data_reprovacao = models.DateTimeField(null=True, blank=True)
     data_cancelamento = models.DateTimeField(null=True, blank=True)
-    aprovado_por = models.ForeignKey('accounts.User', on_delete=models.PROTECT, related_name='analises_credito_aprovadas', null=True, blank=True)
+    aprovado_por = models.ForeignKey('accounts.User', on_delete=models.CASCADE, related_name='analises_credito_aprovadas', null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='EA')
     data_pagamento = models.CharField(max_length=20, null=True, blank=True, choices=(
         ('1', 'Dia 1'),
@@ -386,9 +386,9 @@ class AnaliseCreditoCliente(Base):
         ('4', '4x'),
         ('6', '6x'),
     ))
-    produto = models.ForeignKey('produtos.Produto', on_delete=models.PROTECT, related_name='analises_credito')
-    imei = models.ForeignKey('estoque.EstoqueImei', on_delete=models.PROTECT, related_name='analises_credito_imei', null=True, blank=True)
-    venda = models.ForeignKey('vendas.Venda', on_delete=models.PROTECT, related_name='analises_credito_venda', null=True, blank=True)
+    produto = models.ForeignKey('produtos.Produto', on_delete=models.CASCADE, related_name='analises_credito')
+    imei = models.ForeignKey('estoque.EstoqueImei', on_delete=models.CASCADE, related_name='analises_credito_imei', null=True, blank=True)
+    venda = models.ForeignKey('vendas.Venda', on_delete=models.CASCADE, related_name='analises_credito_venda', null=True, blank=True)
     observacao = models.TextField(null=True, blank=True)
     
     def venda_gerada(self):
@@ -475,12 +475,12 @@ class ComprovantesCliente(Base):
         return f"Comprovantes para {self.cliente.nome if self.cliente else 'Cliente'}"
 
 class ProdutoVenda(Base):
-    produto = models.ForeignKey('produtos.Produto', on_delete=models.PROTECT, related_name='produto_vendas')
+    produto = models.ForeignKey('produtos.Produto', on_delete=models.CASCADE, related_name='produto_vendas')
     imei = models.CharField(max_length=100, null=True, blank=True)
     valor_unitario = models.DecimalField(max_digits=10, decimal_places=2)
     quantidade = models.PositiveIntegerField()
     valor_desconto = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    venda = models.ForeignKey('vendas.Venda', on_delete=models.PROTECT, related_name='itens_venda')
+    venda = models.ForeignKey('vendas.Venda', on_delete=models.CASCADE, related_name='itens_venda')
     
 
     def calcular_valor_total(self):
@@ -506,8 +506,8 @@ class ProdutoVenda(Base):
         
 
 class Pagamento(Base):
-    venda = models.ForeignKey('vendas.Venda', on_delete=models.PROTECT, related_name='pagamentos')
-    tipo_pagamento = models.ForeignKey('vendas.TipoPagamento', on_delete=models.PROTECT, related_name='pagamentos_tipo')
+    venda = models.ForeignKey('vendas.Venda', on_delete=models.CASCADE, related_name='pagamentos')
+    tipo_pagamento = models.ForeignKey('vendas.TipoPagamento', on_delete=models.CASCADE, related_name='pagamentos_tipo')
     valor = models.DecimalField(max_digits=10, decimal_places=2)
     parcelas = models.PositiveIntegerField(default=1, null=True, blank=True)
     # valor_parcela = models.DecimalField(max_digits=10, decimal_places=2)
@@ -543,11 +543,11 @@ class TipoPagamento(Base):
         
 
 class Parcela(Base):
-    pagamento = models.ForeignKey('vendas.Pagamento', on_delete=models.PROTECT, related_name='parcelas_pagamento')
+    pagamento = models.ForeignKey('vendas.Pagamento', on_delete=models.CASCADE, related_name='parcelas_pagamento')
     numero_parcela = models.PositiveIntegerField()
     valor = models.DecimalField(max_digits=10, decimal_places=2)
     valor_pago = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, default=0)
-    tipo_pagamento = models.ForeignKey('vendas.TipoPagamento', on_delete=models.PROTECT, related_name='parcelas_tipo_pagamento', null=True, blank=True)
+    tipo_pagamento = models.ForeignKey('vendas.TipoPagamento', on_delete=models.CASCADE, related_name='parcelas_tipo_pagamento', null=True, blank=True)
     desconto = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, default=0)
     data_pagamento = models.DateField(null=True, blank=True)
     data_vencimento = models.DateField()

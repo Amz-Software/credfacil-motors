@@ -1,12 +1,13 @@
 from django import forms
-from django.db.models import Subquery, OuterRef, Exists
+from django.db.models import OuterRef, Exists
 from accounts.models import User
 from estoque.models import Estoque, EstoqueImei
 from produtos.models import Produto
 from .models import *
 from django_select2.forms import Select2Widget, ModelSelect2Widget, Select2MultipleWidget
 from django_select2.forms import ModelSelect2MultipleWidget, HeavySelect2Widget
-from decimal import Decimal
+from collections import OrderedDict
+
 
 class EstoqueImeiSelectWidgetEdit(HeavySelect2Widget):
     data_view = 'estoque:estoque-imei-search-edit'
@@ -139,36 +140,43 @@ class ContatoAdicionalForm(forms.ModelForm):
                     self.fields['endereco_adicional'].disabled = True
 
 class InformacaoPessoalForm(forms.ModelForm):
+    nome_pessoal = forms.CharField(label='Nome', widget=forms.TextInput(attrs={'class': 'form-control'}))
+    contato_pessoal = forms.CharField(label='Contato', widget=forms.TextInput(attrs={'class': 'form-control'}))
+    endereco_pessoal = forms.CharField(label='Endereço', widget=forms.TextInput(attrs={'class': 'form-control'}))
+
     class Meta:
         model = InformacaoPessoal
         fields = '__all__'
-        exclude = ['cliente', 'loja']
-        widgets = {
-            'nome': forms.TextInput(attrs={'class': 'form-control'}),
-            'contato': forms.TextInput(attrs={'class': 'form-control'}),
-            'endereco': forms.TextInput(attrs={'class': 'form-control'}),
-        }
+        exclude = ['cliente', 'loja', 'nome', 'contato', 'endereco']
         
     
     def __init__(self, *args, **kwargs):
         user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
-        for name, field in self.fields.items():
-            if name not in ['email']:
-                field.required = True
+        
+        self.fields['nome_pessoal'].initial = self.instance.nome
+        self.fields['contato_pessoal'].initial = self.instance.contato
+        self.fields['endereco_pessoal'].initial = self.instance.endereco
                 
         if self.instance and self.instance.pk:
             if user and not user.has_perm('vendas.change_status_analise'):
-                self.fields['nome'].disabled = True
-                self.fields['contato'].disabled = True
-                self.fields['endereco'].disabled = True
+                self.fields['nome_pessoal'].disabled = True
+                self.fields['contato_pessoal'].disabled = True
+                self.fields['endereco_pessoal'].disabled = True
                 
             if user and not user.has_perm('vendas.can_edit_finished_sale'):
                 if not self.instance.cliente.analise_credito.status == 'EA':
-                    self.fields['nome'].disabled = True
-                    self.fields['contato'].disabled = True
-                    self.fields['endereco'].disabled = True
+                    self.fields['nome_pessoal'].disabled = True
+                    self.fields['contato_pessoal'].disabled = True
+                    self.fields['endereco_pessoal'].disabled = True
         
+    def save(self, commit=True):
+        self.instance.nome = self.cleaned_data.get('nome_pessoal')
+        self.instance.contato = self.cleaned_data.get('contato_pessoal')
+        self.instance.endereco = self.cleaned_data.get('endereco_pessoal')
+        return super().save(commit=commit)
+
+
 
 class AnaliseCreditoClienteForm(forms.ModelForm):
     class Meta:

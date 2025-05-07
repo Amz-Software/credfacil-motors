@@ -1151,18 +1151,21 @@ class LojaListView(BaseView, PermissionRequiredMixin, ListView):
 
     def get_queryset(self):
         user = self.request.user
-        query = user.lojas.all()
+        query = Loja.objects.all()
+        loja_id = self.request.session.get('loja_id')
         search = self.request.GET.get('search')
-        filter_type = self.request.GET.get('filter')  # Filtro de repasse (pendente ou não)
+        filter_type = self.request.GET.get('filter')
+        
+        if not user.has_perm('vendas.can_view_all_stores'):
+            query = query.filter(id=loja_id)
 
         if search:
             query = query.filter(nome__icontains=search)
         
-        # Filtro para repasses pendentes
         if filter_type == 'pendente':
-            query = query.com_repasse_pendente()  # Lojas com repasses pendentes
+            query = query.com_repasse_pendente()
         elif filter_type == 'sem_pendente':
-            query = query.sem_repasse_pendente()  # Lojas sem repasses pendentes
+            query = query.sem_repasse_pendente()
         
         return query.order_by('nome')
 

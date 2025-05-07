@@ -291,6 +291,9 @@ class Loja(Base):
     
     class Meta:
         verbose_name_plural = 'Lojas'
+        permissions = (
+            ('can_view_all_stores', 'Pode ver todas as lojas'),
+        )
 
 
 class Cliente(Base):

@@ -64,4 +64,23 @@ class EstoqueImeiAdmin(AdminBase):
   list_display = ('produto', 'imei', 'vendido') + AdminBase.list_display
   search_fields = ('produto__nome', 'imei')
   list_filter = ('produto', 'vendido')
+  actions = ['trocar_para_credfacil']
+  
+  
+  def trocar_para_credfacil(self, request, queryset):
+      for entrada in queryset:
+          nome = entrada.produto.nome
+          try:
+              novo = Produto.objects.get(nome_icontains=nome, loja__nome__icontains='CredFácil')
+          except Produto.DoesNotExist:
+              self.message_user(
+                  request,
+                  f"Produto CredFácil não encontrado p/ '{nome}'",
+                  level=messages.ERROR
+              )
+              continue
+          entrada.produto = novo
+          entrada.save()
+      self.message_user(request, "Produtos trocados para CredFácil com sucesso.")
+  trocar_para_credfacil.short_description = "Trocar produto para loja CredFácil"
   

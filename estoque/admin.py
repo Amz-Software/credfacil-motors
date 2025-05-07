@@ -26,6 +26,23 @@ class EstoqueAdmin(AdminBase):
   list_display = ('produto', 'quantidade_disponivel') + AdminBase.list_display
   search_fields = ('produto__nome',)
   list_filter = ('produto',)
+  actions = ['trocar_para_credfacil']
+  
+  def trocar_para_credfacil(self, request, queryset):
+      for entrada in queryset:
+          nome = entrada.produto.nome
+          try:
+              novo = Produto.objects.get(nome__icontains=nome, loja__nome__icontains='CredFácil')
+          except Produto.DoesNotExist:
+              self.message_user(
+                  request,
+                  f"Produto CredFácil não encontrado p/ '{nome}'",
+                  level=messages.ERROR
+              )
+              continue
+          entrada.produto = novo
+          entrada.save()
+      self.message_user(request, "Produtos trocados para CredFácil com sucesso.")
 
 
 @admin.register(Fornecedor)
@@ -46,7 +63,7 @@ class ProdutoEntradaAdmin(AdminBase):
       for entrada in queryset:
           nome = entrada.produto.nome
           try:
-              novo = Produto.objects.get(nome=nome, loja__nome='CredFácil')
+              novo = Produto.objects.get(nome__icontains=nome, loja__nome__icontains='CredFácil')
           except Produto.DoesNotExist:
               self.message_user(
                   request,

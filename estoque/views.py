@@ -208,11 +208,11 @@ class EstoqueImeiListView(BaseView, PermissionRequiredMixin, ListView):
     def get_queryset(self):
         loja_id = self.request.session.get('loja_id')
         loja = get_object_or_404(Loja, pk=loja_id)
-        query = super().get_queryset().filter(produto__loja=loja)
+        query = super().get_queryset().filter(loja=loja)
         
         search = self.request.GET.get('search', None)
         if search:
-            query = query.filter(Q(imei__icontains=search)|Q(produto__nome__icontains=search)).filter(produto__loja=loja)
+            query = query.filter(Q(imei__icontains=search)|Q(produto__nome__icontains=search))
             
         return query
     
@@ -265,7 +265,7 @@ class EstoqueImeiSearchView(View):
         )
         
         if not user.has_perm('estoque.can_view_all_imei'):
-            queryset = queryset.filter(produto__loja=loja)
+            queryset = queryset.filter(loja=loja)
         
         if produto_id:
             queryset = queryset.filter(produto_id=produto_id)
@@ -291,7 +291,7 @@ class EstoqueImeiSearchEditView(View):
         loja = get_object_or_404(Loja, pk=loja_id)
         queryset = EstoqueImei.objects.filter(
             Q(imei__icontains=term) | Q(produto__nome__icontains=term)
-        ).filter(produto__loja=loja).filter(vendido=False)
+        ).filter(loja=loja).filter(vendido=False)
         if produto_id:
             queryset = queryset.filter(produto_id=produto_id)
         results = []

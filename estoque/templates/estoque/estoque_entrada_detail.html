@@ -23,8 +23,6 @@ Entrada {{ entrada.data_entrada|date:"d/m/Y" }}
             <p><strong>Fornecedor:</strong> {{ entrada.fornecedor|upper }}</p>
             <p><strong>Data da Entrada:</strong> {{ entrada.data_entrada|date:"d/m/Y" }}</p>
             <p><strong>Custo Total:</strong> {{ entrada.custo_total }}</p>
-            <p><strong>Venda Total:</strong> {{ entrada.venda_total }}</p>
-            <p><strong>Quantidade Total:</strong> {{ entrada.quantidade_total }}</p>
             <p><strong>Loja:</strong> {{ entrada.loja }}</p>
         </div>
       </div>
@@ -54,7 +52,6 @@ Entrada {{ entrada.data_entrada|date:"d/m/Y" }}
               <tr>
                 <td>{{ produto.produto }}</td>
                 <td>{{ produto.custo_unitario }}</td>
-                <td>{{ produto.venda_unitaria }}</td>
                 <td>{{ produto.quantidade }}</td>
                 <td class="">
                     <div class="dropdown">

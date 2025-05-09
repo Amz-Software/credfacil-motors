@@ -163,7 +163,7 @@ class AdicionarEntradaEstoqueView(PermissionRequiredMixin, CreateView):
         if self.request.POST:
             context['formset'] = ProdutoEntradaFormSet(self.request.POST, form_kwargs={'loja': loja_id})
         else:
-            context['formset'] = ProdutoEntradaFormSet(queryset=ProdutoEntrada.objects.none(), form_kwargs={'loja': loja_id})  # Cria um queryset vazio para o formset
+            context['formset'] = ProdutoEntradaFormSet(queryset=ProdutoEntrada.objects.none(), form_kwargs={'loja': loja_id})
         return context
 
     def form_valid(self, form):
@@ -182,8 +182,7 @@ class AdicionarEntradaEstoqueView(PermissionRequiredMixin, CreateView):
                 produto.loja = loja
                 produto.save(user=self.request.user)
                 
-                # Se o produto for serializado, salve os IMEIs na tabela EstoqueImei
-                if produto.imei:  # Presumindo que o IMEI é obrigatório
+                if produto.imei: 
                     estoque_imei = EstoqueImei.objects.create(
                         produto=produto.produto,
                         imei=produto.imei,

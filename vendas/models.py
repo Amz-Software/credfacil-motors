@@ -513,6 +513,7 @@ class Pagamento(Base):
     tipo_pagamento = models.ForeignKey('vendas.TipoPagamento', on_delete=models.CASCADE, related_name='pagamentos_tipo')
     valor = models.DecimalField(max_digits=10, decimal_places=2)
     parcelas = models.PositiveIntegerField(default=1, null=True, blank=True)
+    bloqueado = models.BooleanField(default=False)
     # valor_parcela = models.DecimalField(max_digits=10, decimal_places=2)
     data_primeira_parcela = models.DateField()
     

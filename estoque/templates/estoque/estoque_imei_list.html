@@ -43,7 +43,6 @@ Estoque
                                     <th scope="col">Nome</th>
                                     <th scope="col" class="text-center">IMEI</th>
                                     <th scope="col" class="text-end">Vendido</th>
-                                    <th scope="col" class="text-end">Preço de Venda (R$)</th>
                                     {% if user|has_perm:"estoque.can_view_all_imei" %}
                                     <th scope="col" class="text-end">Loja</th>
                                     {% endif %}
@@ -62,7 +61,6 @@ Estoque
                                             <i class="bx bx-x-circle text-danger"></i>
                                         {% endif %}
                                     </td>
-                                    <td class="text-end">{{ produto.produto_entrada.venda_unitaria|floatformat:2 }}</td>
                                     {% if user|has_perm:"estoque.can_view_all_imei" %}
                                     <td class="text-end">
                                         {{ produto.produto_entrada.loja.nome|title }}

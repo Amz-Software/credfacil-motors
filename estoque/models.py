@@ -2,8 +2,8 @@ from django.db import models
 from vendas.models import Base
 
 class EntradaEstoque(Base):
-    fornecedor = models.ForeignKey('estoque.Fornecedor', on_delete=models.PROTECT, related_name='entradas_estoque', verbose_name='Fornecedor')
-    data_entrada = models.DateField(verbose_name='Data de Entrada')
+    fornecedor = models.ForeignKey('estoque.Fornecedor', on_delete=models.PROTECT, related_name='entradas_estoque', verbose_name='Fornecedor', blank=True, null=True)
+    data_entrada = models.DateField(verbose_name='Data de Entrada', auto_now_add=True)
     numero_nota = models.CharField(max_length=20, verbose_name='Número da Nota')
     
     @property
@@ -28,7 +28,7 @@ class EntradaEstoque(Base):
         return total
     
     def __str__(self):
-        return f"Entrada {self.numero_nota} - {self.fornecedor.nome}"
+        return f"Entrada {self.numero_nota}"
 
     class Meta:
         verbose_name = 'Entrada de Estoque'
@@ -39,7 +39,7 @@ class ProdutoEntrada(Base):
     produto = models.ForeignKey('produtos.Produto', on_delete=models.PROTECT, related_name='entradas_estoque', verbose_name='Produto')
     imei = models.CharField(max_length=20, blank=True, null=True, verbose_name='IMEI')
     custo_unitario = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Custo Unitário')
-    venda_unitaria = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Venda Unitária')
+    venda_unitaria = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Venda Unitária', blank=True, null=True)
     quantidade = models.PositiveIntegerField(verbose_name='Quantidade', default=1)
 
     @property

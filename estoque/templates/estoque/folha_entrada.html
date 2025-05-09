@@ -98,10 +98,7 @@
                     <th>Loja</th>
                     <th>Produto</th>
                     <th>Quantidade</th>
-                    <th>Custo Unitário</th>
-                    <th>Valor Unitário</th>
-                    <th>Custo Total</th>
-                    <th>Valor Total</th>
+                    <th>Custo</th>
                 </tr>
             </thead>
             <tbody>
@@ -111,9 +108,6 @@
                         <td>{{ produto.produto.nome }}</td>
                         <td>{{ produto.quantidade }}</td>
                         <td>R$ {{ produto.custo_unitario }}</td>
-                        <td>R$ {{ produto.venda_unitaria }}</td>
-                        <td>R$ {{ produto.custo_total }}</td>
-                        <td>R$ {{ produto.venda_total }}</td>
                     </tr>
                 {% endfor %}
             </tbody>
@@ -121,7 +115,6 @@
                 <tr></tr>
                     <td colspan="3"><strong>Total de Produtos:{{ entrada.quantidade_total }}</strong></td>
                     <td colspan="2"><strong>Total Custo: R$ {{ entrada.custo_total }}</strong></td>
-                    <td colspan="2"><strong>Total Valor: R$ {{ entrada.venda_total }}</strong></td>
                 </tr>
             </tfoot>
         </table>

@@ -54,7 +54,7 @@ class FornecedorAdmin(AdminBase):
 
 @admin.register(ProdutoEntrada)
 class ProdutoEntradaAdmin(AdminBase):
-  list_display = ('entrada', 'produto', 'imei', 'custo_unitario', 'venda_unitaria', 'quantidade', 'custo_total', 'venda_total') + AdminBase.list_display
+  list_display = ('entrada', 'produto', 'imei', 'custo_unitario', 'quantidade', 'custo_total') + AdminBase.list_display
   search_fields = ('produto__nome', 'imei')
   list_filter = ('entrada', 'produto')
   actions = ['trocar_para_credfacil']

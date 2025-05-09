@@ -85,10 +85,7 @@ Estoque
                   <th scope="col">Nome</th>
                   <th scope="col" class="text-center">Quantidade</th>
                   <th scope="col" class="text-center">Qtd. Vendas</th>
-                  <th scope="col" class="text-center">Custo médio</th>
-                  <th scope="col" class="text-center">Preço médio</th>
                   <th scope="col" class="text-center">Última entrada</th>
-                  <th scope="col" class="text-center">Última modificação</th>
                   <th scope="col" class="text-center">Ações</th>
                 </tr>
               </thead>
@@ -101,21 +98,14 @@ Estoque
                   <td class="text-center">
                     {{ produto|total_vendas:loja_id }}
                   </td>
-                  <td class="text-center">R$ {{ produto.preco_medio_custo|floatformat:2 }}</td>
-                  <td class="text-center">R$ {{ produto.preco_medio|floatformat:2 }}</td>
                   <td class="text-center">
                     {% if produto.ultima_entrada.entrada.id %}
                     <a href="{% url 'estoque:entrada_update' produto.ultima_entrada.entrada.pk %}">
-                      {{ produto.ultima_entrada.entrada.id }}
+                      {{ produto.ultima_entrada.entrada.data_entrada }}
                     </a>
                     {% else %}
                     <span>Sem entrada registrada</span>
                     {% endif %}
-                  </td>
-                  <td class="text-center">
-                    <a>
-                      {{ produto.modificado_por|default:"" }}
-                    </a>
                   </td>
                   <td class="text-center">
                     <div class="dropdown">

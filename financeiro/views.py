@@ -380,7 +380,7 @@ class ContasAReceberListView(BaseView, PermissionRequiredMixin, ListView):
             queryset = queryset.filter(loja_id=loja_id)
         
         
-        return queryset.order_by('-criado_em').filter(loja_id=loja_id).exclude(tipo_pagamento__caixa=True).filter(tipo_pagamento__parcelas=True)
+        return queryset.order_by('-criado_em').exclude(tipo_pagamento__caixa=True).filter(tipo_pagamento__parcelas=True)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

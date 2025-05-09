@@ -8,15 +8,10 @@ from produtos.models import Produto
 class EntradaEstoqueForm(forms.ModelForm):
     class Meta:
         model = EntradaEstoque
-        fields = ['fornecedor', 'data_entrada', 'numero_nota']
-        
-        widgets = {
-            'data_entrada': forms.DateInput(attrs={'type': 'date'}),
-        }
+        fields = ['numero_nota']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # caso tenha dado, ajustar a data de entrada para o padrão do javascript
         if self.instance.data_entrada:
             self.initial['data_entrada'] = self.instance.data_entrada.strftime('%Y-%m-%d')
 
@@ -33,7 +28,7 @@ class FornecedorForm(forms.ModelForm):
         }
 
     def __init__(self, *args, disabled=False, **kwargs):
-        self.user = kwargs.pop('user', None)  # Pega o usuário que será passado pela view
+        self.user = kwargs.pop('user', None) 
         super().__init__(*args, **kwargs)
         if disabled:
             for field in self.fields.values():
@@ -53,14 +48,13 @@ class FornecedorForm(forms.ModelForm):
 class ProdutoEntradaForm(forms.ModelForm):
     class Meta:
         model = ProdutoEntrada
-        exclude = ['loja', 'entrada', 'id']
+        exclude = ['loja', 'entrada', 'venda_unitaria', 'quantidade']
 
         widgets = {
             'produto': forms.Select(attrs={'class': 'form-control'}),
             'imei': forms.TextInput(attrs={'class': 'form-control'}),
-            'quantidade': forms.NumberInput(attrs={'class': 'form-control'}),
+            # 'quantidade': forms.NumberInput(attrs={'class': 'form-control'}),
             'custo_unitario': forms.TextInput(attrs={'class': 'form-control money'}),
-            'venda_unitaria': forms.TextInput(attrs={'class': 'form-control money'}),
         }
 
     def __init__(self, *args, **kwargs):

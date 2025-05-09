@@ -86,7 +86,9 @@ Estoque
                   <th scope="col" class="text-center">Quantidade</th>
                   <th scope="col" class="text-center">Qtd. Vendas</th>
                   <th scope="col" class="text-center">Última entrada</th>
+                  {% if user|has_perm:"estoque.change_estoque" %}
                   <th scope="col" class="text-center">Ações</th>
+                  {% endif %}
                 </tr>
               </thead>
               <tbody>
@@ -107,21 +109,21 @@ Estoque
                     <span>Sem entrada registrada</span>
                     {% endif %}
                   </td>
+                  {% if user|has_perm:"estoque.change_estoque" %}
                   <td class="text-center">
                     <div class="dropdown">
                       <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
                         <i class="bx bx-dots-vertical-rounded"></i>
                       </button>
                       <div class="dropdown-menu">
-                        {% if user|has_perm:"estoque.change_estoque" %}
                         <a class="dropdown-item" href="{% url 'estoque:estoque_update' produto.id %}">
                           <i class="bx bx-edit me-1"></i>
                           Editar
                         </a>
-                        {% endif %}
                       </div>
                     </div>
                   </td>
+                  {% endif %}
                 </tr>
                 {% endfor %}
                 {% else %}

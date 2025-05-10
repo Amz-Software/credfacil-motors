@@ -31,6 +31,9 @@ import qrcode
 from dateutil.relativedelta import relativedelta
 import calendar
 from datetime import date
+from django.urls import reverse
+from django.contrib.auth.decorators import login_required, permission_required
+
 
 
 
@@ -620,6 +623,7 @@ def gerar_venda(request, cliente_id):
 
     # Atualiza IMEI e estoque
     imei.vendido = True
+    imei.data_venda = timezone.now()
     imei.save()
     estoque.remover_estoque(1)
 
@@ -1782,3 +1786,13 @@ def contrato_view(request, pk):
     }
 
     return render(request, "venda/contrato.html", context)
+
+
+
+@login_required
+@permission_required('vendas.change_pagamento', raise_exception=True)
+def toggle_bloqueio_pagamento(request, pk):
+    pagamento = get_object_or_404(Pagamento, pk=pk)
+    pagamento.bloqueado = not pagamento.bloqueado
+    pagamento.save()
+    return redirect(reverse('financeiro:contas_a_receber_update', args=[pagamento.pk]))

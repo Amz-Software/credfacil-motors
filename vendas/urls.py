@@ -69,4 +69,10 @@ urlpatterns = [
     path('produtos-vendidos/', ProdutoVendidoListView.as_view(), name='produto_vendido_list'),
     
     path('gerar_qrcode_pix/<int:loja_id>/', gerar_qrcode_pix, name='gerar_qrcode_pix'),
+    
+    path(
+        'pagamento/<int:pk>/toggle-bloqueio/',
+        toggle_bloqueio_pagamento,
+        name='toggle_bloqueio_pagamento'
+    ),
 ]

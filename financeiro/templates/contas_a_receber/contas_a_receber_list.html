@@ -4,6 +4,18 @@
 Contas a Receber
 {% endblock title %}
 
+{% block extra_head %}
+<style>
+  .table-purple,
+  .table-purple th,
+  .table-purple td {
+    background-color: #6f42c1 !important;
+    color: #fff            !important;
+  }
+</style>
+{% endblock %}
+
+
 {% block content %}
 
 <div class="container-xxl mt-4">
@@ -34,7 +46,9 @@ Contas a Receber
                             </thead>
                             <tbody>
                                 {% for conta in contas_a_receber %}
-                                {% if conta.atrasado == 'Atrasado' %}
+                                {% if conta.bloqueado %}
+                                <tr class="table-purple">
+                                {% elif conta.atrasado == 'Atrasado' %}
                                 <tr class="table-danger">
                                 {% elif conta.atrasado == 'Pago parcialmente' %}
                                 <tr class="table-warning">

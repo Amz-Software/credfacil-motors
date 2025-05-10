@@ -62,6 +62,7 @@ class EstoqueImei(Base):
     produto = models.ForeignKey('produtos.Produto', on_delete=models.CASCADE, related_name='estoque_imei')
     imei = models.CharField(max_length=20, verbose_name='IMEI')
     vendido = models.BooleanField(default=False, verbose_name='Vendido')
+    data_venda = models.DateTimeField(blank=True, null=True, verbose_name='Data da Venda')
     produto_entrada = models.ForeignKey(ProdutoEntrada, on_delete=models.CASCADE, related_name='estoque_imei', blank=True, null=True)
     
     def __str__(self):

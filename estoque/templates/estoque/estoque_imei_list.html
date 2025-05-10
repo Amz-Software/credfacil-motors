@@ -43,6 +43,7 @@ Estoque
                                     <th scope="col">Nome</th>
                                     <th scope="col" class="text-center">IMEI</th>
                                     <th scope="col" class="text-end">Vendido</th>
+                                    <th scope="col" class="text-end">Data da Venda</th>
                                     {% if user|has_perm:"estoque.can_view_all_imei" %}
                                     <th scope="col" class="text-end">Loja</th>
                                     {% endif %}
@@ -60,6 +61,9 @@ Estoque
                                         {% else %}
                                             <i class="bx bx-x-circle text-danger"></i>
                                         {% endif %}
+                                    </td>
+                                    <td class="text-end">
+                                        {{ produto.data_venda|date:"d/m/Y H:i"|default:"-" }}
                                     </td>
                                     {% if user|has_perm:"estoque.can_view_all_imei" %}
                                     <td class="text-end">

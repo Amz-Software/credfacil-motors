@@ -248,6 +248,9 @@ class ComprovantesClienteForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
+        
+        if not (user and user.has_perm('vendas.can_edit_finished_sale')):
+            self.fields.pop('consulta_serasa', None)
 
         # 1) Se não tiver permissão, remove todos os campos que terminam em "_analise"
         if not (user and user.has_perm('vendas.view_all_analise_credito')):

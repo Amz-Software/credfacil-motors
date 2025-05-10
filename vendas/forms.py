@@ -281,17 +281,17 @@ class ComprovantesClienteForm(forms.ModelForm):
                 field.required = True
         
         if self.instance and self.instance.pk:
+            if user and not user.has_perm('vendas.change_status_analise'):
+                self.fields['documento_identificacao_frente'].disabled = True
+                self.fields['documento_identificacao_verso'].disabled = True
+                self.fields['comprovante_residencia'].disabled = True
+                
             if user and not user.has_perm('vendas.can_edit_finished_sale'):
                 if self.instance.cliente.analise_credito and self.instance.cliente.analise_credito.status == 'EA':
                     self.fields['documento_identificacao_frente'].disabled = True
                     self.fields['documento_identificacao_verso'].disabled = True
                     self.fields['comprovante_residencia'].disabled = True
                     
-            if user and not user.has_perm('vendas.change_status_analise'):
-                self.fields['documento_identificacao_frente'].disabled = True
-                self.fields['documento_identificacao_verso'].disabled = True
-                self.fields['comprovante_residencia'].disabled = True
-                self.fields['consulta_serasa'].disabled = True
             
 
 class EnderecoForm(forms.ModelForm):

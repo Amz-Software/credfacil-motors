@@ -249,7 +249,7 @@ class ComprovantesClienteForm(forms.ModelForm):
         user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
         
-        if not (user and user.has_perm('vendas.can_edit_finished_sale')):
+        if not (user and user.has_perm('vendas.change_status_analise')):
             self.fields.pop('consulta_serasa', None)
 
         # 1) Se não tiver permissão, remove todos os campos que terminam em "_analise"
@@ -286,7 +286,6 @@ class ComprovantesClienteForm(forms.ModelForm):
                     self.fields['documento_identificacao_frente'].disabled = True
                     self.fields['documento_identificacao_verso'].disabled = True
                     self.fields['comprovante_residencia'].disabled = True
-                    self.fields['consulta_serasa'].disabled = True
                     
             if user and not user.has_perm('vendas.change_status_analise'):
                 self.fields['documento_identificacao_frente'].disabled = True

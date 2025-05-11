@@ -1383,7 +1383,7 @@ class FolhaCaixaPDFView(PermissionRequiredMixin, View):
         valor_venda_por_tipo_pagamento = {}
 
         for venda in vendas:
-            for pagamento in venda.pagamentos.all():
+            for pagamento in venda.pagamentos.filter(tipo_pagamento__caixa=True):
                 if not pagamento.tipo_pagamento.nao_contabilizar:
                     if pagamento.tipo_pagamento.nome not in valor_venda_por_tipo_pagamento:
                         valor_venda_por_tipo_pagamento[pagamento.tipo_pagamento.nome] = 0
@@ -1431,7 +1431,7 @@ class FolhaProdutoPDFView(PermissionRequiredMixin, View):
             # Captura todas as formas de pagamento únicas
             pagamentos = venda.pagamentos.all()
             formas_pagamento = ', '.join(set(p.tipo_pagamento.nome for p in pagamentos))
-            valor_total += venda.pagamentos_valor_total
+            valor_total += venda.pagamentos_valor_total_dinheiro
             total_custos = 0
             total_lucro = 0
 
@@ -1441,9 +1441,10 @@ class FolhaProdutoPDFView(PermissionRequiredMixin, View):
                         'id_venda': venda.id,
                         'id_produto': produto.produto.id,
                         'produto': produto.produto.nome,
-                        'tipo_produto': produto.produto.tipo.nome,
-                        'vendedor': venda.vendedor.get_full_name(),
+                        'vendedor': venda.vendedor.get_full_name() if venda.vendedor else 'N/A',
                         'preco': produto.valor_unitario,
+                        'entrada_cliente': produto.produto.entrada_cliente,
+                        'repasse_logista': produto.produto.valor_repasse_logista,
                         'quantidade': produto.quantidade,
                         'custo': produto.custo(),
                         'total': venda.pagamentos_valor_total,

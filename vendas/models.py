@@ -348,7 +348,6 @@ class Venda(Base):
     def pagamentos_valor_total_dinheiro(self):
         return sum(pagamento.valor for pagamento in self.pagamentos.all() if pagamento.tipo_pagamento.caixa)
     
-    
     def calcular_valor_total(self):
         return sum(produto.calcular_valor_total() for produto in self.itens_venda.all())
     
@@ -502,7 +501,7 @@ class ProdutoVenda(Base):
     
     def lucro(self):
         from estoque.models import ProdutoEntrada
-        return (self.valor_unitario - ProdutoEntrada.objects.filter(produto=self.produto).last().custo_unitario) * self.quantidade
+        return ((self.produto.valor_repasse_logista + self.produto.entrada_cliente) - ProdutoEntrada.objects.filter(produto=self.produto).last().custo_unitario) * self.quantidade
     
     def custo(self):
         from estoque.models import ProdutoEntrada

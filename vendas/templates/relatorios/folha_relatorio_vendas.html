@@ -82,7 +82,6 @@
                     <th>Data</th>
                     <th>Vendedor</th>
                     <th>Produtos</th>
-                    <th>Tipo de Venda</th>
                     <th>Valor Total</th>
                     <th>Valor Total Lucro</th>
                 </tr>
@@ -100,7 +99,6 @@
                         N/A
                         {% endfor %}
                     </td>
-                    <td>{{ venda.tipo_venda }}</td>
                     <td>{{ venda.pagamentos_valor_total|floatformat:2 }}</td>
                     <td>{{ venda.lucro_total|floatformat:2 }}</td>
                 </tr>

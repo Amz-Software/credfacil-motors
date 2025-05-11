@@ -125,11 +125,11 @@
                     <th>ID Venda</th>
                     <th>ID Produto</th>
                     <th>Produto</th>
-                    <th>Tipo Produto</th>
                     <th>Formas de Pagamento</th>
                     <th>Vendedor</th>
                     <th>Custo</th>
-                    <th>Preço</th>
+                    <th>Entrada</th>
+                    <th>Repasse CredFácil</th>
                     <th>Quantidade</th>
                     <th>Total</th>
                     <th>Lucro</th>
@@ -141,11 +141,11 @@
                     <td>{{ produto.id_venda }}</td>
                     <td>{{ produto.id_produto }}</td>
                     <td>{{ produto.produto }}</td>
-                    <td>{{ produto.tipo_produto }}</td>
                     <td>{{ produto.formas_pagamento }}</td>
                     <td>{{ produto.vendedor }}</td>
                     <td>R$ {{ produto.custo }}</td>
-                    <td>R$ {{ produto.preco }}</td>
+                    <td>R$ {{ produto.entrada_cliente }}</td>
+                    <td>R$ {{ produto.repasse_logista }}</td>
                     <td>{{ produto.quantidade }}</td>
                     <td>R$ {{ produto.total }}</td>
                     <td>R$ {{ produto.lucro }}</td>

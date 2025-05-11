@@ -60,8 +60,8 @@ Caixas
                 <tr>
                   <th scope="col">Data de Abertura</th>
                   <th scope="col">Quantidade de Vendas</th>
-                  <th scope="col">Vendas Total</th>
-                  <th scope="col">Vendas Caixa</th>
+                  <!-- <th scope="col">Vendas Total</th> -->
+                  <th scope="col">Total em Caixa</th>
                   <th scope="col">Data Fechamento</th>
                   <th scope="col">Ações</th>
                 </tr>
@@ -71,7 +71,6 @@ Caixas
                 <tr>
                   <td>Caixa - {{ caixa.data_abertura|date:"d/m/Y" }}</td>
                   <td>{{ caixa.quantidade_vendas }}</td>
-                  <td>{{ caixa.saldo_total }}</td>
                   <td>{{ caixa.saldo_final }}</td>
                   {% if caixa.data_fechamento %}
                   <td>
@@ -95,11 +94,6 @@ Caixas
                         {% if user|has_perm:"vendas.view_caixa" %}
                         <a class="dropdown-item" href="{% url "vendas:caixa_detail" caixa.pk %}">
                           <i class="bx bx-show me-1"></i> Detalhes
-                        </a>
-                        {% endif %}
-                        {% if user|has_perm:"vendas.view_caixa" %}
-                        <a class="dropdown-item" href="{% url "vendas:caixa_pdf" caixa.pk %}" target="_blank">
-                          <i class="bx bx-file me-1"></i> Folha Caixa
                         </a>
                         {% endif %}
                         {% if user|has_perm:"vendas.view_caixa" %}

@@ -656,13 +656,6 @@ class RelatorioVendasForm(forms.Form):
         required=False,
         widget=Select2MultipleWidget(attrs={'class': 'form-control'})
     )
-    tipos_pagamento = forms.ModelMultipleChoiceField(
-        queryset=TipoPagamento.objects.all(),
-        label='Tipos de Pagamento',
-        required=False,
-        widget=Select2MultipleWidget(attrs={'class': 'form-control'})
-    )
-
     def __init__(self, *args, **kwargs):
         loja = kwargs.pop('loja', None)
         print(f'Loja no form: {loja}')
@@ -672,10 +665,7 @@ class RelatorioVendasForm(forms.Form):
             self.fields['cliente'].queryset = Cliente.objects.filter(loja=loja)
             self.fields['vendedores'].queryset = User.objects.filter(loja=loja)
             self.fields['lojas'].queryset = Loja.objects.filter(id=loja)
-            self.fields['tipos_pagamento'].queryset = TipoPagamento.objects.all()
-
             self.fields['lojas'].initial = loja
-
 
 
 # vendas/forms.py

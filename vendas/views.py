@@ -1623,9 +1623,6 @@ class FolhaRelatorioVendasView(PermissionRequiredMixin, TemplateView):
 
         if produtos:
             filtros['produtos__in'] = produtos
-            
-        if tipos_venda:
-            filtros['pagamentos__tipo_pagamento__in'] = tipos_venda
 
         if loja:
             filtros['loja__id'] = loja

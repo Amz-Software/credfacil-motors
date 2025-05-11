@@ -81,6 +81,18 @@ Contas a Receber
                   >
                   <label class="form-check-label" for="bloqueado">Somente Bloqueados</label>
                 </div>
+              <div class="col-auto">
+                <div class="form-check form-check-inline">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="pagamento_efetuado"
+                    name="pagamento_efetuado"
+                    value="1"
+                    {% if request.GET.pagamento_efetuado %}checked{% endif %}
+                  >
+                  <label class="form-check-label" for="pagamento_efetuado">Pagamento Sinalizado</label>
+                </div>
               </div>
 
               <!-- Botão Filtrar -->

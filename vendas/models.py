@@ -3,8 +3,10 @@ from django.utils import timezone
 from datetime import date, timedelta
 from decimal import Decimal
 from django.utils.functional import cached_property
-from django.db.models import Count, Q, Case, When, Value, IntegerField
+from django.db.models import Count, Q, Case, When, Value, IntegerField, BooleanField, F
 from datetime import date, timedelta
+from django.db import models
+from django.utils import timezone
 
 class Base(models.Model):
     loja = models.ForeignKey('vendas.Loja', on_delete=models.CASCADE, related_name='%(class)s_loja', null=True, blank=True)
@@ -508,28 +510,6 @@ class ProdutoVenda(Base):
         )
         
 
-class Pagamento(Base):
-    venda = models.ForeignKey('vendas.Venda', on_delete=models.CASCADE, related_name='pagamentos')
-    tipo_pagamento = models.ForeignKey('vendas.TipoPagamento', on_delete=models.CASCADE, related_name='pagamentos_tipo')
-    valor = models.DecimalField(max_digits=10, decimal_places=2)
-    parcelas = models.PositiveIntegerField(default=1, null=True, blank=True)
-    bloqueado = models.BooleanField(default=False)
-    # valor_parcela = models.DecimalField(max_digits=10, decimal_places=2)
-    data_primeira_parcela = models.DateField()
-    
-    @property
-    def valor_parcela(self):
-        return self.valor / self.parcelas
-    
-    def __str__(self):
-        return f"Pagamento de R$ {self.valor} via {self.tipo_pagamento.nome}"
-    
-    class Meta:
-        verbose_name_plural = 'Pagamentos'
-        permissions = (
-            ('can_view_all_payments', 'Pode ver todos os pagamentos'),
-        )
-    
 
 class TipoPagamento(Base):
     nome = models.CharField(max_length=100)
@@ -545,6 +525,84 @@ class TipoPagamento(Base):
     class  Meta:
         verbose_name_plural = 'Tipos de Pagamentos'
         
+
+class PagamentoQuerySet(models.QuerySet):
+    def with_parcelas_info(self):
+        return self.annotate(
+            total_parcelas=Count('parcelas_pagamento'),
+            parcelas_pagas=Count(
+                'parcelas_pagamento',
+                filter=Q(parcelas_pagamento__pago=True)
+            ),
+            parcelas_pagas_no_prazo=Count(
+                'parcelas_pagamento',
+                filter=Q(
+                    parcelas_pagamento__pago=True,
+                    parcelas_pagamento__data_pagamento__lte=F('parcelas_pagamento__data_vencimento')
+                )
+            ),
+            parcelas_atrasadas=Count(
+                'parcelas_pagamento',
+                filter=Q(
+                    parcelas_pagamento__pago=False,
+                    parcelas_pagamento__data_vencimento__lt=timezone.now()
+                )
+            )
+        )
+
+    def with_status_flags(self):
+        return self.with_parcelas_info().annotate(
+            todas_parcelas_pagas=Case(
+                When(parcelas_pagas=F('total_parcelas'), then=Value(True)),
+                default=Value(False),
+                output_field=BooleanField()
+            ),
+            pago_dentro_prazo=Case(
+                When(parcelas_pagas_no_prazo=F('total_parcelas'), then=Value(True)),
+                default=Value(False),
+                output_field=BooleanField()
+            ),
+            com_parcela_atrasada=Case(
+                When(parcelas_atrasadas__gt=0, then=Value(True)),
+                default=Value(False),
+                output_field=BooleanField()
+            ),
+            # <— nova flag: pendente mas sem atraso
+            com_pagamento_pendente=Case(
+                When(
+                    Q(parcelas_pagas__lt=F('total_parcelas')) &
+                    Q(parcelas_atrasadas=0),
+                    then=Value(True)
+                ),
+                default=Value(False),
+                output_field=BooleanField()
+            ),
+        )
+    
+    
+class Pagamento(Base):
+    venda = models.ForeignKey('vendas.Venda', on_delete=models.CASCADE, related_name='pagamentos')
+    tipo_pagamento = models.ForeignKey('vendas.TipoPagamento', on_delete=models.CASCADE, related_name='pagamentos_tipo')
+    valor = models.DecimalField(max_digits=10, decimal_places=2)
+    parcelas = models.PositiveIntegerField(default=1, null=True, blank=True)
+    bloqueado = models.BooleanField(default=False)
+    # valor_parcela = models.DecimalField(max_digits=10, decimal_places=2)
+    objects = PagamentoQuerySet.as_manager()
+    data_primeira_parcela = models.DateField()
+    
+    @property
+    def valor_parcela(self):
+        return self.valor / self.parcelas
+    
+    def __str__(self):
+        return f"Pagamento de R$ {self.valor} via {self.tipo_pagamento.nome}"
+    
+    class Meta:
+        verbose_name_plural = 'Pagamentos'
+        permissions = (
+            ('can_view_all_payments', 'Pode ver todos os pagamentos'),
+        )
+    
 
 class Parcela(Base):
     pagamento = models.ForeignKey('vendas.Pagamento', on_delete=models.CASCADE, related_name='parcelas_pagamento')

@@ -372,15 +372,34 @@ class ContasAReceberListView(BaseView, PermissionRequiredMixin, ListView):
     permission_required = 'vendas.view_pagamento'
 
     def get_queryset(self):
-        queryset = Pagamento.objects.all()
         loja_id = self.request.session.get('loja_id')
         user = self.request.user
+        qs = Pagamento.objects.with_status_flags()
         
+        search = self.request.GET.get('search', '')
+        if search:
+            qs = qs.filter(
+                Q(venda__cliente__nome__icontains=search) |
+                Q(venda__cliente__cpf__icontains=search) 
+            )
+
+        if self.request.GET.get('bloqueado'):
+            qs = qs.filter(bloqueado=True)
+
         if not user.has_perm('vendas.can_view_all_payments'):
-            queryset = queryset.filter(loja_id=loja_id)
-        
-        
-        return queryset.order_by('-criado_em').exclude(tipo_pagamento__caixa=True).filter(tipo_pagamento__parcelas=True)
+            qs = qs.filter(loja_id=loja_id)
+
+        status = self.request.GET.get('status')
+        if status == 'no_prazo':
+            qs = qs.filter(pago_dentro_prazo=True)
+        elif status == 'atrasado':
+            qs = qs.filter(com_parcela_atrasada=True)
+        elif status == 'quitado':
+            qs = qs.filter(todas_parcelas_pagas=True)
+        elif status == 'pendente':                              # novo
+            qs = qs.filter(com_pagamento_pendente=True)
+
+        return qs.order_by('-criado_em').exclude(tipo_pagamento__caixa=True).filter(tipo_pagamento__parcelas=True)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

@@ -15,69 +15,154 @@ Contas a Receber
 </style>
 {% endblock %}
 
-
 {% block content %}
-
 <div class="container-xxl mt-4">
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h4 class="card-title">Contas a Receber</h4>
-                    <div>
-                        <form action="" method="get" class="d-inline-block me-2" id="searchForm">
-                            <input type="text" name="search" value="{{ request.GET.search }}" class="form-control"
-                                placeholder="Pesquisar" onchange="document.getElementById('searchForm').submit()">
-                        </form>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th scope="col">Venda</th>
-                                    <th scope="col">Tipo de Pagamento</th>
-                                    <th scope="col">Valor</th>
-                                    <th scope="col">Parcelas</th>
-                                    <th scope="col">Data da Primeira Parcela</th>
-                                    <th scope="col">Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for conta in contas_a_receber %}
-                                {% if conta.bloqueado %}
-                                <tr class="table-purple">
-                                {% elif conta.atrasado == 'Atrasado' %}
-                                <tr class="table-danger">
-                                {% elif conta.atrasado == 'Pago parcialmente' %}
-                                <tr class="table-warning">
-                                {% else %}
-                                <tr class="table-success">
-                                    {% endif %}
-                                    <td>{{ conta.venda }}</td>
-                                    <td>{{ conta.tipo_pagamento }}</td>
-                                    <td>{{ conta.valor }}</td>
-                                    <td>{{ conta.parcelas }}</td>
-                                    <td>{{ conta.data_primeira_parcela }}</td>
-                                    <td>
-                                        {% if user|has_perm:"vendas.view_pagamento" %}
-                                        <a href="{% url 'financeiro:contas_a_receber_update' conta.id %}"
-                                            class="btn btn-sm btn-primary">Visualizar</a>
-                                        {% endif %}
-                                    </td>
-                                    {% empty %}
-                                    <td colspan="6">Nenhum registro encontrado</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                        {% include "snippets/pagination.html" %}
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <!-- CARD HEADER COM SEARCH + FILTROS -->
+        <div class="card-header">
+          <div class="d-flex flex-wrap justify-content-between align-items-center">
+            <h4 class="card-title mb-0">Contas a Receber
+                <button
+                type="button"
+                class="btn btn-sm btn-outline-secondary ms-2"
+                data-bs-toggle="tooltip"
+                data-bs-html="true"
+                title="
+                  <ul class='mb-0 ps-3'>
+                    <li><strong>Roxo:</strong> Bloqueado</li>
+                    <li><strong>Vermelho:</strong> Atrasado</li>
+                    <li><strong>Amarelo:</strong> Pendente (não atrasado)</li>
+                    <li><strong>Verde:</strong> Pago no Prazo</li>
+                    <li><strong>Azul:</strong> Quitado</li>
+                  </ul>
+                "
+              >
+                <i class="bi bi-info-circle"></i>
+              </button>
+            </h4>
 
+            <form method="get" class="row gx-2 gy-1 align-items-center">
+              <!-- Pesquisa -->
+              <div class="col-auto">
+                <input
+                  type="text"
+                  name="search"
+                  value="{{ request.GET.search }}"
+                  class="form-control form-control-sm"
+                  placeholder="Pesquisar..."
+                >
+              </div>
+
+              <!-- Filtro de Status -->
+              <div class="col-auto">
+                <select name="status" class="form-select form-select-sm">
+                  <option value="" {% if not request.GET.status %}selected{% endif %}>Todos</option>
+                  <option value="no_prazo"    {% if request.GET.status == 'no_prazo' %}selected{% endif %}>Pago no Prazo</option>
+                  <option value="atrasado"    {% if request.GET.status == 'atrasado' %}selected{% endif %}>Com Atraso</option>
+                  <option value="quitado"     {% if request.GET.status == 'quitado' %}selected{% endif %}>Quitado</option>
+                  <option value="pendente" {% if request.GET.status == 'pendente' %}selected{% endif %}>
+                    Pendente (não atrasado)
+                  </option>
+                </select>
+              </div>
+
+              <!-- Filtro de Bloqueados -->
+              <div class="col-auto">
+                <div class="form-check form-check-inline">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="bloqueado"
+                    name="bloqueado"
+                    value="1"
+                    {% if request.GET.bloqueado %}checked{% endif %}
+                  >
+                  <label class="form-check-label" for="bloqueado">Somente Bloqueados</label>
+                </div>
+              </div>
+
+              <!-- Botão Filtrar -->
+              <div class="col-auto">
+                <button type="submit" class="btn btn-primary btn-sm">Filtrar</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- CARD BODY COM TABELA -->
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>Venda</th>
+                  <th>Tipo de Pagamento</th>
+                  <th>Valor</th>
+                  <th>Parcelas</th>
+                  <th>1ª Parcela</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for conta in contas_a_receber %}
+                  {% if conta.bloqueado %}
+                    <tr class="table-purple">
+                  {% elif conta.com_parcela_atrasada %}
+                    <tr class="table-danger">
+                  {% elif conta.com_pagamento_pendente %}           {# novo #}
+                    <tr class="table-warning">
+                  {% elif conta.pago_dentro_prazo %}
+                    <tr class="table-success">
+                  {% elif conta.todas_parcelas_pagas %}
+                    <tr class="table-info">
+                  {% else %}
+                    <tr >
+                  {% endif %}
+                      <td>{{ conta.venda }}</td>
+                      <td>{{ conta.tipo_pagamento }}</td>
+                      <td>{{ conta.valor|floatformat:2 }}</td>
+                      <td>{{ conta.parcelas }}</td>
+                      <td>{{ conta.data_primeira_parcela }}</td>
+                      <td>
+                        {% if user|has_perm:"vendas.view_pagamento" %}
+                          <a
+                            href="{% url 'financeiro:contas_a_receber_update' conta.id %}"
+                            class="btn btn-sm btn-outline-primary"
+                          >Visualizar</a>
+                        {% endif %}
+                      </td>
+                    </tr>
+                {% empty %}
+                  <tr>
+                    <td colspan="6" class="text-center py-4">Nenhum registro encontrado</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+
+            {% include "snippets/pagination.html" %}
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+
+{% block extra_scripts %}
+  <!-- Certifique-se de ter o bundle do Bootstrap (inclui Popper) carregado -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      var tooltipTriggerList = [].slice.call(
+        document.querySelectorAll('[data-bs-toggle="tooltip"]')
+      );
+      tooltipTriggerList.forEach(function (el) {
+        new bootstrap.Tooltip(el);
+      });
+    });
+  </script>
 {% endblock %}

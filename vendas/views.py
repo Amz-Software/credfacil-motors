@@ -12,7 +12,7 @@ from estoque.models import Estoque, EstoqueImei
 from financeiro.forms import RepasseForm
 from financeiro.models import Repasse
 from produtos.models import Produto
-from vendas.forms import AnaliseCreditoClienteForm, ClienteForm, ComprovantesClienteForm, ContatoAdicionalForm, FormaPagamentoEditFormSet, InformacaoPessoalForm, LojaForm, ProdutoVendaEditFormSet, RelatorioVendasForm, VendaForm, ProdutoVendaFormSet, FormaPagamentoFormSet, LancamentoForm, LancamentoCaixaTotalForm
+from vendas.forms import AnaliseCreditoClienteForm, ClienteConsultaForm, ClienteForm, ComprovantesClienteForm, ContatoAdicionalForm, FormaPagamentoEditFormSet, InformacaoPessoalForm, LojaForm, ProdutoVendaEditFormSet, RelatorioVendasForm, VendaForm, ProdutoVendaFormSet, FormaPagamentoFormSet, LancamentoForm, LancamentoCaixaTotalForm
 from .models import AnaliseCreditoCliente, Caixa, Cliente, Loja, Pagamento, Parcela, ProdutoVenda, TipoPagamento, Venda, LancamentoCaixa, LancamentoCaixaTotal
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.utils import timezone
@@ -33,8 +33,14 @@ import calendar
 from datetime import date
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required, permission_required
-
-
+import re, sys, io, base64
+import base64
+from io import BytesIO
+from django.shortcuts import get_object_or_404
+from django.views.generic import DetailView
+import qrcode
+from pixqrcodegen import Payload
+from vendas.models import Pagamento, Loja
 
 
 logger = logging.getLogger(__name__)
@@ -1356,6 +1362,7 @@ class VendaPDFView(PermissionRequiredMixin, View):
         }
         return render(request, 'venda/venda_pdf.html', context)
     
+    
 class FolhaCaixaPDFView(PermissionRequiredMixin, View):
     permission_required = 'vendas.view_venda'
     
@@ -1403,6 +1410,7 @@ class FolhaCaixaPDFView(PermissionRequiredMixin, View):
             'valor_final': valor_final
         }
         return render(request, 'caixa/folha_caixa.html', context)
+
     
 class FolhaProdutoPDFView(PermissionRequiredMixin, View):
     permission_required = 'vendas.view_venda'
@@ -1460,86 +1468,104 @@ class FolhaProdutoPDFView(PermissionRequiredMixin, View):
         return render(request, 'caixa/folha_produtos.html', context)
 
 
-def folha_carne_view(request, pk, tipo):
-    # Busca a venda
-    venda = Venda.objects.get(pk=pk)
-    valor_total = venda.pagamentos_valor_total
-    pagamento_carne = Pagamento.objects.filter(venda=venda, tipo_pagamento__carne=True).first()
 
+import re
+import sys
+import io
+import base64
+
+from io import BytesIO
+from dateutil.relativedelta import relativedelta
+
+from django.shortcuts import get_object_or_404, redirect, render
+from django.contrib import messages
+
+import qrcode
+from qrcode import QRCode
+from qrcode.constants import ERROR_CORRECT_M
+from pixqrcodegen import Payload
+
+from vendas.models import Venda, Pagamento, Loja
+
+
+def folha_carne_view(request, pk, tipo):
+    # 1) Busca a venda e o pagamento em carnê/promissória
+    venda = get_object_or_404(Venda, pk=pk)
+    pagamento_carne = Pagamento.objects.filter(
+        venda=venda,
+        tipo_pagamento__carne=True
+    ).first()
     if not pagamento_carne:
         messages.error(request, 'Venda não possui pagamento em carnê ou promissória')
         return redirect('vendas:venda_list')
-    
+
+    # 2) Dados iniciais
     quantidade_parcelas = pagamento_carne.parcelas
-    nome_cliente = venda.cliente.nome.title()
-    tipo_pagamento = 'Carnê' if tipo == 'carne' else 'Promissória'
-    endereco_cliente = venda.cliente.endereco
-    cpf = venda.cliente.cpf
+    nome_cliente       = venda.cliente.nome.title()
+    tipo_pagamento     = 'Carnê' if tipo == 'carne' else 'Promissória'
+    endereco_cliente   = venda.cliente.endereco
+    cpf                = venda.cliente.cpf
+    loja               = get_object_or_404(Loja, nome__icontains="CredFácil")
 
-    # Lista de parcelas (1 a quantidade_parcelas)
-    parcelas = list(range(1, quantidade_parcelas + 1))
-    datas_vencimento = []
-    valores_parcelas = []
-    parcelas_info = []  # Lista para armazenar as informações combinadas (parcela, valor, qr_code)
+    # 3) Sanitiza chave Pix
+    raw_chave     = loja.chave_pix or ""
+    chave_digits  = re.sub(r'\D', '', raw_chave)
+    is_celular    = bool(re.fullmatch(r'(?:\+?55)?\d{11}', raw_chave))
 
+    parcelas_info = []
     for i in range(quantidade_parcelas):
-        # Calcular a data de vencimento corretamente
-        data_vencimento = pagamento_carne.data_primeira_parcela + relativedelta(months=i)
-        datas_vencimento.append(data_vencimento.strftime('%d/%m/%Y'))
+        # vencimento e valor
+        data_venc   = pagamento_carne.data_primeira_parcela + relativedelta(months=i)
+        valor_parc  = f"{pagamento_carne.valor_parcela:.2f}"
+        txid        = f"{pagamento_carne.pk:04d}{i+1:02d}"
 
-        # Adicionar o valor da parcela
-        valor_parcela = f'{pagamento_carne.valor_parcela:.2f}'
-        valores_parcelas.append(valor_parcela)
-        
-        try:
-            loja = Loja.objects.filter(nome__icontains="CredFácil").first()
-        except Loja.DoesNotExist:
-            messages.error(request, 'Loja CredFácil não encontrada')
-            return redirect('vendas:venda_list')
-        
-        if not loja.chave_pix:
-            messages.error(request, 'Loja não possui chave Pix cadastrada')
-            return redirect('vendas:venda_list')
+        if is_celular:
+            # fluxo antigo
+            pix_qrcode = PixQrCode(
+                name=loja.nome,
+                key=raw_chave,
+                city=loja.endereco or '',
+                amount=valor_parc
+            )
+            qr_string = pix_qrcode.generate_code()
+            img = qrcode.make(qr_string)
 
-        # Gerar o QR Code Pix para a parcela com o valor correspondente
-        chave_pix = loja.chave_pix
-        nome_loja = loja.nome
-        cidade_loja = loja.endereco or "Cidade não especificada"
+        else:
+            payload = Payload(loja.nome, chave_digits, valor_parc, loja.endereco or '', txid)
 
-        # Criando a instância da classe PixQrCode com o valor da parcela
-        pix_qrcode = PixQrCode(
-            name=nome_loja, 
-            key=chave_pix, 
-            city=cidade_loja, 
-            amount=str(valor_parcela)  # O valor precisa ser passado como string
-        )
+            buf_out    = io.StringIO()
+            old_stdout = sys.stdout
+            sys.stdout  = buf_out
+            payload.gerarPayload()
+            sys.stdout  = old_stdout
+            emv        = buf_out.getvalue().strip()
 
-        # Gerar o código QR Pix
-        qr_code_data = pix_qrcode.generate_code()
+            qr = QRCode(
+                version=None,
+                error_correction=ERROR_CORRECT_M,
+                box_size=10,
+                border=4
+            )
+            qr.add_data(emv)
+            qr.make(fit=True)
+            img = qr.make_image()
 
-        # Gerar a imagem do QR Code
-        qr = qrcode.make(qr_code_data)
-
-        # Salvar o QR Code em memória usando BytesIO
+        # converte a imagem em base64
         buffer = BytesIO()
-        qr.save(buffer, format="PNG")
-        buffer.seek(0)
+        img.save(buffer, format="PNG")
+        qr_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
 
-        # Codificar o QR Code em base64
-        qr_code_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
-
-        # Adicionar as informações da parcela, valor e QR Code à lista
         parcelas_info.append({
             'parcela': i + 1,
-            'valor_parcela': valor_parcela,
-            'qr_code_base64': qr_code_base64,
-            'chave_pix': chave_pix,
-            'data_vencimento': datas_vencimento[i]
+            'valor_parcela': valor_parc,
+            'data_vencimento': data_venc.strftime('%d/%m/%Y'),
+            'qr_code_base64': qr_base64,
+            'chave_pix': raw_chave,
         })
 
     context = {
         'venda': venda,
-        'valor_total': valor_total,
+        'valor_total': venda.pagamentos_valor_total,
         'tipo_pagamento': tipo_pagamento,
         'quantidade_parcelas': quantidade_parcelas,
         'nome_cliente': nome_cliente,
@@ -1550,7 +1576,6 @@ def folha_carne_view(request, pk, tipo):
         'loja': loja,
     }
     return render(request, "venda/folha_carne.html", context)
-
 
 class RelatorioVendasView(PermissionRequiredMixin, FormView):
     template_name = 'relatorios/relatorio_vendas.html'
@@ -1796,3 +1821,76 @@ def toggle_bloqueio_pagamento(request, pk):
     pagamento.bloqueado = not pagamento.bloqueado
     pagamento.save()
     return redirect(reverse('financeiro:contas_a_receber_update', args=[pagamento.pk]))
+
+
+class ConsultaPagamentosView(FormView):
+    template_name = "publico/consulta_pagamentos.html"
+    form_class = ClienteConsultaForm
+
+    def form_valid(self, form):
+        cpf = form.cleaned_data['cpf']
+        dob = form.cleaned_data['date_of_birth']
+        pagamentos = (
+            Pagamento.objects
+            .with_status_flags()     # já inclui with_parcelas_info() internamente
+            .filter(
+                venda__cliente__cpf=cpf,
+                venda__cliente__nascimento=dob
+            )
+        )
+        return self.render_to_response(
+            self.get_context_data(form=form, pagamentos=pagamentos)
+        )
+        
+
+class PagamentoDetailView(DetailView):
+    model = Pagamento
+    template_name = 'publico/pagamento_detail.html'
+    context_object_name = 'pagamento'
+    pk_url_kwarg = 'pk'
+
+    def get_context_data(self, **kwargs):
+        ctx       = super().get_context_data(**kwargs)
+        pagamento = ctx['pagamento']
+
+        # busca loja e limpa só os dígitos da chave (telefone ou CPF/CNPJ)
+        loja    = get_object_or_404(Loja, nome__iexact='CredFácil')
+        chave   = re.sub(r'\D', '', loja.chave_pix)
+        nome    = loja.nome
+        cidade  = 'belem'
+
+        qr_items = []
+        for parcela in pagamento.parcelas_pagamento.all().order_by('numero_parcela'):
+            txid   = f"{pagamento.pk:04d}{parcela.numero_parcela:02d}"
+            amount = f"{parcela.valor:.2f}"
+
+            payload = Payload(nome, chave, amount, cidade, txid)
+
+            buf_out = io.StringIO()
+            old_stdout = sys.stdout
+            sys.stdout = buf_out
+            payload.gerarPayload()
+            sys.stdout = old_stdout
+            emv = buf_out.getvalue().strip()
+
+            img = qrcode.make(emv)
+            img_buf = BytesIO()
+            img.save(img_buf, format='PNG')
+            b64 = base64.b64encode(img_buf.getvalue()).decode()
+
+            qr_items.append({'parcela': parcela, 'qr_b64': b64})
+
+        ctx['qr_items'] = qr_items
+        return ctx
+
+
+
+class InformarPagamentoView(View):
+    def post(self, request, pk):
+        parcela = get_object_or_404(Parcela, pk=pk)
+        parcela.pagamento_efetuado = True
+        parcela.pagamento_efetuado_em = timezone.now()
+        parcela.data_pagamento = timezone.now().date()
+        parcela.save(update_fields=['pagamento_efetuado', 'data_pagamento'])
+        messages.success(request, "Pagamento informado e está em confirmação.")
+        return redirect('vendas:pagamento_detail', pk=parcela.pagamento.pk)

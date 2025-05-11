@@ -429,20 +429,30 @@ class ContasAReceberDetailView(PermissionRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         conta_a_receber = self.get_object()
-        context['parcela_form'] = ParcelaInlineFormSet(instance=conta_a_receber)
+        context['parcela_form'] = ParcelaInlineFormSet(instance=conta_a_receber, form_kwargs={'user': self.request.user})
         return context
     
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
+        user = request.user
+        
+        if not user.has_perm('vendas.change_pagamento'):
+            messages.error(request, "Você não tem permissão para editar parcelas.")
+            return redirect('financeiro:contas_a_receber_list')
         conta_a_receber = self.object
-        parcela_form = ParcelaInlineFormSet(request.POST, instance=conta_a_receber)
+        parcela_form = ParcelaInlineFormSet(request.POST, instance=conta_a_receber, form_kwargs={'user': request.user})
 
         if parcela_form.is_valid():
             parcela_form.save()
             messages.success(request, "Parcelas atualizadas com sucesso!")
             return redirect('financeiro:contas_a_receber_update', pk=conta_a_receber.pk)
-
-        messages.error(request, "Erro ao atualizar as parcelas.")
+        else:
+            # Se o formset não for válido, exibir mensagens de erro
+            for form in parcela_form:
+                if form.errors:
+                    for error in form.errors:
+                        messages.error(request, f"Erro no campo {form.instance}: {error}")
+        messages.error(request, "Erro ao atualizar as parcelas.")   
         return self.render_to_response(self.get_context_data(parcela_form=parcela_form))
     
 class RelatorioSaidaView(BaseView, PermissionRequiredMixin, TemplateView):

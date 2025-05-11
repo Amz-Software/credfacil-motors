@@ -670,3 +670,30 @@ class RelatorioVendasForm(forms.Form):
 
             self.fields['lojas'].initial = loja
 
+
+
+# vendas/forms.py
+from django.core.validators import RegexValidator
+
+class ClienteConsultaForm(forms.Form):
+    cpf = forms.CharField(
+        label="CPF",
+        max_length=14,
+        validators=[
+            RegexValidator(
+                regex=r'^\d{3}\.\d{3}\.\d{3}\-\d{2}$|^\d{11}$',
+                message="Informe um CPF válido (somente números ou formatado)."
+            )
+        ],
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': '000.000.000-00'
+        })
+    )
+    date_of_birth = forms.DateField(
+        label="Data de Nascimento",
+        widget=forms.DateInput(attrs={
+            'type': 'date',
+            'class': 'form-control'
+        })
+    )

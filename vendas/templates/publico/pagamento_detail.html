@@ -1,0 +1,175 @@
+{% extends "base_blank.html" %}
+{% load static %}
+
+{% block extra_head %}
+  <style>
+    .qr-img {
+      max-width: 150px;
+      margin: 0.5rem 0;
+    }
+    .table-purple,
+    .table-purple th,
+    .table-purple td {
+      background-color: #6f42c1 !important;
+      color: #fff            !important;
+    }
+    /* No desktop, a tabela vai aparecer; no mobile, usamos cards */
+    .table-responsive.d-none.d-md-block {
+      overflow: visible;
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+  <!-- Logo -->
+  <div class="row mb-3">
+    <div class="col text-center">
+      <img
+        src="{% static 'images/logo.png' %}"
+        alt="Logo"
+        class="img-fluid"
+        style="max-height: 80px;"
+      >
+    </div>
+  </div>
+
+  <!-- Título com tooltip de cores -->
+  <div class="row mb-3">
+    <div class="col d-flex justify-content-center align-items-center">
+      <h5 class="text-primary mb-0">
+        Parcelas de Pagamento #{{ pagamento.id }} — Venda {{ pagamento.venda.id }}
+      </h5>
+      <button
+        type="button"
+        class="btn btn-sm btn-outline-secondary ms-2"
+        data-bs-toggle="tooltip"
+        data-bs-html="true"
+        title="
+          <ul class='mb-0 ps-3'>
+            <li><strong>Roxo:</strong> Bloqueado</li>
+            <li><strong>Vermelho:</strong> Vencido</li>
+            <li><strong>Amarelo:</strong> Pendente</li>
+            <li><strong>Verde:</strong> Pago</li>
+            <li><strong>Azul:</strong> Em Confirmação</li>
+          </ul>
+        "
+      >
+        <i class="bi bi-info-circle"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- CARDS (mobile) -->
+  <div class="row d-md-none">
+    {% for item in qr_items %}
+      {% with p=item.parcela %}
+      <div class="col-12 mb-3">
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <div class="mb-3">
+              <p class="mb-1"><strong>Parcela:</strong> {{ p.numero_parcela }}</p>
+              <p class="mb-1"><strong>Valor:</strong> R$ {{ p.valor|floatformat:2 }}</p>
+              <p class="mb-1"><strong>Vencimento:</strong> {{ p.data_vencimento }}</p>
+              <p class="mb-0"><strong>Pago:</strong> {{ p.pago|yesno:"Sim,Não" }}</p>
+            </div>
+
+            <div class="text-center mb-3">
+              <img
+                src="data:image/png;base64,{{ item.qr_b64 }}"
+                alt="QR Code Parcela {{ p.numero_parcela }}"
+                class="img-fluid"
+                style="max-width:200px;"
+              >
+            </div>
+
+            {% if p.pago %}
+              <span class="badge bg-success w-100 py-2">Pago</span>
+            {% elif p.pagamento_efetuado %}
+              <span class="badge bg-info w-100 py-2">Em confirmação</span>
+            {% else %}
+              <form method="post" action="{% url 'vendas:parcela_informar' p.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-warning w-100">
+                  Informar pagamento
+                </button>
+              </form>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% endwith %}
+    {% endfor %}
+  </div>
+
+  <!-- TABELA (desktop) -->
+  <div class="row d-none d-md-block">
+    <div class="col">
+      <div class="card shadow-sm">
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead class="table-secondary">
+                <tr>
+                  <th>#</th>
+                  <th>Valor</th>
+                  <th>Vencimento</th>
+                  <th>Pago?</th>
+                  <th>QR Code</th>
+                  <th>Ação</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in qr_items %}
+                  {% with p=item.parcela %}
+                  <tr class="
+                    {% if p.pago %}table-success
+                    {% elif not p.pago and p.data_vencimento < today %}table-danger
+                    {% else %}table-warning{% endif %}
+                  ">
+                    <td>{{ p.numero_parcela }}</td>
+                    <td>R$ {{ p.valor|floatformat:2 }}</td>
+                    <td>{{ p.data_vencimento }}</td>
+                    <td>{{ p.pago|yesno:"Sim,Não" }}</td>
+                    <td>
+                      <img
+                        src="data:image/png;base64,{{ item.qr_b64 }}"
+                        alt="QR Code Parcela {{ p.numero_parcela }}"
+                        class="qr-img img-fluid"
+                      >
+                    </td>
+                    <td style="min-width:140px;">
+                      {% if p.pago %}
+                        <span class="badge bg-success">Pago</span>
+                      {% elif p.pagamento_efetuado %}
+                        <span class="badge bg-info">Em confirmação</span>
+                      {% else %}
+                        <form method="post" action="{% url 'vendas:parcela_informar' p.pk %}">
+                          {% csrf_token %}
+                          <button class="btn btn-warning btn-sm">Informar pagamento</button>
+                        </form>
+                      {% endif %}
+                    </td>
+                  </tr>
+                  {% endwith %}
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) {
+      new bootstrap.Tooltip(el);
+    });
+  });
+</script>
+{% endblock %}

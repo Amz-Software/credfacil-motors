@@ -1,77 +1,139 @@
 {% extends "base.html" %}
 {% load static iam_tags %}
-{% block title %}
-Contas a Receber
-{% endblock title %}
+{% block title %}Contas a Receber{% endblock title %}
 
 {% block content %}
-
 <div class="container-xxl mt-4">
-  <div class="row">
+  <div class="row gy-4">
+
+
+    {# -- CARD: Informações do Cliente -- #}
     <div class="col-12">
-      <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center">
-          <h4 class="card-title">Contas a Receber</h4>
+      <div class="card shadow-sm">
+        <div class="card-header text-white">
+          <h5 class="mb-0">Informações do Cliente</h5>
         </div>
         <div class="card-body">
-
-          {# -- Dados principais da conta -- #}
-          <div class="row mb-4">
-            <div class="col-md-4">
-              <h5>Venda: {{ conta_a_receber.venda.id }}</h5>
+          <div class="row gx-3 gy-2">
+            <div class="col-12 col-md-6 col-lg-4">
+              <small class="text-muted">Nome</small>
+              <div>{{ conta_a_receber.venda.cliente.nome }}</div>
             </div>
-            <div class="col-md-4">
-              <h5>Cliente: {{ conta_a_receber.venda.cliente }}</h5>
+            <div class="col-12 col-md-6 col-lg-4">
+              <small class="text-muted">E-mail</small>
+              <div>{{ conta_a_receber.venda.cliente.email|default:"—" }}</div>
             </div>
-            <div class="col-md-4">
-              <h5>Valor: {{ conta_a_receber.valor }}</h5>
+            <div class="col-12 col-md-6 col-lg-4">
+              <small class="text-muted">Telefone</small>
+              <div>{{ conta_a_receber.venda.cliente.telefone }}</div>
             </div>
-            <div class="col-md-4">
-              <h5>Forma de Pagamento: {{ conta_a_receber.tipo_pagamento }}</h5>
+            <div class="col-12 col-md-6 col-lg-4">
+              <small class="text-muted">CPF</small>
+              <div>{{ conta_a_receber.venda.cliente.cpf }}</div>
             </div>
-            <div class="col-md-4">
-              <h5>Parcelas: {{ conta_a_receber.parcelas }}</h5>
+            <div class="col-12 col-md-6 col-lg-4">
+              <small class="text-muted">Nascimento</small>
+              <div>{{ conta_a_receber.venda.cliente.nascimento }}</div>
             </div>
-            <div class="col-md-4">
-              <h5>Produto Vendido: {{ conta_a_receber.venda.itens_venda.first.produto.nome|title }}</h5>
+            <div class="col-12 col-md-6 col-lg-4">
+              <small class="text-muted">RG</small>
+              <div>{{ conta_a_receber.venda.cliente.rg|default:"—" }}</div>
+            </div>
+            <div class="col-12 col-md-6 col-lg-4">
+              <small class="text-muted">CEP</small>
+              <div>{{ conta_a_receber.venda.cliente.cep }}</div>
+            </div>
+            <div class="col-12 col-md-12 col-lg-8">
+              <small class="text-muted">Endereço</small>
+              <div>{{ conta_a_receber.venda.cliente.endereco }}</div>
+            </div>
+            <div class="col-12 col-md-6 col-lg-4">
+              <small class="text-muted">Bairro</small>
+              <div>{{ conta_a_receber.venda.cliente.bairro }}</div>
+            </div>
+            <div class="col-12 col-md-6 col-lg-4">
+              <small class="text-muted">Cidade</small>
+              <div>{{ conta_a_receber.venda.cliente.cidade }}</div>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
 
-          {# -- Switch de Bloquear / Desbloquear -- #}
-          {% if user|has_perm:"vendas.change_pagamento" %}
-          <div class="d-flex justify-content-end mb-4">
-            <form
-              action="{% url 'vendas:toggle_bloqueio_pagamento' conta_a_receber.id %}"
-              method="post"
-              class="d-inline-block"
-            >
-              {% csrf_token %}
-              <div class="form-check form-switch">
-                <input
-                  class="form-check-input"
-                  type="checkbox"
-                  id="bloqueioSwitch"
-                  onchange="this.form.submit()"
-                  {% if conta_a_receber.bloqueado %}checked{% endif %}
-                >
-                <label class="form-check-label" for="bloqueioSwitch">
-                  {% if conta_a_receber.bloqueado %}
-                    Desbloquear Pagamento
-                  {% else %}
-                    Bloquear Pagamento
-                  {% endif %}
-                </label>
-              </div>
-            </form>
+    {# -- CARD: Detalhes da Conta a Receber -- #}
+    <div class="col-12">
+      <div class="card shadow-sm">
+        <div class="card-header text-white">
+          <h5 class="mb-0">Detalhes da Conta</h5>
+        </div>
+        <div class="card-body">
+          <div class="row gx-3 gy-2">
+            <div class="col-12 col-md-4">
+              <small class="text-muted">Venda</small>
+              <div>#{{ conta_a_receber.venda.id }}</div>
+            </div>
+            <div class="col-12 col-md-4">
+              <small class="text-muted">Produto</small>
+              <div>{{ conta_a_receber.venda.itens_venda.first.produto.nome|title }}</div>
+            </div>
+            <div class="col-12 col-md-4">
+              <small class="text-muted">Valor Total</small>
+              <div>R$ {{ conta_a_receber.valor|floatformat:2 }}</div>
+            </div>
+            <div class="col-12 col-md-4">
+              <small class="text-muted">Tipo Pagamento</small>
+              <div>{{ conta_a_receber.tipo_pagamento }}</div>
+            </div>
+            <div class="col-12 col-md-4">
+              <small class="text-muted">Parcelas</small>
+              <div>{{ conta_a_receber.parcelas }}</div>
+            </div>
+            <div class="col-12 col-md-4">
+              <small class="text-muted">1ª Parcela</small>
+              <div>{{ conta_a_receber.data_primeira_parcela }}</div>
+            </div>
+            <div class="col-12">
+              {% if user|has_perm:"vendas.change_pagamento" %}
+                <div class="d-flex justify-content-start">
+                  <form
+                    action="{% url 'vendas:toggle_bloqueio_pagamento' conta_a_receber.id %}"
+                    method="post"
+                  >
+                    {% csrf_token %}
+                    <div class="form-check form-switch">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        id="bloqueioSwitch"
+                        onchange="this.form.submit()"
+                        {% if conta_a_receber.bloqueado %}checked{% endif %}
+                      >
+                      <label class="form-check-label" for="bloqueioSwitch">
+                        {% if conta_a_receber.bloqueado %}Desbloquear{% else %}Bloquear{% endif %} Pagamento
+                      </label>
+                    </div>
+                  </form>
+                </div>
+              {% endif %}
+            </div>
           </div>
-          {% endif %}
+        </div>
+      </div>
+    </div>
 
-          {# -- Tabela de Parcelas/Editável -- #}
+
+    {# -- CARD: Tabela de Parcelas/Editável -- #}
+    <div class="col-12">
+      <div class="card shadow-sm">
+        <div class="card-header bg-light text-dark">
+          <h5 class="mb-0">Parcelas</h5>
+        </div>
+        <div class="card-body p-0">
           <div class="table-responsive">
             <form action="" method="post">
               {{ parcela_form.management_form }}
               {% csrf_token %}
-              <table class="table table-hover">
+              <table class="table table-hover mb-0">
                 <thead class="table-light">
                   <tr>
                     <th scope="col">Número da Parcela</th>
@@ -96,65 +158,20 @@ Contas a Receber
                   {% endfor %}
                 </tbody>
               </table>
-
-              <div class="row mt-3 mb-3">
-                <div class="col-md-12 d-flex justify-content-center align-items-center">
-                  <a href="{% url 'financeiro:contas_a_receber_list' %}" class="btn btn-secondary w-50 me-3">
-                    Voltar
-                  </a>
-                  {% if user|has_perm:"vendas.change_pagamento" %}
-                    <button type="submit" class="btn btn-primary w-50">Salvar</button>
-                  {% endif %}
-                </div>
+              <div class="d-flex justify-content-center py-3">
+                <a href="{% url 'financeiro:contas_a_receber_list' %}"
+                   class="btn btn-secondary me-3">Voltar</a>
+                {% if user|has_perm:"vendas.change_pagamento" %}
+                  <button type="submit" class="btn btn-primary">Salvar</button>
+                {% endif %}
               </div>
             </form>
-
             {% include "snippets/pagination.html" %}
           </div>
-
         </div>
       </div>
     </div>
+
   </div>
 </div>
-
-{% endblock %}
-
-{% block extra_scripts %}
-<!-- <script>
-  function obterValorSemMascara(seletor) {
-    const valor = $(seletor).cleanVal();
-    if (valor === "") return;
-    var numericValue = parseInt(valor, 10) / 100;
-    $(this).val(numericValue.toFixed(2));
-    return numericValue;
-  }
-
-  $(document).ready(function() {
-    $('.valor-restante').each(function() {
-      const row = $(this).closest('tr');
-      const valorInput = row.find('[name$="-valor"]');
-      const valorPagoInput = row.find('[name$="-valor_pago"]');
-      const valorRestanteInput = $(this);
-      if (valorInput && valorPagoInput && valorRestanteInput) {
-        const valor = parseFloat(valorInput.val());
-        let valorPago = obterValorSemMascara(valorPagoInput);
-        valorRestanteInput.val((valor - valorPago).toFixed(2));
-      }
-    });
-
-    // Recalcular ao digitar
-    $('input[name$="-valor"], input[name$="-valor_pago"]').on('input', function() {
-      const row = $(this).closest('tr');
-      const valorInput = row.find('[name$="-valor"]');
-      const valorPagoInput = row.find('[name$="-valor_pago"]');
-      const valorRestanteInput = row.find('.valor-restante');
-      if (valorInput && valorPagoInput && valorRestanteInput) {
-        const valor = parseFloat(valorInput.val());
-        let valorPago = obterValorSemMascara(valorPagoInput);
-        valorRestanteInput.val((valor - valorPago).toFixed(2));
-      }
-    });
-  });
-</script> -->
 {% endblock %}

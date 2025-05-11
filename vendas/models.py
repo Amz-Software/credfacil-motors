@@ -3,10 +3,11 @@ from django.utils import timezone
 from datetime import date, timedelta
 from decimal import Decimal
 from django.utils.functional import cached_property
-from django.db.models import Count, Q, Case, When, Value, IntegerField, BooleanField, F
+from django.db.models import Count, Q, Case, When, Value, IntegerField, BooleanField, F, Min
 from datetime import date, timedelta
 from django.db import models
 from django.utils import timezone
+
 
 class Base(models.Model):
     loja = models.ForeignKey('vendas.Loja', on_delete=models.CASCADE, related_name='%(class)s_loja', null=True, blank=True)
@@ -33,6 +34,9 @@ class Caixa(Base):
     @property
     def saldo_total(self):
         return sum(venda.pagamentos_valor_total for venda in self.vendas.filter(is_deleted=False).filter(loja=self.loja).filter(caixa=self))
+    
+    def saldo_caixa(self):
+        return sum(venda.valor_caixa for venda in self.vendas.filter(is_deleted=False).filter(loja=self.loja).filter(caixa=self))
     
     @property
     def saldo_total_dinheiro(self):
@@ -157,6 +161,7 @@ class Loja(Base):
     usuarios = models.ManyToManyField('accounts.User', related_name='lojas')
     gerentes = models.ManyToManyField('accounts.User', related_name='lojas_gerenciadas')
     chave_pix = models.CharField(max_length=100, null=True, blank=True)
+    credfacil = models.BooleanField(default=False)
     objects = LojaQuerySet.as_manager()
 
 
@@ -330,6 +335,10 @@ class Venda(Base):
     observacao = models.TextField(null=True, blank=True)
     repasse_logista = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     is_deleted = models.BooleanField(default=False)
+    
+    @cached_property
+    def valor_caixa(self):
+        return sum(pagamento.valor for pagamento in self.pagamentos.all().filter(tipo_pagamento__caixa=True))
 
     @property
     def pagamentos_valor_total(self):
@@ -547,7 +556,12 @@ class PagamentoQuerySet(models.QuerySet):
                     parcelas_pagamento__pago=False,
                     parcelas_pagamento__data_vencimento__lt=timezone.now()
                 )
+            ),
+            next_vencimento=Min(
+                'parcelas_pagamento__data_vencimento',
+                filter=Q(parcelas_pagamento__pago=False)
             )
+            
         )
 
     def with_status_flags(self):
@@ -613,6 +627,8 @@ class Parcela(Base):
     desconto = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, default=0)
     data_pagamento = models.DateField(null=True, blank=True)
     data_vencimento = models.DateField()
+    pagamento_efetuado = models.BooleanField(default=False)
+    pagamento_efetuado_em = models.DateTimeField(null=True, blank=True)
     pago = models.BooleanField(default=False)
 
     @property

@@ -1,0 +1,194 @@
+<!doctype html>
+{% load static %}
+<html lang="pt-br" class="light-style layout-navbar-fixed layout-menu-fixed layout-compact" dir="ltr"
+    data-theme="theme-default" data-assets-path="{% static 'sneat-template/assets/' %}"
+    data-template="vertical-menu-template">
+
+<head>
+    <!-- Meta Tags -->
+    <meta property="og:url" content="{{ request.scheme }}://{{ request.get_host }}{{ request.path }}" />
+    <meta name="theme-color" content="#FDC600" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{% static 'imagens/....webp' %}" />
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="600">
+    <meta property="og:title" content="Dr Smart" />
+    <meta name="description" content="O sistema de loja de celular oferece uma plataforma completa para gerenciar vendas, estoque, clientes e serviços de assistência técnica, proporcionando uma experiência de compra eficiente e integrada." />
+    <meta property="og:description" content="O sistema de loja de celular oferece uma plataforma completa para gerenciar vendas, estoque, clientes e serviços de assistência técnica, proporcionando uma experiência de compra eficiente e integrada." />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
+    <title>
+    {% block title %}{{ loja_atual|default:"CredFácil" }} - CredFácil{% endblock %}
+    </title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{% static '/images/logo.png' %}" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap" rel="stylesheet" />
+
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Public+Sans&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans&display=swap"></noscript>
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{% static 'sneat-template/assets/vendor/fonts/boxicons.css' %}" />
+    <link rel="stylesheet" href="{% static 'sneat-template/assets/vendor/fonts/fontawesome.css' %}" />
+    <link rel="stylesheet" href="{% static 'sneat-template/assets/vendor/fonts/flag-icons.css' %}" />
+
+    <!-- Core CSS -->
+    <link rel="stylesheet" href="{% static 'sneat-template/assets/vendor/css/rtl/core.css' %}" class="template-customizer-core-css" />
+    <link rel="stylesheet" href="{% static 'sneat-template/assets/vendor/css/rtl/theme-default.css' %}" class="template-customizer-theme-css" />
+    <link rel="stylesheet" href="{% static 'sneat-template/assets/css/demo.css' %}" />
+
+    <!-- Vendors CSS -->
+    <link rel="stylesheet" href="{% static 'sneat-template/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css' %}" />
+    <link rel="stylesheet" href="{% static 'sneat-template/assets/vendor/libs/typeahead-js/typeahead.css' %}" />
+    <link rel="stylesheet" href="{% static 'sneat-template/assets/vendor/libs/apex-charts/apex-charts.css' %}" />
+
+    <!-- Page CSS -->
+
+    <!-- Helpers -->
+    <script src="{% static 'sneat-template/assets/vendor/js/helpers.js' %}"></script>
+    <!--! Template customizer & Theme config files MUST be included after core stylesheets and helpers.js in the <head> section -->
+    <!--? Template customizer: To hide customizer set displayCustomizer value false in config.js.  -->
+    <script src="{% static 'sneat-template/assets/vendor/js/template-customizer.js' %}"></script>
+<!--? Config:  Mandatory theme config file contain global vars & default theme options, Set your preferred theme option in this file.  -->
+    <script src="{% static 'sneat-template/assets/js/config.js' %}"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"
+    integrity="sha512-pHVGpX7F/27yZ0ISY+VVjyULApbDlD0/X0rgGbTqCE7WFW5MezNTWG/dnhtbBuICzsd0WQPgpE4REBLv+UqChw=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    {% if form %}
+    <link rel="stylesheet" href="{% static 'sneat-template/assets/vendor/libs/select2/select2.css'%}"/>
+    {%endif%}
+
+
+    {% block extra_head %}{% endblock extra_head %}
+
+  </head>
+
+  <body>
+    <div class="layout-container d-flex flex-column min-vh-100">
+      <div class="content-wrapper flex-grow-1">
+        <div class="container-fluid py-4">
+          {% if messages %}
+            <div class="row">
+              <div class="col-12">
+                {% include 'snippets/alert_messages.html' %}
+              </div>
+            </div>
+          {% endif %}
+  
+          {% block content %}{% endblock %}
+        </div>
+      </div>
+  
+      <footer class="content-footer footer bg-footer-theme mt-auto py-2">
+        <div class="container-xxl d-flex flex-wrap justify-content-between">
+          <div>
+            © {% now "Y" %}, feita com ❤️ por
+            <a href="#" class="footer-link fw-medium">Amz Software</a>
+          </div>
+        </div>
+      </footer>
+    </div>
+
+
+    <!-- Core JS -->
+    <!-- build:js assets/vendor/js/core.js -->
+
+    <script src="{% static 'sneat-template/assets/vendor/libs/popper/popper.js' %}"></script>
+    <script src="{% static 'sneat-template/assets/vendor/js/bootstrap.js' %}"></script>
+    <script src="{% static 'sneat-template/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js' %}"></script>
+    <script src="{% static 'sneat-template/assets/vendor/libs/hammer/hammer.js' %}"></script>
+    <script src="{% static 'sneat-template/assets/vendor/libs/i18n/i18n.js' %}"></script>
+    <script src="{% static 'sneat-template/assets/vendor/libs/typeahead-js/typeahead.js' %}"></script>
+    <script src="{% static 'sneat-template/assets/vendor/js/menu.js' %}"></script>
+
+    <!-- endbuild -->
+
+    <!-- Vendors JS -->
+    <script src="{% static 'sneat-template/assets/vendor/libs/apex-charts/apexcharts.js' %}"></script>
+
+    <!-- Main JS -->
+    <script src="{% static 'sneat-template/assets/js/main.js' %}"></script>
+
+    <!-- Page JS -->
+    <script src="{% static 'sneat-template/assets/js/dashboards-analytics.js' %}"></script>
+    {% if form %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/corejs-typeahead/1.3.1/typeahead.bundle.min.js"></script>
+    {{ form.media.js }}
+    {%endif%}
+
+    <script>
+      $('.money').mask('000.000.000,00', {reverse: true});
+      // ao enviar o formulário, remove a máscara para enviar o valor sem formatação apenas com as casas decimais
+      $('form').submit(function(){
+        $('.money').each(function(){
+          var rawValue = $(this).cleanVal();
+          if (rawValue === "") return; // se estiver vazio, pula
+          // Converte para número considerando os dois últimos dígitos como decimais
+          var numericValue = parseInt(rawValue, 10) / 100;
+          // Garante duas casas decimais no valor final
+          $(this).val(numericValue.toFixed(2));
+        });
+      });
+
+    </script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        // Função para desabilitar os botões
+        function disableButtons() {
+            const buttons = document.querySelectorAll('button');
+            buttons.forEach(function(button) {
+                button.disabled = true;
+            });
+        }
+    
+        // Função para habilitar os botões
+        function enableButtons() {
+            const buttons = document.querySelectorAll('button');
+            buttons.forEach(function(button) {
+                button.disabled = false;
+            });
+        }
+    
+        // Limpar o estado de desabilitação ao recarregar ou voltar na navegação
+        window.addEventListener('pageshow', function(event) {
+            // Verifica se a navegação foi feita via cache (navegação 'voltar')
+            if (event.persisted) {
+                enableButtons();  // Garante que os botões serão habilitados
+            }
+        });
+    
+        // Desabilitar botões ao enviar o formulário
+        document.querySelectorAll('form').forEach(function(form) {
+            form.addEventListener('submit', function() {
+                disableButtons();
+            });
+        });
+    
+        // Desabilitar botões durante requisições AJAX
+        document.addEventListener('ajaxStart', function() {
+            disableButtons();
+        });
+    
+        document.addEventListener('ajaxStop', function() {
+            enableButtons();
+        });
+    
+        // Para lidar com navegação de página (recarregamento)
+        window.addEventListener('beforeunload', function () {
+            disableButtons();
+        });
+    });
+      </script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+      {% block extra_scripts %}{% endblock %}
+
+  </body>
+</html>

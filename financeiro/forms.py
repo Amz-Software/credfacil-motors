@@ -10,6 +10,7 @@ class PagamentoForm(forms.ModelForm):
         model = Pagamento
         fields = '__all__'
 
+
 class ParcelaForm(forms.ModelForm):
     class Meta:
         model = Parcela
@@ -18,12 +19,17 @@ class ParcelaForm(forms.ModelForm):
             'data_vencimento': forms.DateInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
             'valor': forms.TextInput(attrs={ 'class': 'form-control', 'readonly': 'readonly'}),
             'valor_pago': forms.TextInput(attrs={'class': 'form-control money'}),
-            # 'tipo_pagamento': forms.Select(attrs={'class': 'form-select'}),
             'pago': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'numero_parcela': forms.NumberInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
             'data_pagamento': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}, format='%Y-%m-%d'),
-            # 'desconto': forms.TextInput(attrs={'class': 'form-control money'}),
         }
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if user is None or not user.has_perm('vendas.change_pagamento'):
+            for field in self.fields.values():
+                field.disabled = True
+                field.widget.attrs['disabled'] = 'disabled'
 
 class GastosAleatoriosForm(forms.ModelForm):
     class Meta:

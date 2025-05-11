@@ -29,7 +29,7 @@ Caixa {{ caixa.data_abertura|date:"d/m/Y" }}
           <p><strong>Status:</strong> <i class="bx bx-lock-open-alt text-success"></i> Aberto</p>
           {% endif %}
           <p><strong>Total de Vendas:</strong> {{ caixa.quantidade_vendas }}</p>
-          <p><strong>Valor Total:</strong> R$ {{ caixa.saldo_total }}</p>
+          <p><strong>Valor Total em Caixa:</strong> R$ {{ caixa.saldo_total_dinheiro }}</p>
         </div>
       </div>
     </div>

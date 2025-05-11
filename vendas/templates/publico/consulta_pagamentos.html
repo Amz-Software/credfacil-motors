@@ -1,0 +1,161 @@
+{% extends "base_blank.html" %}
+{% load static %}
+
+{% block extra_head %}
+  <style>
+    .table-purple,
+    .table-purple th,
+    .table-purple td {
+      background-color: #6f42c1 !important;
+      color: #fff            !important;
+    }
+    /* Garante scroll em telas muito pequenas */
+    .table-responsive {
+      overflow-x: auto;
+    }
+    /* Espaçamento em telas pequenas */
+    @media (max-width: 576px) {
+      .card-header h5,
+      .card-header h6 {
+        font-size: 1rem;
+      }
+      .container {
+        padding: 0 1rem;
+      }
+    }
+    /* Indica que a linha é clicável */
+    .clickable-row { cursor: pointer; }
+  </style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+  <!-- LOGO -->
+  <div class="row mb-4">
+    <div class="col-12 text-center">
+      <img
+        src="{% static 'images/logo.png' %}"
+        alt="Logo da Empresa"
+        class="img-fluid"
+        style="max-height: 100px;"
+      >
+    </div>
+  </div>
+
+  <!-- FORMULÁRIO -->
+  <div class="row justify-content-center mb-4">
+    <div class="col-12 col-md-8 col-lg-6">
+      <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+          <h5 class="mb-0 text-center text-white">Consulte seus Pagamentos</h5>
+        </div>
+        <div class="card-body">
+          <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+              {{ form.cpf.label_tag }}
+              {{ form.cpf }}
+            </div>
+            <div class="mb-3">
+              {{ form.date_of_birth.label_tag }}
+              {{ form.date_of_birth }}
+            </div>
+            <button type="submit" class="btn btn-primary w-100">
+              Buscar
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESULTADOS -->
+  {% if pagamentos %}
+    <div class="row justify-content-center">
+      <div class="col-12 col-lg-10">
+        <div class="card shadow-sm">
+          <div class="card-header bg-light d-flex align-items-center flex-wrap">
+            <h6 class="mb-0">Resultados para CPF <strong>{{ form.cleaned_data.cpf }}</strong></h6>
+            <button
+              type="button"
+              class="btn btn-sm btn-outline-secondary ms-auto"
+              data-bs-toggle="tooltip"
+              data-bs-html="true"
+              title="
+                <ul class='mb-0 ps-3'>
+                  <li><strong>Roxo:</strong> Bloqueado</li>
+                  <li><strong>Vermelho:</strong> Atrasado</li>
+                  <li><strong>Amarelo:</strong> Pendente</li>
+                  <li><strong>Verde:</strong> Pago no Prazo</li>
+                  <li><strong>Azul:</strong> Quitado</li>
+                </ul>
+              "
+            ><i class="bi bi-info-circle"></i></button>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover mb-0">
+                <thead class="table-secondary">
+                  <tr>
+                    <th>Venda</th>
+                    <th>Valor</th>
+                    <th>Parcelas</th>
+                    <th>Próx. Vencimento</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for conta in pagamentos %}
+                    <tr
+                      class="clickable-row
+                        {% if conta.bloqueado %} table-purple
+                        {% elif conta.com_parcela_atrasada %} table-danger
+                        {% elif conta.com_pagamento_pendente %} table-warning
+                        {% elif conta.pago_dentro_prazo %} table-success
+                        {% elif conta.todas_parcelas_pagas %} table-info
+                        {% endif %}"
+                      onclick="window.location.href='{% url 'vendas:pagamento_detail' conta.id %}'"
+                    >
+                      <td>{{ conta.venda }}</td>
+                      <td>R$ {{ conta.valor|floatformat:2 }}</td>
+                      <td>{{ conta.parcelas }}</td>
+                      <td>{{ conta.next_vencimento }}</td>
+                      <td>
+                        {% if conta.com_parcela_atrasada %}Atrasado
+                        {% elif conta.com_pagamento_pendente %}Pendente
+                        {% elif conta.pago_dentro_prazo %}Pago no Prazo
+                        {% elif conta.todas_parcelas_pagas %}Quitado
+                        {% endif %}
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% elif form.is_bound %}
+    <div class="row justify-content-center">
+      <div class="col-12 col-md-8 col-lg-6">
+        <div class="alert alert-warning text-center">
+          Nenhum pagamento encontrado para esses dados.
+        </div>
+      </div>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    // Inicializa tooltips
+    var tipList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tipList.forEach(function (el) {
+      new bootstrap.Tooltip(el);
+    });
+  });
+</script>
+{% endblock %}

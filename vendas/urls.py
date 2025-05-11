@@ -75,4 +75,17 @@ urlpatterns = [
         toggle_bloqueio_pagamento,
         name='toggle_bloqueio_pagamento'
     ),
+    
+    path(
+        'consultar-pagamentos/',
+        ConsultaPagamentosView.as_view(),
+        name='consulta_pagamentos'
+    ),
+    
+    path(
+        'pagamento/<int:pk>/',
+        PagamentoDetailView.as_view(),
+        name='pagamento_detail'
+    ),
+    path('parcela/<int:pk>/informar/', InformarPagamentoView.as_view(), name='parcela_informar'),
 ]

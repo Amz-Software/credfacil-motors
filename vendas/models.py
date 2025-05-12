@@ -162,10 +162,11 @@ class Loja(Base):
     gerentes = models.ManyToManyField('accounts.User', related_name='lojas_gerenciadas')
     chave_pix = models.CharField(max_length=100, null=True, blank=True)
     credfacil = models.BooleanField(default=False)
+    porcentagem_desconto = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
     objects = LojaQuerySet.as_manager()
 
 
-    REPASSES_DIAS = (1, 10, 20)
+    REPASSES_DIAS = (1, 15)
 
     def get_repasses_status(self, meses_atras=0, limite_meses=6):
         hoje = date.today()
@@ -398,6 +399,7 @@ class AnaliseCreditoCliente(Base):
     numero_parcelas = models.CharField(max_length=20, choices=(
         ('4', '4x'),
         ('6', '6x'),
+        ('8', '8x'),
     ))
     produto = models.ForeignKey('produtos.Produto', on_delete=models.CASCADE, related_name='analises_credito')
     imei = models.ForeignKey('estoque.EstoqueImei', on_delete=models.CASCADE, related_name='analises_credito_imei', null=True, blank=True)

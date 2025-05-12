@@ -612,9 +612,12 @@ def gerar_venda(request, cliente_id):
     if analise.numero_parcelas == '4':
         valor_credfacil = produto.valor_4_vezes
         parcelas = 4
-    else:
+    elif analise.numero_parcelas == '6':
         valor_credfacil = produto.valor_6_vezes
         parcelas = 6
+    elif analise.numero_parcelas == '8':
+        valor_credfacil = produto.valor_8_vezes
+        parcelas = 8
 
     # Cria ProdutoVenda
     ProdutoVenda.objects.create(

@@ -48,6 +48,16 @@ Editar Produto
 
                     <!-- Campo Valor 6 Vezes -->
                     <div class="form-group mb-3">
+                      {{ form.valor_8_vezes.label_tag }}
+                      {{ form.valor_8_vezes }}
+
+                      <!-- Campo calculado 8 vezes -->
+                      <label for="id_valor_8_vezes_calculado" class="mt-2">Valor da parcela 8x</label>
+                      <input type="text" id="id_valor_8_vezes_calculado" class="form-control" readonly>
+                    </div>
+
+                    <!-- Campo Valor 6 Vezes -->
+                    <div class="form-group mb-3">
                       {{ form.valor_6_vezes.label_tag }}
                       {{ form.valor_6_vezes }}
 
@@ -96,7 +106,7 @@ Editar Produto
                       {{ form.estado }}
                     </div>
 
-                    {% if user|has_perm:"produtos.change_produto" %}
+                    {% if user|has_perm:"produtos.add_produto" %}
                     <button type="submit" class="btn btn-primary mt-3">Salvar</button>
                     {% endif %}
                   </form>
@@ -114,17 +124,21 @@ Editar Produto
 function updateValues() {
     const valor6Vezes = parseFloat(document.getElementById('id_valor_6_vezes').value) || 0;
     const valor4Vezes = parseFloat(document.getElementById('id_valor_4_vezes').value) || 0;
+    const valor8Vezes = parseFloat(document.getElementById('id_valor_8_vezes').value) || 0;
     
     document.getElementById('id_valor_6_vezes_calculado').value = (valor6Vezes / 6).toFixed(2);
     document.getElementById('id_valor_4_vezes_calculado').value = (valor4Vezes / 4).toFixed(2);
+    document.getElementById('id_valor_8_vezes_calculado').value = (valor8Vezes / 8).toFixed(2);
 }
 
 // Ativa o update automático ao digitar
 document.addEventListener('DOMContentLoaded', function() {
     const campo6 = document.getElementById('id_valor_6_vezes');
     const campo4 = document.getElementById('id_valor_4_vezes');
+    const campo8 = document.getElementById('id_valor_8_vezes');
     if (campo6) campo6.addEventListener('input', updateValues);
     if (campo4) campo4.addEventListener('input', updateValues);
+    if (campo8) campo8.addEventListener('input', updateValues);
 });
 </script>
 

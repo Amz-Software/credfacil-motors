@@ -41,6 +41,8 @@ from django.views.generic import DetailView
 import qrcode
 from pixqrcodegen import Payload
 from vendas.models import Pagamento, Loja
+from decimal import Decimal
+
 
 
 logger = logging.getLogger(__name__)
@@ -656,7 +658,8 @@ def gerar_venda(request, cliente_id):
         tipo_pagamento=tipo_credfacil,
         valor=valor_credfacil,
         parcelas=parcelas,
-        data_primeira_parcela=data1
+        data_primeira_parcela=data1,
+        porcentagem_desconto=loja.porcentagem_desconto
     )
 
     criar_parcelas(pagamento_entrada, loja)
@@ -1853,38 +1856,73 @@ class PagamentoDetailView(DetailView):
     def get_context_data(self, **kwargs):
         ctx       = super().get_context_data(**kwargs)
         pagamento = ctx['pagamento']
+        
+        # cálculo do desconto
+        restantes = pagamento.parcelas_pagamento.filter(pago=False)
+        total_restante    = sum(p.valor for p in restantes)
+        discount_pct      = getattr(pagamento, 'porcentagem_desconto', Decimal('0'))
+        discount_amount   = (total_restante * discount_pct / Decimal('100')).quantize(Decimal('0.01'))
+        total_com_desconto= (total_restante - discount_amount).quantize(Decimal('0.01'))
+        
+        confirmando_count = pagamento.parcelas_pagamento.filter(
+            pagamento_efetuado=True,
+            pago=False
+        ).count()
 
-        # busca loja e limpa só os dígitos da chave (telefone ou CPF/CNPJ)
-        loja    = get_object_or_404(Loja, nome__iexact='CredFácil')
-        chave   = re.sub(r'\D', '', loja.chave_pix)
-        nome    = loja.nome
-        cidade  = 'belem'
+        # dados da loja
+        loja   = get_object_or_404(Loja, nome__iexact='CredFácil')
+        chave  = re.sub(r'\D', '', loja.chave_pix)
+        nome   = loja.nome
+        cidade = 'belem'
 
+        # QR por parcela (já existente)
         qr_items = []
         for parcela in pagamento.parcelas_pagamento.all().order_by('numero_parcela'):
             txid   = f"{pagamento.pk:04d}{parcela.numero_parcela:02d}"
             amount = f"{parcela.valor:.2f}"
 
             payload = Payload(nome, chave, amount, cidade, txid)
-
-            buf_out = io.StringIO()
-            old_stdout = sys.stdout
-            sys.stdout = buf_out
+            buf = io.StringIO()
+            old = sys.stdout; sys.stdout = buf
             payload.gerarPayload()
-            sys.stdout = old_stdout
-            emv = buf_out.getvalue().strip()
+            sys.stdout = old
+            emv = buf.getvalue().strip()
 
             img = qrcode.make(emv)
-            img_buf = BytesIO()
-            img.save(img_buf, format='PNG')
-            b64 = base64.b64encode(img_buf.getvalue()).decode()
+            b = BytesIO(); img.save(b, format='PNG')
+            qr_items.append({
+                'parcela': parcela,
+                'qr_b64': base64.b64encode(b.getvalue()).decode(),
+            })
 
-            qr_items.append({'parcela': parcela, 'qr_b64': b64})
+        # gera QR de quitação total
+        if restantes:
+            txid_qt = f"{pagamento.pk:04d}QT"
+            amt_qt   = f"{total_com_desconto:.2f}"
+            payload  = Payload(nome, chave, amt_qt, cidade, txid_qt)
+            buf2 = io.StringIO()
+            old = sys.stdout; sys.stdout = buf2
+            payload.gerarPayload()
+            sys.stdout = old
+            emv_qt = buf2.getvalue().strip()
 
-        ctx['qr_items'] = qr_items
+            img_qt = qrcode.make(emv_qt)
+            b2 = BytesIO(); img_qt.save(b2, format='PNG')
+            discount_qr_b64 = base64.b64encode(b2.getvalue()).decode()
+        else:
+            discount_qr_b64 = None
+
+        ctx.update({
+            'qr_items': qr_items,
+            'restantes_count': restantes.count(),
+            'total_restante': total_restante,
+            'confirmando_count': confirmando_count,
+            'discount_pct': discount_pct,
+            'total_com_desconto': total_com_desconto,
+            'discount_qr_b64': discount_qr_b64,
+            'loja': loja,
+        })
         return ctx
-
-
 
 class InformarPagamentoView(View):
     def post(self, request, pk):
@@ -1895,3 +1933,29 @@ class InformarPagamentoView(View):
         parcela.save(update_fields=['pagamento_efetuado', 'data_pagamento'])
         messages.success(request, "Pagamento informado e está em confirmação.")
         return redirect('vendas:pagamento_detail', pk=parcela.pagamento.pk)
+
+
+class InformarTodosPagamentosView(View):
+    def post(self, request, pk):
+        pagamento = get_object_or_404(Pagamento, pk=pk)
+        # apenas as parcelas ainda não informadas
+        parcelas = pagamento.parcelas_pagamento.filter(pagamento_efetuado=False)
+        now_dt = timezone.now()
+        today = now_dt.date()
+
+        # atualiza em bloco
+        updated = parcelas.update(
+            pagamento_efetuado=True,
+            pagamento_efetuado_em=now_dt,
+            data_pagamento=today
+        )
+
+        if updated == 0:
+            msg = "Nenhuma parcela pendente para informar."
+        elif updated == 1:
+            msg = "Parabéns! 1 parcela foi informada com sucesso. Agora está em confirmação pelos nossos analistas."
+        else:
+            msg = f"Parabéns! Suas {updated} parcelas foram informadas com sucesso. Agora estão em confirmação pelos nossos analistas."
+
+        messages.success(request, msg)
+        return redirect('vendas:pagamento_detail', pk=pagamento.pk)

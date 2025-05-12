@@ -88,4 +88,9 @@ urlpatterns = [
         name='pagamento_detail'
     ),
     path('parcela/<int:pk>/informar/', InformarPagamentoView.as_view(), name='parcela_informar'),
+    path(
+        'pagamento/<int:pk>/informar-todos/',
+        InformarTodosPagamentosView.as_view(),
+        name='informar_todos_pagamentos'
+    ),
 ]

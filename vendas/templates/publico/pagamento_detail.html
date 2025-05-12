@@ -2,6 +2,10 @@
 {% load static %}
 
 {% block extra_head %}
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
+  />
   <style>
     .qr-img {
       max-width: 150px;
@@ -13,6 +17,17 @@
       background-color: #6f42c1 !important;
       color: #fff            !important;
     }
+    .alert-quitacao {
+      border-left: .25rem solid #28a745;
+    }
+    /* animação pulse infinita no botão de quitação */
+    .btn-quitacao {
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%,100% { transform: scale(1); }
+      50%     { transform: scale(1.05); }
+    }
     /* No desktop, a tabela vai aparecer; no mobile, usamos cards */
     .table-responsive.d-none.d-md-block {
       overflow: visible;
@@ -20,41 +35,73 @@
   </style>
 {% endblock %}
 
+
 {% block content %}
 <div class="container-fluid py-4">
+
   <!-- Logo -->
   <div class="row mb-3">
     <div class="col text-center">
-      <img
-        src="{% static 'images/logo.png' %}"
-        alt="Logo"
-        class="img-fluid"
-        style="max-height: 80px;"
-      >
+      <img src="{% static 'images/logo.png' %}"
+           alt="Logo"
+           class="img-fluid"
+           style="max-height:80px;">
     </div>
   </div>
+  <!-- Oferta de Quitação -->
+  {% if restantes_count > 0 and confirmando_count == 0 %}
+  <div class="row mb-4">
+    <div class="col-12">
+      <div
+        class="alert alert-success alert-quitacao shadow-sm text-center
+               animate__animated animate__bounceIn"
+      >
+        <h4 class="alert-heading">🔥 Oferta Relâmpago de Quitação! 🔥</h4>
+        <p class="mb-1">
+          Ainda restam <strong>{{ restantes_count }}</strong>
+          parcela{{ restantes_count|pluralize }},
+          totalizando <strong>R$ {{ total_restante|floatformat:2 }}</strong>.
+        </p>
+        <p class="mb-2">
+          Você pagaria <del>R$ {{ total_restante|floatformat:2 }}</del>,
+          mas com <strong>{{ discount_pct }}%</strong> OFF,
+          fica <strong>R$ {{ total_com_desconto|floatformat:2 }}</strong>!
+        </p>
+        <p class="mb-3 text-danger fst-italic">
+          * Promoção Exclusiva! Não perca essa chance.
+        </p>
+        <button
+          type="button"
+          class="btn btn-lg btn-primary btn-quitacao"
+          data-bs-toggle="modal"
+          data-bs-target="#quitacaoModal"
+        >
+          Quitar com Desconto
+        </button>
+      </div>
+    </div>
+  </div>
+  {% endif %}
 
-  <!-- Título com tooltip de cores -->
+  <!-- Título e Tooltip de Cores -->
   <div class="row mb-3">
     <div class="col d-flex justify-content-center align-items-center">
       <h5 class="text-primary mb-0">
         Parcelas de Pagamento #{{ pagamento.id }} — Venda {{ pagamento.venda.id }}
       </h5>
-      <button
-        type="button"
-        class="btn btn-sm btn-outline-secondary ms-2"
-        data-bs-toggle="tooltip"
-        data-bs-html="true"
-        title="
-          <ul class='mb-0 ps-3'>
-            <li><strong>Roxo:</strong> Bloqueado</li>
-            <li><strong>Vermelho:</strong> Vencido</li>
-            <li><strong>Amarelo:</strong> Pendente</li>
-            <li><strong>Verde:</strong> Pago</li>
-            <li><strong>Azul:</strong> Em Confirmação</li>
-          </ul>
-        "
-      >
+      <button type="button"
+              class="btn btn-sm btn-outline-secondary ms-2"
+              data-bs-toggle="tooltip"
+              data-bs-html="true"
+              title="
+                <ul class='mb-0 ps-3'>
+                  <li><strong>Roxo:</strong> Bloqueado</li>
+                  <li><strong>Vermelho:</strong> Vencido</li>
+                  <li><strong>Amarelo:</strong> Pendente</li>
+                  <li><strong>Verde:</strong> Pago</li>
+                  <li><strong>Azul:</strong> Em Confirmação</li>
+                </ul>
+              ">
         <i class="bi bi-info-circle"></i>
       </button>
     </div>
@@ -67,20 +114,15 @@
       <div class="col-12 mb-3">
         <div class="card shadow-sm">
           <div class="card-body">
-            <div class="mb-3">
-              <p class="mb-1"><strong>Parcela:</strong> {{ p.numero_parcela }}</p>
-              <p class="mb-1"><strong>Valor:</strong> R$ {{ p.valor|floatformat:2 }}</p>
-              <p class="mb-1"><strong>Vencimento:</strong> {{ p.data_vencimento }}</p>
-              <p class="mb-0"><strong>Pago:</strong> {{ p.pago|yesno:"Sim,Não" }}</p>
-            </div>
+            <p class="mb-1"><strong>Parcela:</strong> {{ p.numero_parcela }}</p>
+            <p class="mb-1"><strong>Valor:</strong> R$ {{ p.valor|floatformat:2 }}</p>
+            <p class="mb-1"><strong>Vencimento:</strong> {{ p.data_vencimento }}</p>
+            <p class="mb-3"><strong>Pago:</strong> {{ p.pago|yesno:"Sim,Não" }}</p>
 
             <div class="text-center mb-3">
-              <img
-                src="data:image/png;base64,{{ item.qr_b64 }}"
-                alt="QR Code Parcela {{ p.numero_parcela }}"
-                class="img-fluid"
-                style="max-width:200px;"
-              >
+              <img src="data:image/png;base64,{{ item.qr_b64 }}"
+                   alt="QR Code Parcela {{ p.numero_parcela }}"
+                   class="img-fluid" style="max-width:200px;">
             </div>
 
             {% if p.pago %}
@@ -132,11 +174,9 @@
                     <td>{{ p.data_vencimento }}</td>
                     <td>{{ p.pago|yesno:"Sim,Não" }}</td>
                     <td>
-                      <img
-                        src="data:image/png;base64,{{ item.qr_b64 }}"
-                        alt="QR Code Parcela {{ p.numero_parcela }}"
-                        class="qr-img img-fluid"
-                      >
+                      <img src="data:image/png;base64,{{ item.qr_b64 }}"
+                           alt="QR Code Parcela {{ p.numero_parcela }}"
+                           class="qr-img img-fluid">
                     </td>
                     <td style="min-width:140px;">
                       {% if p.pago %}
@@ -161,15 +201,54 @@
     </div>
   </div>
 
+  <!-- Modal de Quitação -->
+  <div class="modal fade" id="quitacaoModal" tabindex="-1" aria-labelledby="quitacaoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header text-white">
+          <h5 class="modal-title" id="quitacaoModalLabel">QUITAR COM DESCONTO </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body text-center">
+          <p><strong>Valor sem desconto:</strong> R$ {{ total_restante|floatformat:2 }}</p>
+          <p><strong>Valor com desconto:</strong> R$ {{ total_com_desconto|floatformat:2 }}</p>
+          <hr>
+          <img src="data:image/png;base64,{{ discount_qr_b64 }}"
+               alt="QR Code Quitação"
+               class="img-fluid qr-img animate__animated animate__fadeIn">
+          <p class="mt-3"><strong>Chave PIX:</strong> {{ loja.chave_pix }}</p>
+          <div class="alert alert-warning text-start mt-3">
+            <p><strong>Atenção:</strong> Certifique-se de enviar o PIX para a conta em nome de <strong>R L D SILVA</strong>.</p>
+            <p>Se aparecer outro nome, <strong>entre em contato IMEDIATAMENTE</strong> antes de pagar.</p>
+            <p class="mb-0"><strong>Não nos responsabilizamos</strong> por valores enviados incorretamente.</p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <form method="post" action="{% url 'vendas:informar_todos_pagamentos' pagamento.id %}">
+            {% csrf_token %}
+            <button
+              type="submit"
+              class="btn btn-warning w-100 mb-2"
+            >
+              Informar pagamento de todas as parcelas
+            </button>
+          </form>
+          <button type="button" class="btn btn-secondary w-100" data-bs-dismiss="modal">
+            Fechar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>
 {% endblock %}
+
 
 {% block extra_js %}
 <script>
   document.addEventListener('DOMContentLoaded', function () {
-    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) {
-      new bootstrap.Tooltip(el);
-    });
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => new bootstrap.Tooltip(el));
   });
 </script>
 {% endblock %}

@@ -162,7 +162,7 @@ class Loja(Base):
     gerentes = models.ManyToManyField('accounts.User', related_name='lojas_gerenciadas')
     chave_pix = models.CharField(max_length=100, null=True, blank=True)
     credfacil = models.BooleanField(default=False)
-    porcentagem_desconto = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
+    porcentagem_desconto = models.DecimalField(max_digits=5, decimal_places=2, default=25.00)
     objects = LojaQuerySet.as_manager()
 
 

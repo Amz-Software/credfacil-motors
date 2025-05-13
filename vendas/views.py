@@ -1208,6 +1208,10 @@ class LojaCreateView(PermissionRequiredMixin, CreateView):
         messages.success(self.request, 'Loja cadastrada com sucesso')
         return super().form_valid(form)
     
+    def form_invalid(self, form):
+        messages.error(self.request, 'Erro ao cadastrar loja')
+        return super().form_invalid(form)
+    
     def get_success_url(self):
         return reverse_lazy('vendas:loja_detail', kwargs={'pk': self.object.id})
     
@@ -1226,6 +1230,10 @@ class LojaUpdateView(PermissionRequiredMixin, UpdateView):
     def form_valid(self, form):
         messages.success(self.request, 'Loja atualizada com sucesso')
         return super().form_valid(form)
+    
+    def form_invalid(self, form):
+        messages.error(self.request, 'Erro ao atualizar loja')
+        return super().form_invalid(form)
     
     def get_success_url(self):
         return reverse_lazy('vendas:loja_detail', kwargs={'pk': self.object.id})

@@ -56,7 +56,7 @@
         class="alert alert-success alert-quitacao shadow-sm text-center
                animate__animated animate__bounceIn"
       >
-        <h4 class="alert-heading">🔥 Oferta Relâmpago de Quitação! 🔥</h4>
+        <h4 class="alert-heading">Valor para Quitação de Contrato Total!</h4>
         <p class="mb-1">
           Ainda restam <strong>{{ restantes_count }}</strong>
           parcela{{ restantes_count|pluralize }},
@@ -67,16 +67,16 @@
           mas com <strong>{{ discount_pct }}%</strong> OFF,
           fica <strong>R$ {{ total_com_desconto|floatformat:2 }}</strong>!
         </p>
-        <p class="mb-3 text-danger fst-italic">
+        <!-- <p class="mb-3 text-danger fst-italic">
           * Promoção Exclusiva! Não perca essa chance.
-        </p>
+        </p> -->
         <button
           type="button"
           class="btn btn-lg btn-primary btn-quitacao"
           data-bs-toggle="modal"
           data-bs-target="#quitacaoModal"
         >
-          Quitar com Desconto
+          Quitar Contrato
         </button>
       </div>
     </div>

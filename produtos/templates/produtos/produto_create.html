@@ -46,7 +46,7 @@ Criar Produto
                       {{ form.entrada_cliente }}
                     </div>
 
-                    <!-- Campo Valor 6 Vezes -->
+                    <!-- Campo Valor 8 Vezes -->
                     <div class="form-group mb-3">
                       {{ form.valor_8_vezes.label_tag }}
                       {{ form.valor_8_vezes }}
@@ -127,7 +127,7 @@ function updateValues() {
     
     document.getElementById('id_valor_6_vezes_calculado').value = (valor6Vezes / 6).toFixed(2);
     document.getElementById('id_valor_4_vezes_calculado').value = (valor4Vezes / 4).toFixed(2);
-    document.getElementById('id_valor_8_vezes_calculado').value = (valor6Vezes / 8).toFixed(2);
+    document.getElementById('id_valor_8_vezes_calculado').value = (valor8Vezes / 8).toFixed(2);
 }
 
 // Ativa o update automático ao digitar

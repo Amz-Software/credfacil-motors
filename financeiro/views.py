@@ -504,7 +504,7 @@ class FolhaRelatorioSaidaView(BaseView, PermissionRequiredMixin, TemplateView):
 class RepasseCreateView(PermissionRequiredMixin, CreateView):
     model = Repasse
     form_class = RepasseForm
-    permission_required = 'vendas.add_repasse'
+    permission_required = 'financeiro.add_repasse'
 
     def form_valid(self, form):
         form.instance.criado_por = self.request.user
@@ -522,7 +522,7 @@ class RepasseUpdateView(PermissionRequiredMixin, UpdateView):
     model = Repasse
     form_class = RepasseForm
     template_name = 'repasse/repasse_form.html'
-    permission_required = 'vendas.change_repasse'
+    permission_required = 'financeiro.change_repasse'
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

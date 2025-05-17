@@ -255,3 +255,11 @@ def loja(request):
     if loja:
         return {'loja_atual': loja}
     return {}
+
+
+def notificacoes_usuario(request):
+    if request.user.is_authenticated:
+        return {
+            "notificacoes_nao_lidas": request.user.notifications.unread()[:5]
+        }
+    return {}

@@ -29,7 +29,10 @@ Estoque
               <thead>
                 <tr>
                   <th scope="col">ID</th>
-                  <th scope="col">Fornecedor</th>
+                  {% if user|has_perm:"estoque.can_view_all_imei" %}
+                    <th scope="col">Loja</th>
+                  {% endif %}
+                  <th scope="col" class="text-center">Número da Nota</th>
                   <th scope="col" class="text-center">Data da Entrada</th>
                   <th scope="col" class="text-center">Emitida por</th>
                   <th scope="col" class="text-center">Modificada por</th>
@@ -41,10 +44,14 @@ Estoque
                   {% for entrada in entradas %}
                     <tr>
                         <td>{{ entrada.id }}</td>
-                        <td>{{ entrada.fornecedor|title }}</td>
+                        {% if user|has_perm:"estoque.can_view_all_imei" %}
+                          <td>{{ entrada.loja.nome|title }}</td>
+                        {% endif %}
+                        <td class="text-center">{{ entrada.numero_nota }}</td>
+                        {% comment %} <td class="text-center">{{ entrada.custo_total|floatformat:2 }}</td> {% endcomment %}
                         <td class="text-center">{{ entrada.data_entrada }}</td>
-                        <td class="text-center">{{ entrada.criado_por }}</td>
-                        <td class="text-center">{{ entrada.modificado_por }}</td>
+                        <td class="text-center">{{ entrada.criado_por|title }}</td>
+                        <td class="text-center">{{ entrada.modificado_por|title }}</td>
                       {% comment %} <td class="text-end">{{ produto.preco|floatformat:2 }}</td> {% endcomment %}
                         <td class="text-center">
                             <div class="dropdown">

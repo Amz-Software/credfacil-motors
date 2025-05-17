@@ -39,10 +39,13 @@ INSTALLED_APPS = [
     'produtos.apps.ProdutosConfig',
     'estoque.apps.EstoqueConfig',
     'assistencia.apps.AssistenciaConfig',
+    'notificacao.apps.NotificacaoConfig',
     'crispy_forms',
     'crispy_bootstrap5', 
     'redis',
     'django_select2',
+    'notifications',
+    'channels',
 ]
 
 MIDDLEWARE = [
@@ -67,6 +70,24 @@ CACHES = {
         }
     }
 }
+
+# Channels settings
+ASGI_APPLICATION = 'core.asgi.application'
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+    },
+}
+
+
+# CHANNEL_LAYERS = {
+#     "default": {
+#         "BACKEND": "channels_redis.core.RedisChannelLayer",
+#         "CONFIG": {
+#             "hosts": [("127.0.0.1", 6379)],
+#         },
+#     },
+# }
 
 # Tell select2 which cache configuration to use:
 SELECT2_CACHE_BACKEND = "select2"
@@ -96,6 +117,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'core.context_processors.menu_items',
                 'core.context_processors.loja',
+                'core.context_processors.notificacoes_usuario',
             ],
         },
     },

@@ -170,6 +170,46 @@
               </div>
 
               <ul class="navbar-nav flex-row align-items-center ms-auto">
+                <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+                
+                <li class="nav-item dropdown">
+                  <a class="nav-link position-relative" href="#" id="notificacaoDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-bell fs-5"></i>
+                    {% if notificacoes_nao_lidas %}
+                      <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                        {{ notificacoes_nao_lidas|length }}
+                        <span class="visually-hidden">notificações não lidas</span>
+                      </span>
+                    {% endif %}
+                  </a>
+                
+                  <ul class="dropdown-menu dropdown-menu-end shadow-sm p-2" aria-labelledby="notificacaoDropdown" style="width: 300px; max-height: 400px; overflow-y: auto;">
+                    <li class="dropdown-header fw-bold text-dark border-bottom pb-2 mb-2">Notificações</li>
+                    
+                    {% for n in notificacoes_nao_lidas %}
+                      <li class="mb-1">
+                        <a class="dropdown-item d-flex flex-column small text-wrap text-break"
+                        href="{{ n.target.get_absolute_url }}"
+                        onclick="event.preventDefault(); marcarComoLida('{{ n.id }}', '{{ n.target.get_absolute_url }}')">
+
+                          <span class="fw-semibold text-dark text-wrap text-break">{{ n.verb }}</span>
+                          <span class="text-muted text-wrap text-break">{{ n.description|truncatechars:40 }}</span>
+                          <small class="text-muted mt-1">{{ n.timestamp|date:"d M, H:i" }}</small>
+                        </a>
+                      </li>
+                    {% empty %}
+                      <li>
+                        <span class="dropdown-item text-muted">Sem notificações</span>
+                      </li>
+                    {% endfor %}
+                
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                      <a class="dropdown-item text-center text-primary fw-semibold small" href="{% url 'notificacao_ler_todas' %}">Marcar todas como lida</a>
+                    </li>
+                  </ul>
+                </li>
+                
                 <!-- User -->
                 <li class="nav-item navbar-dropdown dropdown-user dropdown">
                   <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
@@ -373,6 +413,151 @@
       </script>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
+      <script>
+        // Função para pegar o CSRF Token
+        function getCookie(name) {
+          let cookieValue = null;
+          if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+              const cookie = cookies[i].trim();
+              if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+              }
+            }
+          }
+          return cookieValue;
+        }
+      
+        // 🔔 Marcar como lida via fetch
+        function marcarComoLida(notificationId, targetUrl) {
+          const csrf = getCookie('csrftoken');
+          console.log(`[WS] Marcando notificação ${notificationId} como lida...`);
+          console.log(`[WS] CSRF Token usado: ${csrf}`);
+      
+          fetch(`/notificacao/marcar-como-lida/${notificationId}/`, {
+            method: 'POST',
+            headers: {
+              'X-CSRFToken': csrf,
+            },
+          })
+            .then((res) => {
+              console.log(`[WS] Resposta do servidor: ${res.status}`);
+              if (res.status === 200) {
+                console.log("[WS] Notificação marcada como lida com sucesso.");
+              } else {
+                console.warn("[WS] Falha ao marcar como lida.");
+              }
+              window.location.href = targetUrl;
+            })
+            .catch((err) => {
+              console.error("[WS] Erro ao marcar como lida:", err);
+              window.location.href = targetUrl;
+            });
+        }
+      
+        // WebSocket
+        const socket = new WebSocket(
+          'ws://' + window.location.host + '/ws/notifications/'
+        );
+        console.log("[WS] Conectando...");
+      
+        socket.onopen = function () {
+          console.log("[WS] Conectado com sucesso!");
+        };
+      
+        socket.onerror = function (error) {
+          console.error("[WS] Erro na conexão:", error);
+        };
+      
+        socket.onmessage = function (e) {
+          console.log("[WS] Mensagem recebida:", e.data);
+          const data = JSON.parse(e.data);
+      
+          // Verifica ID
+          console.log("[WS] ID da notificação recebida:", data.notification_id);
+      
+          // 🔊 Som de notificação
+          const audio = new Audio("{% static 'sounds/notification.mp3' %}");
+          audio.volume = 1.0;
+          audio.play().then(() => {
+            console.log("[WS] Som tocado.");
+          }).catch((error) => {
+            console.warn("[WS] Som bloqueado pelo navegador até haver interação do usuário:", error);
+          });
+      
+          // 🔴 Atualiza badge
+          const badge = document.querySelector('#notificacaoDropdown .badge');
+          if (badge) {
+            badge.textContent = parseInt(badge.textContent || "0") + 1;
+          } else {
+            const newBadge = document.createElement('span');
+            newBadge.className = "position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger";
+            newBadge.textContent = "1";
+            document.getElementById("notificacaoDropdown").appendChild(newBadge);
+          }
+      
+          // 📦 Localiza menu
+          const dropdownAnchor = document.querySelector("#notificacaoDropdown");
+          const dropdownLi = dropdownAnchor?.closest("li.dropdown");
+          const dropdownMenu = dropdownLi?.querySelector(".dropdown-menu");
+          if (!dropdownMenu) {
+            console.error("[WS] Dropdown menu não encontrado.");
+            return;
+          }
+      
+          // ❌ Remove "sem notificações"
+          const emptyMsg = dropdownMenu.querySelector(".text-muted");
+          if (emptyMsg && emptyMsg.innerText.includes("Sem notificações")) {
+            emptyMsg.parentElement.remove();
+          }
+      
+          // ✏️ Cria novo item
+          const novaNotificacao = document.createElement('li');
+          novaNotificacao.innerHTML = `
+            <a class="dropdown-item d-flex flex-column small fade show"
+               style="animation: fadeIn 0.4s;"
+               href="${data.target_url}"
+               onclick="event.preventDefault(); marcarComoLida('${data.notification_id}', '${data.target_url}')">
+              <span class="fw-semibold text-dark text-wrap text-break">${data.verb}</span>
+              <span class="text-muted text-wrap text-break">${data.description}</span>
+              <small class="text-muted mt-1">${data.timestamp}</small>
+            </a>
+          `;
+      
+          // 🧩 Insere após o título
+          const header = dropdownMenu.querySelector(".dropdown-header");
+          let insertAfterHeader = header?.nextElementSibling;
+          if (insertAfterHeader?.classList.contains('dropdown-divider')) {
+            insertAfterHeader = null;
+          }
+      
+          if (insertAfterHeader) {
+            dropdownMenu.insertBefore(novaNotificacao, insertAfterHeader);
+          } else {
+            dropdownMenu.appendChild(novaNotificacao);
+          }
+      
+          // ⬆️ Scroll suave
+          dropdownMenu.scrollTo({ top: 0, behavior: 'smooth' });
+      
+          // 🌫️ Adiciona fade-in
+          if (!document.getElementById('fadeStyle')) {
+            const style = document.createElement("style");
+            style.id = "fadeStyle";
+            style.innerHTML = `
+              @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(-5px); }
+                to { opacity: 1; transform: translateY(0); }
+              }
+            `;
+            document.head.appendChild(style);
+          }
+        };
+      </script>
+      
+      
       {% block extra_scripts %}{% endblock %}
 
   </body>

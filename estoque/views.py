@@ -73,14 +73,18 @@ class EntradaListView(BaseView, PermissionRequiredMixin, ListView):
     paginate_by = 10
     
     def get_queryset(self):
-        query = super().get_queryset()
+        query = EntradaEstoque.objects.all()
         loja_id = self.request.session.get('loja_id')
         loja = get_object_or_404(Loja, pk=loja_id)
         search = self.request.GET.get('search', None)
-        if search:
-            query = query.filter(fornecedor__nome__icontains=search).filter(loja=loja)
+        
+        if not self.request.user.has_perm('estoque.can_view_all_imei'):
+            query = query.filter(loja=loja)
             
-        return query.order_by('-data_entrada').filter(loja=loja)
+        if search:
+            query = query.filter(Q(numero_nota__icontains=search))
+            
+        return query.order_by('-criado_em')
     
 class EntradaDetailView(PermissionRequiredMixin, DetailView):
     model = EntradaEstoque
@@ -90,7 +94,6 @@ class EntradaDetailView(PermissionRequiredMixin, DetailView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['produtos'] = ProdutoEntrada.objects.filter(entrada=self.object)
         return context
     
 class EntradaUpdateView(PermissionRequiredMixin, UpdateView):

@@ -22,6 +22,7 @@ class ParcelaForm(forms.ModelForm):
             'pago': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'numero_parcela': forms.NumberInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
             'data_pagamento': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}, format='%Y-%m-%d'),
+            'pagamento_efetuado': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
 
     def __init__(self, *args, user=None, **kwargs):

@@ -72,14 +72,6 @@ CACHES = {
     }
 }
 
-# Channels settings
-# ASGI_APPLICATION = 'core.asgi.application'
-# CHANNEL_LAYERS = {
-#     'default': {
-#         'BACKEND': 'channels.layers.InMemoryChannelLayer',
-#     },
-# }
-
 ASGI_APPLICATION = 'core.asgi.application'
 CHANNEL_LAYERS = {
     "default": {

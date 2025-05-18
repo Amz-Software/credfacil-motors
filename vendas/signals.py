@@ -46,7 +46,7 @@ def notificar_pagamento_parcela(sender, instance, created, **kwargs):
     if instance.pagamento_efetuado_em and not instance.pago:
         print("🧾 Mudou pagamento e ainda não está marcado como pago.")
         
-        admins = User.objects.filter(groups__name="ADMINISTRADOR").exclude(id=instance.criado_por_id)
+        admins = User.objects.filter(groups__name__in=["ADMINISTRADOR", "ANALISTA"]).exclude(id=instance.criado_por_id)
         pagamento = instance.pagamento
         cliente = pagamento.venda.cliente if hasattr(pagamento.venda, 'cliente') else "Cliente"
         

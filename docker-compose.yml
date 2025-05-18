@@ -21,7 +21,7 @@ services:
     image: redis:latest
     restart: always
     ports:
-      - "6380:6379"
+      - "6385:6379"
     networks:
       - mynetwork
 

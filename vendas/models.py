@@ -378,6 +378,8 @@ class Venda(Base):
             ('can_view_all_sales', 'Pode ver todas as vendas'),
             ('can_view_produtos_vendidos', 'Pode ver aba produtos vendidos'),
             ('can_edit_finished_sale', 'Pode editar venda finalizada'),
+            ('can_view_your_dashboard', 'Pode ver seu dashboard'),
+            ('can_view_all_dashboard', 'Pode ver todos os dashboards'),
         )
 
 

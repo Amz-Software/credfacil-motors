@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load static iam_tags %}
+{% load humanize %}
 
 {% block content %}
 <div class="container-xxl flex-grow-1 container-p-y">
@@ -11,14 +12,15 @@
           <div class="col-sm-7">
             <div class="card-body">
               <h5 class="card-title text-primary">Olá, {{ user|title }} 👋</h5>
-              <p class="mb-4">Seja Bem-vindo ao Sistema de Financiamento CredFácil da <strong>{{loja.nome|title}}</strong></p>
+              <p class="mb-4">Seja Bem-vindo ao Sistema de Financiamento CredFácil da
+                <strong>{{loja.nome|title}}</strong>
+              </p>
             </div>
           </div>
           <div class="col-sm-5 text-center text-sm-left">
             <div class="card-body pb-0 px-0 px-md-4">
-              <img src="{% static 'sneat-template/assets/img/illustrations/man-with-laptop-light.png' %}"
-                   height="140"
-                   alt="Welcome User" />
+              <img src="{% static 'sneat-template/assets/img/illustrations/man-with-laptop-light.png' %}" height="140"
+                alt="Welcome User" />
             </div>
           </div>
         </div>
@@ -26,68 +28,317 @@
     </div>
 
     {% if user|has_perm:'vendas.view_venda' %}
-      <!-- Usuário SEM permissão: exibe cards de Vendas e Clientes -->
-      <div class="col-md-6 mb-4">
-        <div class="card border-start shadow-sm h-100">
-          <div class="card-body d-flex align-items-center">
-            <!-- Ícone -->
-            <div class="me-3">
-              <i class="bx bx-cart-alt fs-1 text-success"></i>
-            </div>
-            <!-- Conteúdo -->
-            <div>
-              <h6 class="card-title mb-1">Vendas</h6>
-              <p class="mb-2 text-muted">Vizualize todas as Vendas dos seus Clientes.</p>
-              <a href="{% url 'vendas:venda_list' %}" class="btn btn-sm btn-outline-success">
-                <i class="bx bx-right-arrow-alt me-1"></i>Ver Vendas
-              </a>
-            </div>
+    <!-- Usuário SEM permissão: exibe cards de Vendas e Clientes -->
+    <div class="col-md-6 mb-4">
+      <div class="card border-start shadow-sm h-100">
+        <div class="card-body d-flex align-items-center">
+          <!-- Ícone -->
+          <div class="me-3">
+            <i class="bx bx-cart-alt fs-1 text-success"></i>
+          </div>
+          <!-- Conteúdo -->
+          <div>
+            <h6 class="card-title mb-1">Vendas</h6>
+            <p class="mb-2 text-muted">Vizualize todas as Vendas dos seus Clientes.</p>
+            <a href="{% url 'vendas:venda_list' %}" class="btn btn-sm btn-outline-success">
+              <i class="bx bx-right-arrow-alt me-1"></i>Ver Vendas
+            </a>
           </div>
         </div>
       </div>
-      {% endif %}
+    </div>
+    {% endif %}
 
-      {% if user|has_perm:'vendas.view_cliente' %}
-      <div class="col-md-6 mb-4">
-        <div class="card border-start shadow-sm h-100">
-          <div class="card-body d-flex align-items-center">
-            <!-- Ícone -->
-            <div class="me-3">
-                <i class="bx bx-dollar fs-1 text-success"></i>
-            </div>
-            <!-- Conteúdo -->
-            <div>
-              <h6 class="card-title mb-1">Solicitações</h6>
-              <p class="mb-2 text-muted">Visualize e edite os seus cliente e Solicite sua análise de crédito.</p>
-              <a href="{% url 'vendas:cliente_list' %}" class="btn btn-sm btn-outline-success">
-                <i class="bx bx-right-arrow-alt me-1"></i>Ver Solicitações
-              </a>
-            </div>
+    {% if user|has_perm:'vendas.view_cliente' %}
+    <div class="col-md-6 mb-4">
+      <div class="card border-start shadow-sm h-100">
+        <div class="card-body d-flex align-items-center">
+          <!-- Ícone -->
+          <div class="me-3">
+            <i class="bx bx-dollar fs-1 text-success"></i>
+          </div>
+          <!-- Conteúdo -->
+          <div>
+            <h6 class="card-title mb-1">Solicitações</h6>
+            <p class="mb-2 text-muted">Visualize e edite os seus cliente e Solicite sua análise de crédito.</p>
+            <a href="{% url 'vendas:cliente_list' %}" class="btn btn-sm btn-outline-success">
+              <i class="bx bx-right-arrow-alt me-1"></i>Ver Solicitações
+            </a>
           </div>
         </div>
       </div>
-      {% endif %}
+    </div>
+    {% endif %}
 
-      {% if user|has_perm:'produtos.view_produto' %}
-      <div class="col-md-6 mb-4">
-        <div class="card border-start shadow-sm h-100">
+    {% if user|has_perm:'produtos.view_produto' %}
+    <div class="col-md-6 mb-4">
+      <div class="card border-start shadow-sm h-100">
+        <div class="card-body d-flex align-items-center">
+          <!-- Ícone -->
+          <div class="me-3">
+            <i class="bx bx-package fs-1 text-success"></i>
+          </div>
+          <!-- Conteúdo -->
+          <div>
+            <h6 class="card-title mb-1">Produtos</h6>
+            <p class="mb-2 text-muted">Visualize e os Produtos disponíveis.</p>
+            <a href="{% url 'produtos:produtos' %}" class="btn btn-sm btn-outline-success">
+              <i class="bx bx-right-arrow-alt me-1"></i>Ver Produtos
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+
+    {% if user|has_perm:'vendas.can_view_your_dashboard' %}
+    <div class="row g-4 align-items-stretch mb-4">
+      <hr>
+      <h2 class="text-center">Loja {{ loja|title }}</h2>
+      <div class="col-md-4">
+        <div class="card kpi-card shadow-sm h-100 border-0">
           <div class="card-body d-flex align-items-center">
-            <!-- Ícone -->
             <div class="me-3">
-              <i class="bx bx-package fs-1 text-success"></i>
+              <span class="avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center"
+                style="width:56px;height:56px;">
+                <i class="bx bx-bar-chart-alt-2 fs-2"></i>
+              </span>
             </div>
-            <!-- Conteúdo -->
             <div>
-              <h6 class="card-title mb-1">Produtos</h6>
-              <p class="mb-2 text-muted">Visualize e os Produtos disponíveis.</p>
-              <a href="{% url 'produtos:produtos' %}" class="btn btn-sm btn-outline-success">
-                <i class="bx bx-right-arrow-alt me-1"></i>Ver Produtos
-              </a>
+              <h6 class="card-title mb-1 text-muted">Total de Vendas</h6>
+              <h3 class="mb-0 fw-bold" id="kpi-total-vendas">{{ total_vendas_loja|default:"0" }}</h3>
             </div>
           </div>
         </div>
       </div>
-      {% endif %}
+      <div class="col-md-4">
+        <div class="card kpi-card shadow-sm h-100 border-0">
+          <div class="card-body d-flex align-items-center">
+            <div class="me-3">
+              <span class="avatar bg-info text-white rounded-circle d-flex align-items-center justify-content-center"
+                style="width:56px;height:56px;">
+                <i class="bx bx-list-ol fs-2"></i>
+              </span>
+            </div>
+            <div>
+              <h6 class="card-title mb-1 text-muted">Total de Parcelas</h6>
+              <div class="small text-muted mb-1">(pagas + a vencer)</div>
+              <h3 class="mb-0 fw-bold" id="kpi-total-parcelas">{{ total_de_parcelas|default:"0" }}</h3>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card kpi-card shadow-sm h-100 border-0">
+          <div class="card-body d-flex align-items-center">
+            <div class="me-3">
+              <span class="avatar bg-success text-white rounded-circle d-flex align-items-center justify-content-center"
+                style="width:56px;height:56px;">
+                <i class="bx bx-money fs-2"></i>
+              </span>
+            </div>
+            <div>
+              <h6 class="card-title mb-1 text-muted">Valor Total Parcelas</h6>
+              <div class="small text-muted mb-1">(pagas + a vencer)</div>
+              <h3 class="mb-0 fw-bold" id="kpi-total-parcelas">{{ valor_total_parcelas|intcomma }}</h3>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card kpi-card shadow-sm h-100 border-0">
+          <div class="card-body d-flex align-items-center">
+            <div class="me-3">
+              <span
+                class="avatar bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center"
+                style="width:56px;height:56px;">
+                <i class="bx bx-check-circle fs-2"></i>
+              </span>
+            </div>
+            <div>
+              <h6 class="card-title mb-1 text-muted">Valor Parcelas Pagas</h6>
+              <h3 class="mb-0 fw-bold" id="kpi-total-parcelas">{{ valor_total_pagas|intcomma }}</h3>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card kpi-card shadow-sm h-100 border-0">
+          <div class="card-body d-flex align-items-center">
+            <div class="me-3">
+              <span class="avatar bg-danger text-white rounded-circle d-flex align-items-center justify-content-center"
+                style="width:56px;height:56px;">
+                <i class="bx bx-error-circle fs-2"></i>
+              </span>
+            </div>
+            <div>
+              <h6 class="card-title mb-1 text-muted">Valor Parcelas Vencidas</h6>
+              <h3 class="mb-0 fw-bold" id="kpi-total-parcelas">{{ valor_total_vencidas|intcomma }}</h3>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="card shadow-sm border-0">
+          <div class="card-body">
+            <h4 class="card-title text-center mb-4">Balanço de Parcelas</h4>
+            <div class="d-flex justify-content-center">
+              <canvas id="parcelasChart" style="max-width: 600px; width: 100%;" height="200"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if user|has_perm:'vendas.can_view_all_dashboard' %}
+    <hr>
+    <h2 class="text-center">Dados Gerais</h2>
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="card shadow-sm border-0">
+          <div class="card-body">
+            <h4 class="card-title text-center mb-4">Balanço por Loja</h4>
+            <div class="d-flex justify-content-center">
+              <canvas id="graficoLojas" style="max-width: 600px; width: 100%;" height="200"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
   </div>
 </div>
+{% endblock %}
+{% block extra_scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.min.js"></script>
+<script data-dados="{{ dash }}" data-lojas="{{ dados_lojas }}" type="text/javascript">
+  const dados = JSON.parse(document.currentScript.getAttribute('data-dados'));
+  const ctx = document.getElementById('parcelasChart').getContext('2d');
+
+  const chart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Parcelas'],
+      datasets: [
+        {
+          label: 'Pagas',
+          data: [dados.data[0]],
+          backgroundColor: 'rgba(75, 192, 192, 0.6)'
+        },
+        {
+          label: 'Vencidas',
+          data: [dados.data[1]],
+          backgroundColor: 'rgba(255, 99, 132, 0.6)'
+        },
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          position: 'top',
+          labels: {
+            font: {
+              size: 14
+            }
+          }
+        },
+        tooltip: {
+          callbacks: {
+            label: function (context) {
+              return context.dataset.label + ': ' + context.parsed.y + '%';
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          title: {
+            display: true,
+            text: '',
+            font: {
+              size: 16
+            }
+          },
+          ticks: {
+            beginAtZero: true,
+            callback: function (value) {
+              return value + '%';
+            }
+          },
+          max: 100
+        },
+      }
+    }
+  });
+
+  const dadosLojas = JSON.parse(document.currentScript.getAttribute('data-lojas'));
+  const labels = Object.keys(dadosLojas);
+  const pctPagas = labels.map(loja => dadosLojas[loja].pct_pagas);
+  const pctVencidas = labels.map(loja => dadosLojas[loja].pct_vencidas);
+  const totalPagas = labels.map(loja => dadosLojas[loja].total_pagas);
+  const totalVencidas = labels.map(loja => dadosLojas[loja].total_vencidas);
+  const totais = labels.map(loja =>
+    dadosLojas[loja].total_pagas + dadosLojas[loja].total_vencidas
+  );
+  const ctxLojas = document.getElementById('graficoLojas').getContext('2d');
+
+  const grafico = new Chart(ctxLojas, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: '% Pagas',
+          data: pctPagas,
+          totalValores: totalPagas,
+          backgroundColor: 'rgba(75, 192, 192, 0.6)',
+          stack: 'percentual'
+        },
+        {
+          label: '% Vencidas',
+          data: pctVencidas,
+          totalValores: totalVencidas,
+          backgroundColor: 'rgba(255, 99, 132, 0.6)',
+          stack: 'percentual'
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        x: {
+          stacked: true
+        },
+        y: {
+          stacked: true,
+          beginAtZero: true,
+          max: 100,
+          ticks: {
+            callback: value => value + '%'
+          }
+        }
+      },
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              const loja = context.label;
+              const percentual = context.parsed.y;
+              const valor = context.dataset.totalValores[context.dataIndex];
+              const total = totais[context.dataIndex];
+
+              return `${context.dataset.label}: ${percentual}% (R$ ${valor.toLocaleString('pt-BR')})\nTotal Loja: R$ ${total.toLocaleString('pt-BR')}`;
+            }
+          }
+        }
+      }
+    }
+  });
+</script>
 {% endblock %}

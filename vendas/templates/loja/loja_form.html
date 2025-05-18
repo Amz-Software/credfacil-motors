@@ -64,7 +64,17 @@
               </div>
               <div class="col-md-6 mb-3">
                 <label for="id_porcentagem_desconto" class="form-label">Porcentual Desconto</label>
-                <input type="text" class="form-control" id="id_porcentagem_desconto" name="porcentagem_desconto" value="{{ form.porcentagem_desconto.value|default_if_none:'' }}">
+                <input type="text" class="form-control" id="id_porcentagem_desconto"
+                  name="porcentagem_desconto"
+                  value="{{ form.porcentagem_desconto.value|default_if_none:'' }}">
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="id_qr_code_aplicativo" class="form-label">Qr Code Aplicativo</label>
+                <input type="file" class="form-control" id="id_qr_code_aplicativo" name="qr_code_aplicativo">
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="id_codigo_aplicativo" class="form-label">Código Aplicativo</label>
+                <input type="text" class="form-control" id="id_codigo_aplicativo" name="codigo_aplicativo" value="{{ form.codigo_aplicativo.value|default_if_none:'' }}">
               </div>
             </div>
             <div class="row">

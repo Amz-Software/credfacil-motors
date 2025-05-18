@@ -93,4 +93,22 @@ urlpatterns = [
         InformarTodosPagamentosView.as_view(),
         name='informar_todos_pagamentos'
     ),
+    
+    path(
+        'cliente/<int:pk>/instalar_app/',
+        ClienteInstallAppView.as_view(),
+        name='cliente_instalar_app'
+    ),
+    path(
+        'cliente/<int:pk>/confirm_installed/',
+        ClienteConfirmInstalledView.as_view(),
+        name='cliente_confirm_installed'
+    ),
+    
+    path(
+        'cliente/<int:pk>/status-app/',
+        ClienteStatusAppUpdateView.as_view(),
+        name='cliente_status_app_update'
+    ),
+
 ]

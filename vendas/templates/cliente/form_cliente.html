@@ -23,20 +23,58 @@
 <div class="container-xxl mt-4">
   <div class="card">
     <!-- aqui -->
-    <div class="card-header d-flex justify-content-between align-items-center p-3">
+    {# dentro de card-header, no lugar do badge estático #}
+    <div class="card-header d-flex align-items-center p-3">
       <h4 class="mb-0">
         {% if cliente.pk %}Editar Análise de Crédito{% else %}Criar Análise de Crédito{% endif %}
       </h4>
+
+      {# badge de análise de crédito continua igual… #}
       {% if cliente.pk and cliente.analise_credito %}
         {% with analise=cliente.analise_credito %}
           <span class="badge fs-5 p-2
             {% if analise.status == 'A' %}bg-success
             {% elif analise.status == 'R' %}bg-danger
             {% elif analise.status == 'C' %}bg-secondary
-            {% else %}bg-warning text-dark{% endif %}">
+            {% else %}bg-warning text-dark{% endif %} ms-3">
             {{ analise.get_status_display }}
           </span>
         {% endwith %}
+      {% endif %}
+
+      {# dropdown de Status App #}
+      {% if cliente.pk and user|has_perm:"vendas.change_cliente" %}
+      <form method="post"
+            action="{% url 'vendas:cliente_status_app_update' cliente.pk %}"
+            class="ms-auto d-flex align-items-center">
+        {% csrf_token %}
+        <div class="input-group input-group-sm w-auto">
+          <label class="input-group-text" for="statusAppSelect{{ cliente.pk }}">
+            App
+          </label>
+          <select name="status_app"
+                  id="statusAppSelect{{ cliente.pk }}"
+                  class="form-select"
+                  onchange="this.form.submit()">
+            <option value="" disabled>—</option>
+            {% for code,label in status_app_choices %}
+              <option value="{{ code }}"
+                {% if analise_credito.status_aplicativo == code %}selected{% endif %}>
+                {{ label }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+      </form>
+
+      {% else %}
+        {# só exibe badge se sem permissão #}
+        <span class="badge fs-6 p-2 ms-auto
+          {% if cliente.analise_credito.status_aplicativo == 'P' %}bg-warning text-dark
+          {% elif cliente.analise_credito.status_aplicativo == 'C' %}bg-info text-white
+          {% else %}bg-success{% endif %}">
+          {{ cliente.get_status_aplicativo_display }}
+        </span>
       {% endif %}
     </div>
 

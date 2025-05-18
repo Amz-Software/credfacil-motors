@@ -155,20 +155,66 @@ Detalhes da Loja
                 </div>
                 </div>
             </div>
-            <div class="col">
-                <div class="card shadow-sm h-100">
-                <div class="card-body d-flex align-items-center">
-                    <i class="bx bx-shield fs-2 me-3"></i>
-                    <div>
-                    <h6 class="card-subtitle mb-1">Garantia</h6>
-                    <p class="card-text mb-0">{{ loja.mensagem_garantia|default:"N/A" }}</p>
+              <div class="col">
+                  <div class="card shadow-sm h-100">
+                    <div class="card-body d-flex align-items-center">
+                        <i class="bx bx-shield fs-2 me-3"></i>
+                        <div>
+                        <h6 class="card-subtitle mb-1">Garantia</h6>
+                        <p class="card-text mb-0">{{ loja.mensagem_garantia|default:"N/A" }}</p>
+                        </div>
                     </div>
-                </div>
-                </div>
-            </div>
+                  </div>
+              </div>
+              <div class="col">
+                  <div class="card shadow-sm h-100">
+                    <div class="card-body d-flex align-items-center">
+                        <i class="bx bx-purchase-tag fs-2 me-3"></i>
+                        <div>
+                        <h6 class="card-subtitle mb-1">Porcentagem Desconto</h6>
+                        <p class="card-text mb-0">{{ loja.porcentagem_desconto|default:"N/A" }}</p>
+                        </div>
+                    </div>
+                  </div>
+              </div>
+              <div class="col">
+                  <div class="card shadow-sm h-100">
+                    <div class="card-body d-flex align-items-center">
+                        <i class="bx bx-qrcode fs-2 me-3"></i>
+                        <div>
+                        <h6 class="card-subtitle mb-1">Código Aplicativo</h6>
+                        <p class="card-text mb-0">{{ loja.codigo_aplicativo|default:"N/A" }}</p>
+                        </div>
+                    </div>
+                  </div>
+              </div>
+              <div class="col">
+                  <div class="card shadow-sm h-100">
+                    <div class="card-body d-flex align-items-center">
+                        <i class="bx bx-key fs-2 me-3"></i>
+                        <div>
+                        <h6 class="card-subtitle mb-1">Chave Pix</h6>
+                        <p class="card-text mb-0">{{ loja.chave_pix|default:"N/A" }}</p>
+                        </div>
+                    </div>
+                  </div>
+              </div>
             </div>
         
             <div class="row g-4 mt-4">
+              <div class="col-md-6">
+                  <div class="card shadow-sm h-100 text-center p-3">
+                  <h6>Qr Code Aplicativo</h6>
+                  {% if loja.qr_code_aplicativo %}
+                      <img src="{{ loja.qr_code_aplicativo.url }}"
+                          class="img-thumbnail mt-2"
+                          style="max-height:180px;"
+                          alt="Logo">
+                  {% else %}
+                      <p class="mt-3">Sem Qr code disponível</p>
+                  {% endif %}
+                  </div>
+              </div>
             <div class="col-md-6">
                 <div class="card shadow-sm h-100">
                 <div class="card-body">

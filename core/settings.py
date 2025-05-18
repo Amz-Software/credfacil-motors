@@ -73,22 +73,22 @@ CACHES = {
 }
 
 # Channels settings
-ASGI_APPLICATION = 'core.asgi.application'
-CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels.layers.InMemoryChannelLayer',
-    },
-}
-
-
+# ASGI_APPLICATION = 'core.asgi.application'
 # CHANNEL_LAYERS = {
-#     "default": {
-#         "BACKEND": "channels_redis.core.RedisChannelLayer",
-#         "CONFIG": {
-#             "hosts": [("127.0.0.1", 6379)],
-#         },
+#     'default': {
+#         'BACKEND': 'channels.layers.InMemoryChannelLayer',
 #     },
 # }
+
+ASGI_APPLICATION = 'core.asgi.application'
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("redis", 6379)],
+        },
+    },
+}
 
 # Tell select2 which cache configuration to use:
 SELECT2_CACHE_BACKEND = "select2"

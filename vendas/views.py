@@ -328,8 +328,13 @@ class ClienteListView(BaseView, PermissionRequiredMixin, ListView):
     def get_queryset(self):
         qs = Cliente.objects.all()
         search = self.request.GET.get('search')
+        status_app = self.request.GET.get('status_app')
+        if status_app:
+            qs = qs.filter(analise_credito__status_aplicativo=status_app).distinct()
+            
         if search:
             qs = qs.filter(nome__icontains=search)
+            
         status = self.request.GET.get('status')
         if status:
             qs = qs.filter(analise_credito__status=status).distinct()
@@ -342,7 +347,9 @@ class ClienteListView(BaseView, PermissionRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-
+        loja_id = self.request.session.get('loja_id')
+        
+        context['loja'] = Loja.objects.get(id=loja_id)
         # monta os KPIs conforme permissão
         if self.request.user.has_perm('vendas.view_all_analise_credito'):
             analises = AnaliseCreditoCliente.objects.all()
@@ -358,7 +365,11 @@ class ClienteListView(BaseView, PermissionRequiredMixin, ListView):
         context['kpis'] = kpis
         context['status_choices'] = AnaliseCreditoCliente.STATUS_CHOICES
         context['current_status'] = self.request.GET.get('status', '')
+        context['status_app_choices'] = AnaliseCreditoCliente.STATUS_APP_CHOICES
+        context['current_status_app'] = self.request.GET.get('status_app', '')
         return context
+    
+    
     
     # def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
     #     context = super().get_context_data(**kwargs)
@@ -520,6 +531,9 @@ class ClienteCreateView(PermissionRequiredMixin, CreateView):
         )
         return self.render_to_response(context)
 
+
+
+
 class ClienteUpdateView(PermissionRequiredMixin, UpdateView):
     model = Cliente
     form_class = ClienteForm
@@ -538,6 +552,12 @@ class ClienteUpdateView(PermissionRequiredMixin, UpdateView):
         context['form_comprovantes'] = kwargs.get('form_comprovantes', ComprovantesClienteForm(instance=cliente.comprovantes, user=self.request.user))
         context['form_analise_credito'] = kwargs.get('form_analise_credito', AnaliseCreditoClienteForm(instance=cliente.analise_credito, user=self.request.user))
         context['cliente_id'] = cliente.id
+        
+        analise = get_object_or_404(AnaliseCreditoCliente, cliente=self.object)
+        # expõe no template
+        context['analise_credito'] = analise
+        
+        context['status_app_choices'] = AnaliseCreditoCliente.STATUS_APP_CHOICES
 
         return context
 
@@ -588,7 +608,61 @@ class ClienteUpdateView(PermissionRequiredMixin, UpdateView):
             form_analise_credito=form_analise_credito,
         )
         return self.render_to_response(context)
+    
 
+class ClienteInstallAppView(PermissionRequiredMixin, View):
+    permission_required = 'vendas.change_cliente'
+
+    def post(self, request, pk):
+        cliente = get_object_or_404(Cliente, pk=pk)
+        analise_credito = cliente.analise_credito
+        loja_id = request.session.get('loja_id')
+        # opcional: valida se é da mesma loja
+        if cliente.loja_id != loja_id:
+            messages.error(request, "Ação não autorizada para esta loja.")
+            return redirect('vendas:cliente_list')
+
+        analise_credito.status_aplicativo = 'C'
+        analise_credito.save()
+        messages.success(request, "Status alterado para “Confirmação Pendente”.")
+        return redirect('vendas:cliente_list')
+
+
+class ClienteConfirmInstalledView(PermissionRequiredMixin, View):
+    permission_required = 'vendas.change_cliente'
+
+    def post(self, request, pk):
+        cliente = get_object_or_404(Cliente, pk=pk)
+        analise_credito = cliente.analise_credito
+        
+        imei = cliente.analise_credito.imei
+        imei.aplicativo_instalado = True
+        imei.save()
+        
+        analise_credito.status_aplicativo = 'I'
+        analise_credito.save()
+        messages.success(request, "Status alterado para “Instalado”. Agora você pode gerar a venda.")
+        return redirect('vendas:cliente_list')
+    
+
+class ClienteStatusAppUpdateView(PermissionRequiredMixin, View):
+    permission_required = 'vendas.change_cliente'
+
+    def post(self, request, pk):
+        cliente = get_object_or_404(Cliente, pk=pk)
+        new_status = request.POST.get('status_app')
+        analise_credito = cliente.analise_credito
+
+        valid = dict(AnaliseCreditoCliente.STATUS_APP_CHOICES).keys()
+        if new_status in valid:
+            analise_credito.status_aplicativo = new_status
+            analise_credito.save()
+            messages.success(request, "Status do aplicativo atualizado para “%s”." %
+                             analise_credito.get_status_aplicativo_display())
+        else:
+            messages.error(request, "Status inválido.")
+        # volta para a página de edição
+        return redirect('vendas:cliente_update', pk=pk)
 
 
 
@@ -1315,6 +1389,12 @@ class LojaUpdateView(PermissionRequiredMixin, UpdateView):
         return super().form_valid(form)
     
     def form_invalid(self, form):
+        # Adiciona mensagem de erro se o formulário for inválido
+        if form.errors:
+            print(form.errors)
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(self.request, f"Erro no campo {field}: {error}")
         messages.error(self.request, 'Erro ao atualizar loja')
         return super().form_invalid(form)
     
@@ -2050,3 +2130,5 @@ class InformarTodosPagamentosView(View):
 
         messages.success(request, msg)
         return redirect('vendas:pagamento_detail', pk=pagamento.pk)
+    
+    

@@ -43,6 +43,7 @@ Estoque
                                     <th scope="col">Nome</th>
                                     <th scope="col" class="text-center">IMEI</th>
                                     <th scope="col" class="text-end">Vendido</th>
+                                    <th scope="col" class="text-end">App Instalado</th>
                                     <th scope="col" class="text-end">Data da Venda</th>
                                     {% if user|has_perm:"estoque.can_view_all_imei" %}
                                     <th scope="col" class="text-end">Loja</th>
@@ -57,6 +58,13 @@ Estoque
                                     <td class="text-center">{{ produto.imei }}</td>
                                     <td class="text-end">
                                         {% if produto.vendido %}
+                                            <i class="bx bx-check-circle text-success"></i>
+                                        {% else %}
+                                            <i class="bx bx-x-circle text-danger"></i>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end">
+                                        {% if produto.aplicativo_instalado %}
                                             <i class="bx bx-check-circle text-success"></i>
                                         {% else %}
                                             <i class="bx bx-x-circle text-danger"></i>

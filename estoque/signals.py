@@ -1,17 +1,14 @@
-from django.db.models.signals import post_save, post_delete
+from django.db.models.signals import post_save, post_delete, pre_save
 from django.dispatch import receiver
 from django.core.exceptions import ValidationError
-
 from notificacao.utils import enviar_ws_para_usuario
 from .models import Estoque, EntradaEstoque, ProdutoEntrada, EstoqueImei
 from vendas.models import ProdutoVenda, Venda
 from django.db import transaction
-from django.db.models.signals import pre_save, post_save
-from django.dispatch import receiver
-
 from django.contrib.auth.models import Group
 from notifications.signals import notify
 from django.contrib.auth import get_user_model
+
 User = get_user_model()
 
 

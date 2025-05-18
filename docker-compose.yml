@@ -9,15 +9,22 @@ services:
       - .:/app
       - ./static:/app/static
       - ./mediafiles:/app/mediafiles
-    command: 'sh -c "python3 manage.py migrate && python3 manage.py collectstatic --noinput && gunicorn -c ./configs/configs.py core.wsgi"'
+    command: >
+      sh -c "
+        python3 manage.py migrate &&
+        python3 manage.py collectstatic --noinput &&
+        daphne -b 0.0.0.0 -p 8010 core.asgi:application
+      "
     restart: always
     ports:
       - '8010:8010'
+    depends_on:
+      - redis
     networks:
       - mynetwork
 
   redis:
-    image: redis:latest
+    image: redis:7
     restart: always
     ports:
       - "6381:6379"

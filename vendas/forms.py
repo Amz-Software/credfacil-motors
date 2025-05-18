@@ -583,6 +583,7 @@ class UsuarioSelectWidget(ModelSelect2MultipleWidget):
         'first_name__icontains', 
         'last_name__icontains'
     ]
+    
 
 class LojaForm(forms.ModelForm):
     class Meta:
@@ -602,25 +603,28 @@ class LojaForm(forms.ModelForm):
     )
 
     def __init__(self, *args, **kwargs):
-        # Recupera o ID da loja passada como parâmetro
         user_loja_id = kwargs.pop('user_loja', None)
         super().__init__(*args, **kwargs)
-        # Define o valor inicial do campo 'loja' se o ID foi fornecido
+
         if user_loja_id:
             self.fields['loja'].initial = Loja.objects.get(id=user_loja_id)
 
+        if self.instance and self.instance.porcentagem_desconto is not None:
+            self.initial['porcentagem_desconto'] = str(self.instance.porcentagem_desconto).replace(',', '.')
+
+
     def save(self, commit=True):
-        # Obtém a instância sem salvar imediatamente
         instance = super().save(commit=False)
-        # Atribui o valor da loja ao objeto salvo
+        
         if not instance.loja:
             instance.loja = self.fields['loja'].initial
-        # Salva a instância, se necessário
         if commit:
             instance.save()
             self.save_m2m()
         return instance
     
+
+
 class RelatorioVendasForm(forms.Form):
     data_inicial = forms.DateField(
         label='Data Inicial',

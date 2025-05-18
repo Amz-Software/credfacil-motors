@@ -164,6 +164,8 @@ class Loja(Base):
     chave_pix = models.CharField(max_length=100, null=True, blank=True)
     credfacil = models.BooleanField(default=False)
     porcentagem_desconto = models.DecimalField(max_digits=5, decimal_places=2, default=25.00)
+    qr_code_aplicativo = models.ImageField(upload_to='qr_codes_aplicativo/', null=True, blank=True)
+    codigo_aplicativo = models.CharField(max_length=100, null=True, blank=True)
     objects = LojaQuerySet.as_manager()
 
 
@@ -390,6 +392,11 @@ class AnaliseCreditoCliente(Base):
         ('R', 'Reprovado'),
         ('C', 'Cancelado'),   
     ]
+    STATUS_APP_CHOICES = [
+        ('P', 'Pendente'),
+        ('C', 'Confirmação pendente'),
+        ('I', 'Instalado'),
+    ]
     cliente = models.OneToOneField('vendas.Cliente', on_delete=models.CASCADE, related_name='analise_credito')
     data_analise = models.DateTimeField(auto_now_add=True)
     data_aprovacao = models.DateTimeField(null=True, blank=True)
@@ -397,6 +404,7 @@ class AnaliseCreditoCliente(Base):
     data_cancelamento = models.DateTimeField(null=True, blank=True)
     aprovado_por = models.ForeignKey('accounts.User', on_delete=models.CASCADE, related_name='analises_credito_aprovadas', null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='EA')
+    status_aplicativo = models.CharField(max_length=20, choices=STATUS_APP_CHOICES, default='P', verbose_name='Status do aplicativo')
     data_pagamento = models.CharField(max_length=20, null=True, blank=True, choices=(
         ('1', 'Dia 1'),
         ('10', 'Dia 10'),

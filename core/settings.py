@@ -44,9 +44,9 @@ INSTALLED_APPS = [
     'crispy_bootstrap5', 
     'redis',
     'django_select2',
-    'django.contrib.humanize'
     'notifications',
     'channels',
+    'django.contrib.humanize'
 ]
 
 MIDDLEWARE = [

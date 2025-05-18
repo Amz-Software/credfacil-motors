@@ -325,6 +325,9 @@ class Cliente(Base):
     def __str__(self):
         return self.nome
     
+    def get_absolute_url(self):
+        return reverse('vendas:cliente_update', kwargs={'pk': self.pk})
+    
     class Meta:
         verbose_name_plural = 'Clientes'
         

@@ -20,65 +20,79 @@ Clientes
   <div class="row">
     <div class="col-12">
     <div class="card">
-      <div class="card-header d-flex justify-content-between align-items-center">
-      <h4 class="card-title">Solicitações</h4>
-      <div>
-        <form id="filterAppForm" method="get" class="d-inline-block me-2">
-          {# preserva os outros filtros #}
-          <input type="hidden" name="search" value="{{ request.GET.search }}">
-          <input type="hidden" name="status" value="{{ request.GET.status }}">
-        
-          <select name="status_app"
-                  class="form-select form-select-sm"
-                  onchange="document.getElementById('filterAppForm').submit()">
-            <option value="">Status App: Todos</option>
-            {% for code, label in status_app_choices %}
-              <option value="{{ code }}"
-                {% if current_status_app == code %}selected{% endif %}>
-                {{ label }}
-              </option>
-            {% endfor %}
-          </select>
-        </form>
-        {% if user|has_perm:"vendas.add_cliente" %}
-        <a href="{% url 'vendas:cliente_create' %}" class="btn btn-primary" type="button">
-        <i class="bx bx-plus me-1"></i>
-          Solicitar Crédito
-        </a>
-        {% endif %}
+      <div class="card-header">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+          <h4 class="card-title mb-0 text-center text-md-start w-100">Solicitações</h4>
+      
+          <div class="d-flex flex-column flex-md-row align-items-stretch align-items-md-center gap-2 w-100">
+            <form id="filterAppForm" method="get" class="w-100">
+              <!-- preserva os outros filtros -->
+              <input type="hidden" name="search" value="{{ request.GET.search }}">
+              <input type="hidden" name="status" value="{{ request.GET.status }}">
+      
+              <select name="status_app"
+                      class="form-select form-select-sm w-100"
+                      onchange="document.getElementById('filterAppForm').submit()">
+                <option value="">Status App: Todos</option>
+                {% for code, label in status_app_choices %}
+                  <option value="{{ code }}"
+                    {% if current_status_app == code %}selected{% endif %}>
+                    {{ label }}
+                  </option>
+                {% endfor %}
+              </select>
+            </form>
+      
+            {% if user|has_perm:"vendas.add_cliente" %}
+            <a href="{% url 'vendas:cliente_create' %}" class="btn btn-primary btn-md w-100 d-flex align-items-center justify-content-center">
+              <i class="bx bx-plus me-1"></i> Solicitar Crédito
+            </a>
+            {% endif %}
+          </div>
+        </div>
       </div>
-      </div>
-      <div class="row mb-4" id="kpi-row">
+      
+      <div class="row mb-4 mx-3" id="kpi-row">
         {% for code, label in status_choices %}
-          <div class="col-md-3">
+          <div class="col-6 col-md-3">
             <div
-              class="card text-center kpi-card"
+              class="card text-center shadow-sm kpi-card border-0 my-2 {% if code == current_status %}border border-2 border-primary{% endif %}"
               data-status="{{ code }}"
-              style="
+              style="cursor: pointer; transition: 0.2s ease-in-out; border-radius: 0.75rem;"
+              onmouseover="this.classList.add('shadow-lg')"
+              onmouseout="this.classList.remove('shadow-lg')"
+            >
+              <div class="card-body py-3 rounded" style="
                 background-color:
                   {% if code == 'A' %}
-                    #d4edda 
+                    #e6f4ea
                   {% elif code == 'R' %}
-                    #f8d7da
+                    #fdecea
                   {% elif code == 'C' %}
-                    #e2e3e5 
+                    #f0f0f0
                   {% else %}
-                    #fff3cd 
+                    #fff8e1
                   {% endif %}
-                ;
-                cursor: pointer;
-                border: 1px solid #ddd;
-              "
-            >
-              <div class="card-body">
-                <h6 class="card-title">{{ label }}</h6>
-                <p class="display-6" id="kpi-{{ code }}">{{ kpis|get_item:code }}</p>
+              ">
+                <div class="mb-2">
+                  {% if code == 'A' %}
+                    <i class="bi bi-check-circle-fill text-success fs-3"></i>
+                  {% elif code == 'R' %}
+                    <i class="bi bi-x-circle-fill text-danger fs-3"></i>
+                  {% elif code == 'C' %}
+                    <i class="bi bi-hourglass-split text-secondary fs-3"></i>
+                  {% else %}
+                    <i class="bi bi-question-circle-fill text-warning fs-3"></i>
+                  {% endif %}
+                </div>
+                <h6 class="card-title text-muted mb-1">{{ label }}</h6>
+                <p class="h4 fw-bold text-dark mb-0" id="kpi-{{ code }}">{{ kpis|get_item:code }}</p>
               </div>
             </div>
           </div>
         {% endfor %}
       </div>
-        
+      
       <div class="card-body">
       <div class="table-responsive">
         <table class="table table-hover">
@@ -152,7 +166,7 @@ Clientes
                   {% endif %}
             
                   {# 1) Pendente: abre modal de instalação #}
-                  {% if cliente.analise_credito.status_aplicativo == 'P' and user|has_perm:"vendas.change_cliente" %}
+                  {% if cliente.analise_credito.status_aplicativo == 'P' and user|has_perm:"vendas.change_cliente" and cliente.analise_credito.status == 'A' %}
                   <a class="dropdown-item"
                      data-bs-toggle="modal"
                      data-bs-target="#installModal{{ cliente.pk }}">

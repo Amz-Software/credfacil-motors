@@ -142,6 +142,7 @@
                     <th scope="col">Valor Pago</th>
                     <th scope="col">Data de Vencimento</th>
                     <th scope="col">Pago?</th>
+                    <th scope="col">Cliente Informou?</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -154,6 +155,7 @@
                       <td>{{ parcela.valor_pago }}</td>
                       <td>{{ parcela.data_vencimento }}</td>
                       <td>{{ parcela.pago }}</td>
+                      <td>{{ parcela.pagamento_efetuado }}</td>
                     </tr>
                   {% endfor %}
                 </tbody>

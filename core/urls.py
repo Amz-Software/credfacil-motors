@@ -28,4 +28,5 @@ urlpatterns = [
     path('', include('financeiro.urls')),
     path('', include('accounts.urls')),
     path('', include('assistencia.urls')),
+    path('notificacao/', include('notificacao.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

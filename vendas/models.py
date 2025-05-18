@@ -7,6 +7,7 @@ from django.db.models import Count, Q, Case, When, Value, IntegerField, BooleanF
 from datetime import date, timedelta
 from django.db import models
 from django.utils import timezone
+from django.urls import reverse
 
 
 class Base(models.Model):
@@ -365,6 +366,9 @@ class Venda(Base):
     def __str__(self):
         return f"{self.cliente} - {self.data_venda.strftime('%d/%m/%Y')}"
     
+    def get_absolute_url(self):
+        return reverse('vendas:venda_detail', kwargs={'pk': self.pk})
+    
     class Meta:
         verbose_name_plural = 'Vendas'
         permissions = (
@@ -613,6 +617,9 @@ class Pagamento(Base):
     
     def __str__(self):
         return f"Pagamento de R$ {self.valor} via {self.tipo_pagamento.nome}"
+    
+    def get_absolute_url(self):
+        return reverse('financeiro:contas_a_receber_update', kwargs={'pk': self.pk})
     
     class Meta:
         verbose_name_plural = 'Pagamentos'

@@ -1,9 +1,11 @@
 from django.db import models
 from vendas.models import Base
+from django.urls import reverse
+
 
 class EntradaEstoque(Base):
     fornecedor = models.ForeignKey('estoque.Fornecedor', on_delete=models.PROTECT, related_name='entradas_estoque', verbose_name='Fornecedor', blank=True, null=True)
-    data_entrada = models.DateField(verbose_name='Data de Entrada', auto_now_add=True)
+    data_entrada = models.DateTimeField(verbose_name='Data de Entrada', auto_now_add=True)
     numero_nota = models.CharField(max_length=20, verbose_name='Número da Nota')
     
     @property
@@ -27,12 +29,19 @@ class EntradaEstoque(Base):
             total += produto.quantidade
         return total
     
+    def count_produtos(self):
+        return self.produtos.count()
+    
+    def get_absolute_url(self):
+        return reverse('estoque:entrada_detail', kwargs={'pk': self.pk}) 
+    
     def __str__(self):
         return f"Entrada {self.numero_nota}"
 
     class Meta:
         verbose_name = 'Entrada de Estoque'
         verbose_name_plural = 'Entradas de Estoque'
+        ordering = ['-data_entrada']
 
 class ProdutoEntrada(Base):
     entrada = models.ForeignKey(EntradaEstoque, on_delete=models.CASCADE, related_name='produtos', verbose_name='Entrada de Estoque')
@@ -56,6 +65,7 @@ class ProdutoEntrada(Base):
     class Meta:
         verbose_name = 'Produto na Entrada de Estoque'
         verbose_name_plural = 'Produtos na Entrada de Estoque'
+        ordering = ['entrada__data_entrada']
         
 
 class EstoqueImei(Base):

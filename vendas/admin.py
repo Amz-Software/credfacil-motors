@@ -56,8 +56,7 @@ class ProdutoVendaAdmin(admin.ModelAdmin):
 @admin.register(Cliente)
 class ClienteAdmin(AdminBase):
     list_display = ('nome', 'email', 'telefone', 'cpf')
-
-
+    list_filter = ('loja',)
 
 @admin.register(Endereco)
 class EnderecoAdmin(AdminBase):

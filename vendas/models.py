@@ -75,6 +75,7 @@ class Caixa(Base):
 
     class Meta:
         verbose_name_plural = 'Caixas'
+        ordering = ['-data_abertura']
 
 class LancamentoCaixaTotal(Base):
     tipo_lancamento_opcoes = (

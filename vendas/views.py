@@ -216,47 +216,65 @@ class CaixaListView(BaseView, PermissionRequiredMixin, ListView):
     context_object_name = 'caixas'
     permission_required = 'vendas.view_caixa'
     
+    
     def get_queryset(self):
         query = super().get_queryset()
         data_filter = self.request.GET.get('search')
+        loja = self.request.GET.get('loja')
+        
+        if loja:
+            query = query.filter(loja__id=loja)
+            
         if data_filter:
             return query.filter(data_abertura=data_filter)
         
         return query.order_by('-criado_em')
-    
-    def post(self, request, *args, **kwargs):
-        criar_caixa = request.POST.get('criar_caixa')
 
-        if criar_caixa:
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.request.user.has_perm('vendas.can_view_all_stores'):
+            context['lojas'] = Loja.objects.all()
+        return context
+
+    def post(self, request, *args, **kwargs):
+        # Abertura de caixa
+        if 'criar_caixa' in request.POST:
+            user = request.user
             today = timezone.localtime(timezone.now()).date()
 
-            if not Caixa.caixa_aberto(today, Loja.objects.get(id=request.session.get('loja_id'))):
+            # Escolhe a loja: do select se tiver permissão, senão da sessão
+            if user.has_perm('vendas.can_view_all_stores'):
+                loja_id = request.POST.get('loja_id')
+            else:
+                loja_id = request.session.get('loja_id')
+            loja = Loja.objects.get(id=loja_id)
+
+            if not Caixa.caixa_aberto(today, loja):
                 Caixa.objects.create(
                     data_abertura=today,
-                    criado_por=request.user,
-                    modificado_por=request.user,
-                    loja=Loja.objects.get(id=request.session.get('loja_id'))
-                    )
+                    criado_por=user,
+                    modificado_por=user,
+                    loja=loja
+                )
                 messages.success(request, 'Caixa aberto com sucesso')
-                return redirect('vendas:caixa_list')
             else:
                 messages.warning(request, 'Já existe um caixa aberto para hoje')
-                return redirect('vendas:caixa_list')
-            
-        
-        fechar_caixa = request.POST.get('fechar_caixa')
-        if fechar_caixa:
+
+            return redirect('vendas:caixa_list')
+
+        # Fechamento de caixa (mantido igual)
+        if 'fechar_caixa' in request.POST:
             today = timezone.localtime(timezone.now()).date()
             try:
-                caixa = Caixa.objects.get(id=fechar_caixa, loja=request.session.get('loja_id'))
+                caixa = Caixa.objects.get(id=request.POST['fechar_caixa'],
+                                          loja=request.session.get('loja_id'))
                 caixa.data_fechamento = today
                 caixa.save(user=request.user)
                 messages.success(request, 'Caixa fechado com sucesso')
-                return redirect('vendas:caixa_list')
-            except:
+            except Caixa.DoesNotExist:
                 messages.warning(request, 'Não existe caixa aberto para hoje')
-                return redirect('vendas:caixa_list')
-        
+            return redirect('vendas:caixa_list')
+
         return self.get(request, *args, **kwargs)
 
 
@@ -721,11 +739,10 @@ def gerar_venda(request, cliente_id):
     # Verifica caixa aberto
     caixa = Caixa.objects.filter(
         loja=loja,
-        data_abertura=timezone.now().date(),
         data_fechamento__isnull=True
     ).first()
     if not caixa:
-        messages.error(request, "❌ Nenhum caixa aberto encontrado para hoje.")
+        messages.error(request, "❌ Nenhum caixa aberto encontrado.")
         return redirect('vendas:cliente_list')
 
     # Valida análise de crédito

@@ -15,42 +15,79 @@ Caixas
           <div>
             <form action="" method="get" class="d-inline-block me-2" id="searchForm">
               <div class="input-group">
-                    <input type="date" name="search" class="form-control" value="{{ request.GET.search }}" onchange="this.form.submit()">
-                  <a href="{% url "vendas:caixa_list" %}" class="btn btn-outline-secondary">
-                      <i class="bx bx-x"></i>
-                  </a>
+                <!-- filtro por data -->
+                <input
+                  type="date"
+                  name="search"
+                  class="form-control"
+                  value="{{ request.GET.search }}"
+                  onchange="this.form.submit()"
+                >
+            
+                {% if user|has_perm:"vendas.can_view_all_stores" %}
+                  <!-- filtro por loja -->
+                  <select
+                    name="loja"
+                    class="form-select ms-2"
+                    onchange="this.form.submit()"
+                  >
+                    <option value="">Todas as lojas</option>
+                    {% for loja in lojas %}
+                      <option
+                        value="{{ loja.id }}"
+                        {% if request.GET.loja == loja.id|stringformat:"s" %}selected{% endif %}
+                      >
+                        {{ loja.nome }}
+                      </option>
+                    {% endfor %}
+                  </select>
+                {% endif %}
+            
+                <!-- botão limpar filtros -->
+                <a href="{% url 'vendas:caixa_list' %}" class="btn btn-outline-secondary ms-2">
+                  <i class="bx bx-x"></i>
+                </a>
               </div>
-            </form>
-            <!-- Button trigger modal -->
-            {% if user|has_perm:"vendas.add_caixa" %}  
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#confirmModal">
-              <i class="bx bx-plus me-1"></i>
-              Criar Caixa
-            </button>
-            {% endif %}
-            <!-- Modal -->
-            <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel"
-              aria-hidden="true">
-              <div class="modal-dialog">
-                <div class="modal-content">
+            </form>            
+          {% if user|has_perm:"vendas.add_caixa" %}  
+          <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#confirmModal">
+            <i class="bx bx-plus me-1"></i> Criar Caixa
+          </button>
+          {% endif %}
+
+          <!-- Novo modal -->
+          <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <form method="post">
+                  {% csrf_token %}
+                  <input type="hidden" name="criar_caixa" value="1">
                   <div class="modal-header">
                     <h5 class="modal-title" id="confirmModalLabel">Confirmar Abertura do Caixa</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                   </div>
                   <div class="modal-body">
-                    Você tem certeza que deseja abrir um novo caixa?
+                    {% if user|has_perm:"vendas.can_view_all_stores" %}
+                      <div class="mb-3">
+                        <label for="lojaSelect" class="form-label">Selecione a loja</label>
+                        <select name="loja_id" id="lojaSelect" class="form-select" required>
+                          {% for loja in lojas %}
+                            <option value="{{ loja.id }}">{{ loja.nome }}</option>
+                          {% endfor %}
+                        </select>
+                      </div>
+                    {% endif %}
+                    <p>Você tem certeza que deseja abrir um novo caixa?</p>
                   </div>
                   <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <form method="post" class="d-inline-block">
-                      {% csrf_token %}
-                      <input type="hidden" name="criar_caixa" value="1">
-                      <button type="submit" class="btn btn-primary">Confirmar</button>
-                    </form>
+                    <button type="submit" class="btn btn-primary">Confirmar</button>
                   </div>
-                </div>
+                </form>
               </div>
             </div>
+          </div>
+
           </div>
         </div>
         <div class="card-body">
@@ -60,8 +97,10 @@ Caixas
                 <tr>
                   <th scope="col">Data de Abertura</th>
                   <th scope="col">Quantidade de Vendas</th>
-                  <!-- <th scope="col">Vendas Total</th> -->
                   <th scope="col">Total em Caixa</th>
+                  {% if user|has_perm:"vendas.can_view_all_stores" %}
+                  <th scope="col">Loja</th>
+                  {% endif %}
                   <th scope="col">Data Fechamento</th>
                   <th scope="col">Ações</th>
                 </tr>
@@ -72,6 +111,9 @@ Caixas
                   <td>Caixa - {{ caixa.data_abertura|date:"d/m/Y" }}</td>
                   <td>{{ caixa.quantidade_vendas }}</td>
                   <td>{{ caixa.saldo_final }}</td>
+                  {% if user|has_perm:"vendas.can_view_all_stores" %}
+                  <td>{{ caixa.loja.nome }}</td>
+                  {% endif %}
                   {% if caixa.data_fechamento %}
                   <td>
                     <span class="badge bg-danger">

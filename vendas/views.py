@@ -105,7 +105,7 @@ class IndexView(LoginRequiredMixin, TemplateView):
             total_de_parcelas_pagas = 0
 
             for venda in vendas: 
-                parcelas = Parcela.objects.filter(pagamento__venda=venda).select_related('pagamento')
+                parcelas = Parcela.objects.filter(pagamento__venda=venda, pagamento__tipo_pagamento__nome='CREDFACIL')
 
                 parcelas_vencidas = parcelas.filter(data_vencimento__lt=timezone.now(), pago=False, pagamento_efetuado=False)
                 parcelas_pagas = parcelas.filter(pago=True, pagamento_efetuado=False)
@@ -149,7 +149,7 @@ class IndexView(LoginRequiredMixin, TemplateView):
                 loja_nome = venda.loja.nome  
                 valores_por_loja[loja_nome]['total_vendas'] += 1
 
-                parcelas = Parcela.objects.filter(pagamento__venda=venda)
+                parcelas = Parcela.objects.filter(pagamento__venda=venda, pagamento__tipo_pagamento__nome='CREDFACIL')
 
                 parcelas_vencidas = parcelas.filter(data_vencimento__lt=timezone.now(), pago=False, pagamento_efetuado=False)
                 parcelas_pagas = parcelas.filter(pago=True, pagamento_efetuado=False)

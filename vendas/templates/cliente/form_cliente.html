@@ -232,38 +232,54 @@
 {% block extra_scripts %}
   {{ form_analise_credito.media.js }}
   <script>
-    // Parcelamento dinâmico
-    const produtos = JSON.parse('{{ produtos_json|escapejs }}');
-    const selProduto = document.getElementById('id_produto');
-    const selParcelas = document.getElementById('id_numero_parcelas');
-    const infoDiv = document.getElementById('parcelas-info');
+    $(function(){
+      // dados dos produtos vindos do contexto
+      const produtos = JSON.parse('{{ produtos_json|escapejs }}');
 
-    function formatBRL(v) {
-      return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-    }
-
-    function atualizaInfo() {
-      const prodId = selProduto.value;
-      const np = selParcelas.value;
-      if (!prodId || !np) {
-        infoDiv.textContent = '';
-        return;
+      function formatBRL(v) {
+        return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
       }
-      const p = produtos.find(x => x.id == prodId);
-      if (!p) {
-        infoDiv.textContent = '';
-        return;
-      }
-      const total = np === '4' ? p.valor4 : p.valor6;
-      const parcela = total / parseInt(np, 10);
-      infoDiv.innerHTML = `
-        Valor total (${np}×): <strong>${formatBRL(total)}</strong><br>
-        Valor por parcela (${np}×): <strong>${formatBRL(parcela)}</strong>
-      `;
-    }
 
-    selProduto.addEventListener('change', atualizaInfo);
-    selParcelas.addEventListener('change', atualizaInfo);
-    document.addEventListener('DOMContentLoaded', atualizaInfo);
+      function atualizaInfo() {
+        const prodId = $('#id_produto').val();
+        const np     = $('#id_numero_parcelas').val();
+        const infoDiv = $('#parcelas-info');
+
+        if (!prodId) {
+          infoDiv.text('');
+          return;
+        }
+
+        const p = produtos.find(x => x.id == prodId);
+        if (!p) {
+          infoDiv.text('');
+          return;
+        }
+
+        let total = 0;
+        if      (np === '4') total = p.valor4;
+        else if (np === '6') total = p.valor6;
+        else if (np === '8') total = p.valor8;
+
+        const parcela = (np && total) ? total / parseInt(np, 10) : 0;
+
+        infoDiv.html(`
+          Valor de entrada: <strong>${formatBRL(p.entrada)}</strong><br>
+          Valor total (${np}×): <strong>${formatBRL(total)}</strong><br>
+          Valor por parcela (${np}×): <strong>${formatBRL(parcela)}</strong>
+        `);
+      }
+
+      // escuta mudanças no select2 e no select nativo
+      $('#id_produto')
+        .on('change',         atualizaInfo)
+        .on('select2:select', atualizaInfo);
+
+      $('#id_numero_parcelas').on('change', atualizaInfo);
+
+      // dispara no carregamento da página
+      atualizaInfo();
+    });
   </script>
+
 {% endblock extra_scripts %}

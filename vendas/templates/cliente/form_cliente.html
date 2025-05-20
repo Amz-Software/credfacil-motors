@@ -183,7 +183,39 @@
                   {{ field }}
                 </div>
               {% endfor %}
-              <div id="parcelas-info" class="fst-italic text-secondary"></div>
+              <div class="row text-center mb-4" id="parcelas-info">
+                <div class="col-12 col-md-4 mb-2">
+                  <div class="card border-primary h-100">
+                    <div class="card-body">
+                      <h6 class="card-subtitle fs-5 fw-semibold text-primary text-uppercase">
+                        Entrada
+                      </h6>
+                      <p class="card-text display-6" id="info-entrada">—</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-12 col-md-4 mb-2">
+                  <div class="card border-success h-100">
+                    <div class="card-body">
+                      <h6 class="card-subtitle fs-5 fw-semibold text-success text-uppercase">
+                        Total
+                      </h6>
+                      <p class="card-text display-6" id="info-total">—</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-12 col-md-4 mb-2">
+                  <div class="card border-warning h-100">
+                    <div class="card-body">
+                      <h6 class="card-subtitle fs-5 fw-semibold text-warning text-uppercase">
+                        Parcelas
+                      </h6>
+                      <p class="card-text display-6" id="info-parcela">—</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
             </div>
           </div>
         </div>
@@ -233,7 +265,7 @@
   {{ form_analise_credito.media.js }}
   <script>
     $(function(){
-      // dados dos produtos vindos do contexto
+      // lista de produtos do contexto
       const produtos = JSON.parse('{{ produtos_json|escapejs }}');
 
       function formatBRL(v) {
@@ -243,41 +275,43 @@
       function atualizaInfo() {
         const prodId = $('#id_produto').val();
         const np     = $('#id_numero_parcelas').val();
-        const infoDiv = $('#parcelas-info');
 
+        // se não houver produto selecionado, limpa tudo
         if (!prodId) {
-          infoDiv.text('');
+          $('#info-entrada, #info-total, #info-parcela').text('—');
           return;
         }
 
-        const p = produtos.find(x => x.id == prodId);
-        if (!p) {
-          infoDiv.text('');
-          return;
-        }
+        // busca dados do produto
+        const p = produtos.find(x => x.id == prodId) || {};
+        const entrada = p.entrada  || 0;
+        const valor4  = p.valor4   || 0;
+        const valor6  = p.valor6   || 0;
+        const valor8  = p.valor8   || 0;
 
-        let total = 0;
-        if      (np === '4') total = p.valor4;
-        else if (np === '6') total = p.valor6;
-        else if (np === '8') total = p.valor8;
+        // escolhe total conforme parcelas
+        const total = { '4': valor4, '6': valor6, '8': valor8 }[np] || 0;
+        const parcela = (np && total)
+          ? total / parseInt(np, 10)
+          : 0;
 
-        const parcela = (np && total) ? total / parseInt(np, 10) : 0;
+        // preenche os cards
+        $('#info-entrada').text(formatBRL(entrada));
+        $('#info-total')  .text(formatBRL(total));
 
-        infoDiv.html(`
-          Valor de entrada: <strong>${formatBRL(p.entrada)}</strong><br>
-          Valor total (${np}×): <strong>${formatBRL(total)}</strong><br>
-          Valor por parcela (${np}×): <strong>${formatBRL(parcela)}</strong>
-        `);
+        const textoParcela = np
+          ? `${np}× de ${formatBRL(parcela)}`
+          : '—';
+        $('#info-parcela').text(textoParcela);
       }
 
-      // escuta mudanças no select2 e no select nativo
+      // dispara ao mudar produto (Select2) ou número de parcelas
       $('#id_produto')
-        .on('change',         atualizaInfo)
-        .on('select2:select', atualizaInfo);
+        .on('change select2:select', atualizaInfo);
+      $('#id_numero_parcelas')
+        .on('change', atualizaInfo);
 
-      $('#id_numero_parcelas').on('change', atualizaInfo);
-
-      // dispara no carregamento da página
+      // inicializa ao carregar a página
       atualizaInfo();
     });
   </script>

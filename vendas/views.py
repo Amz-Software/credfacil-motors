@@ -103,12 +103,14 @@ class IndexView(LoginRequiredMixin, TemplateView):
             total_vendas = vendas.count()
             total_de_parcelas_vencidas = 0
             total_de_parcelas_pagas = 0
+            total_geral_parcelas = 0
 
             for venda in vendas: 
                 parcelas = Parcela.objects.filter(pagamento__venda=venda, pagamento__tipo_pagamento__nome='CREDFACIL')
 
                 parcelas_vencidas = parcelas.filter(data_vencimento__lt=timezone.now(), pago=False, pagamento_efetuado=False)
                 parcelas_pagas = parcelas.filter(pago=True, pagamento_efetuado=False)
+                total_geral_parcelas += parcelas.count()
 
                 qtd_vencidas = parcelas_vencidas.count()
                 qtd_pagas = parcelas_pagas.count()
@@ -127,6 +129,7 @@ class IndexView(LoginRequiredMixin, TemplateView):
 
             context['total_vendas_loja'] = total_vendas
             context['total_de_parcelas'] = total_de_parcelas_vencidas + total_de_parcelas_pagas
+            context['total_de_parcelas_geral'] = total_geral_parcelas
             context['valor_total_parcelas'] = total_geral
             context['valor_total_pagas'] = float(total_pagas)
             context['valor_total_vencidas'] = float(total_vencidas)
@@ -1703,6 +1706,7 @@ def folha_carne_view(request, pk, tipo):
     endereco_cliente   = venda.cliente.endereco
     cpf                = venda.cliente.cpf
     loja               = get_object_or_404(Loja, nome__icontains="CredFácil")
+    numero_loja        = loja.telefone
 
     # 3) Sanitiza chave Pix
     raw_chave     = loja.chave_pix or ""
@@ -1771,6 +1775,7 @@ def folha_carne_view(request, pk, tipo):
         'cpf': cpf,
         'parcelas_info': parcelas_info,
         'loja': loja,
+        'numero_loja': numero_loja,
     }
     return render(request, "venda/folha_carne.html", context)
 

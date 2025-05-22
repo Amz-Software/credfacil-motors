@@ -24,6 +24,12 @@
             table {
                 page-break-inside: avoid;
             }
+            .via {
+                page-break-after: always;
+            }
+            .via:last-child {
+                page-break-after: auto;
+            }
         }
 
         body {
@@ -66,36 +72,80 @@
         .left {
             text-align: left;
         }
+        .destaque-via {
+            background: #ffe066;
+            color: #222;
+            font-weight: bold;
+            text-align: center;
+            font-size: 25px;
+            padding: 10px 0;
+            margin-bottom: 20px;
+            border: 2px solid #ffd700;
+        }
+        .via {
+            margin-bottom: 40px;
+        }
     </style>
 </head>
 <body>
 
-<h2>CONTRATO DE LOCAÇÃO DE CELULAR</h2>
-<p>Este Contrato de Locação de Celular ("Contrato") é celebrado entre: {{loja.nome|title}}, inscrito no CNPJ {{loja.cnpj|default:"-"}}, com endereço registrado em {{loja.endereco}} referido como "Locador", {{cliente.nome|title}}, inscrito no CPF {{cliente.cpf}}, REGISTRO GERAL {{cliente.rg}}, com endereço registrado em {{cliente.endereco}} referido como "Locatário".</p>
-<p><strong>1. Objeto do Contrato</strong></p>
-<p>O Locador concorda em alugar ao Locatário o seguinte celular:</p>
-<ul>
-    <li>Modelo de Celular: {{aparelho.produto.nome|title}}</li>
-    <li>Número de Série/IMEI: {{imei}}</li>
-</ul>
-<p><strong>2. Período de Locação</strong></p>
-<p>O período de locação começará em {{primeira_parcela}} e terminará em {{ultima_parcela}}.</p>
-<p><strong>3. Taxa de Locação</strong></p>
-<p>O Locatário concorda em pagar uma taxa de locação de R$ {{valor_parcela}} por {{quantidade_parcelas}} MESES durante o período de locação. O pagamento deverá ser efetuado no máximo com 5 dias de atraso de cada parcela para não ocorrer bloqueio.</p>
-<div id="texto_contrato" data-texto="{{contrato}}"></div>
-<p>Locador: {{loja.nome|title}}<br>
-CNPJ: {{loja.cnpj}}<br>
-Locatário: ____________________________________<br>
-CPF: ____________________________________<br>
-Vendedor: ____________________________________<br>
-CPF: ____________________________________</p>
+<div class="via">
+    <div class="destaque-via">VIA DO CLIENTE</div>
+    <h2>CONTRATO DE LOCAÇÃO DE CELULAR</h2>
+    <p>Este Contrato de Locação de Celular ("Contrato") é celebrado entre: {{loja.nome|title}}, inscrito no CNPJ {{loja.cnpj|default:"-"}}, com endereço registrado em {{loja.endereco}} referido como "Locador", {{cliente.nome|title}}, inscrito no CPF {{cliente.cpf}}, REGISTRO GERAL {{cliente.rg}}, com endereço registrado em {{cliente.endereco}} referido como "Locatário".</p>
+    <p><strong>1. Objeto do Contrato</strong></p>
+    <p>O Locador concorda em alugar ao Locatário o seguinte celular:</p>
+    <ul>
+        <li>Modelo de Celular: {{aparelho.produto.nome|title}}</li>
+        <li>Número de Série/IMEI: {{imei}}</li>
+    </ul>
+    <p><strong>2. Período de Locação</strong></p>
+    <p>O período de locação começará em {{primeira_parcela}} e terminará em {{ultima_parcela}}.</p>
+    <p><strong>3. Taxa de Locação</strong></p>
+    <p>O Locatário concorda em pagar uma taxa de locação de R$ {{valor_parcela}} por {{quantidade_parcelas}} MESES durante o período de locação. O pagamento deverá ser efetuado no máximo com 5 dias de atraso de cada parcela para não ocorrer bloqueio.</p>
+    <div id="texto_contrato_cliente" data-texto="{{contrato}}"></div>
+    <p>Locador: {{loja.nome|title}}<br>
+    CNPJ: {{loja.cnpj}}<br>
+    Locatário: ____________________________________<br>
+    CPF: ____________________________________<br>
+    Vendedor: ____________________________________<br>
+    CPF: ____________________________________</p>
+</div>
+
+<div class="via">
+    <div class="destaque-via">VIA DO LOJISTA</div>
+    <h2>CONTRATO DE LOCAÇÃO DE CELULAR</h2>
+    <p>Este Contrato de Locação de Celular ("Contrato") é celebrado entre: {{loja.nome|title}}, inscrito no CNPJ {{loja.cnpj|default:"-"}}, com endereço registrado em {{loja.endereco}} referido como "Locador", {{cliente.nome|title}}, inscrito no CPF {{cliente.cpf}}, REGISTRO GERAL {{cliente.rg}}, com endereço registrado em {{cliente.endereco}} referido como "Locatário".</p>
+    <p><strong>1. Objeto do Contrato</strong></p>
+    <p>O Locador concorda em alugar ao Locatário o seguinte celular:</p>
+    <ul>
+        <li>Modelo de Celular: {{aparelho.produto.nome|title}}</li>
+        <li>Número de Série/IMEI: {{imei}}</li>
+    </ul>
+    <p><strong>2. Período de Locação</strong></p>
+    <p>O período de locação começará em {{primeira_parcela}} e terminará em {{ultima_parcela}}.</p>
+    <p><strong>3. Taxa de Locação</strong></p>
+    <p>O Locatário concorda em pagar uma taxa de locação de R$ {{valor_parcela}} por {{quantidade_parcelas}} MESES durante o período de locação. O pagamento deverá ser efetuado no máximo com 5 dias de atraso de cada parcela para não ocorrer bloqueio.</p>
+    <div id="texto_contrato_vendedor" data-texto="{{contrato}}"></div>
+    <p>Locador: {{loja.nome|title}}<br>
+    CNPJ: {{loja.cnpj}}<br>
+    Locatário: ____________________________________<br>
+    CPF: ____________________________________<br>
+    Vendedor: ____________________________________<br>
+    CPF: ____________________________________</p>
+</div>
 
 <script src="{% static 'js/formatarTextoEditor.js' %}"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const divContrato = document.getElementById('texto_contrato');
-        const texto = divContrato.getAttribute('data-texto');
-        formatarTexto(texto, divContrato);
+        formatarTexto(
+            document.getElementById('texto_contrato_cliente').getAttribute('data-texto'),
+            document.getElementById('texto_contrato_cliente')
+        );
+        formatarTexto(
+            document.getElementById('texto_contrato_vendedor').getAttribute('data-texto'),
+            document.getElementById('texto_contrato_vendedor')
+        );
     });
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.2/html2pdf.bundle.min.js"></script>

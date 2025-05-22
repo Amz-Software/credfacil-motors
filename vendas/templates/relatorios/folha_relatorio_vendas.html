@@ -81,6 +81,7 @@
                     <th>Loja</th>
                     <th>Data</th>
                     <th>Vendedor</th>
+                    <th>Parcelas</th>
                     <th>Produtos</th>
                     <th>Valor Total</th>
                     <th>Valor Total Lucro</th>
@@ -89,12 +90,13 @@
             <tbody>
                 {% for venda in vendas %}
                 <tr>
-                    <td>{{ venda.loja }}</td>
+                    <td>{{ venda.loja|title }}</td>
                     <td>{{ venda.data_venda }}</td>
-                    <td>{{ venda.vendedor }}</td>
+                    <td>{{ venda.vendedor|title }}</td>
+                    <td>{{ venda.qtd_total_parcelas }}</td>
                     <td>
                         {% for produto in venda.produtos.all %}
-                        {{ produto.nome }}{% if not forloop.last %}, {% endif %}
+                        {{ produto.nome|title }}{% if not forloop.last %}, {% endif %}
                         {% empty %}
                         N/A
                         {% endfor %}

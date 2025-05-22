@@ -1,180 +1,212 @@
 {% extends "base.html" %}
 {% load static iam_tags %}
-{% block title %}
-Contas a Receber
-{% endblock title %}
+
+{% block title %}Contas a Receber{% endblock %}
 
 {% block extra_head %}
-<style>
-  .table-purple,
-  .table-purple th,
-  .table-purple td {
-    background-color: #6f42c1 !important;
-    color: #fff            !important;
-  }
-</style>
+  <style>
+    /* Linha bloqueada em roxo */
+    .table-purple,
+    .table-purple th,
+    .table-purple td {
+      background-color: #6f42c1 !important;
+      color: #fff            !important;
+    }
+    /* Sombreamento leve para o card */
+    .card-custom {
+      border: none;
+      border-radius: .75rem;
+      box-shadow: 0 0.25rem 0.75rem rgba(0,0,0,0.05);
+    }
+  </style>
 {% endblock %}
+
 
 {% block content %}
 <div class="container-xxl mt-4">
-  <div class="row">
-    <div class="col-12">
-      <div class="card">
-        <!-- CARD HEADER COM SEARCH + FILTROS -->
-        <div class="card-header">
-          <div class="d-flex flex-wrap justify-content-between align-items-center">
-            <h4 class="card-title mb-0">Contas a Receber
-                <button
-                type="button"
-                class="btn btn-sm btn-outline-secondary ms-2"
-                data-bs-toggle="tooltip"
-                data-bs-html="true"
-                title="
-                  <ul class='mb-0 ps-3'>
-                    <li><strong>Roxo:</strong> Bloqueado</li>
-                    <li><strong>Vermelho:</strong> Atrasado</li>
-                    <li><strong>Amarelo:</strong> Pendente (não atrasado)</li>
-                    <li><strong>Verde:</strong> Pago no Prazo</li>
-                    <li><strong>Azul:</strong> Quitado</li>
-                  </ul>
-                "
-              >
-                <i class="bi bi-info-circle"></i>
-              </button>
-            </h4>
+  <div class="card card-custom">
+    <!-- HEADER -->
+    <div class="card-header border-bottom">
+      <div class="d-flex flex-wrap justify-content-between align-items-center">
+        <h4 class="mb-0">
+          <i class="bi bi-wallet2 me-1"></i>
+          Contas a Receber
+          <button
+            type="button"
+            class="btn btn-link btn-sm text-decoration-none ms-2 p-0 align-middle"
+            data-bs-toggle="tooltip"
+            data-bs-html="true"
+            title="
+              <ul class='mb-0 ps-3'>
+                <li><strong>Roxo:</strong> Bloqueado</li>
+                <li><strong>Vermelho:</strong> Atrasado</li>
+                <li><strong>Amarelo:</strong> A vencer</li>
+                <li><strong>Verde:</strong> Pago</li>
+                <li><strong>Azul:</strong> Quitado</li>
+              </ul>
+            "
+          >
+            <i class="bi bi-info-circle"></i>
+          </button>
+        </h4>
+      </div>
+    </div>
 
-            <form method="get" class="row gx-2 gy-1 align-items-center">
-              <!-- Pesquisa -->
-              <div class="col-auto">
-                <input
-                  type="text"
-                  name="search"
-                  value="{{ request.GET.search }}"
-                  class="form-control form-control-sm"
-                  placeholder="Pesquisar..."
-                >
-              </div>
-
-              <!-- Filtro de Status -->
-              <div class="col-auto">
-                <select name="status" class="form-select form-select-sm">
-                  <option value="" {% if not request.GET.status %}selected{% endif %}>Todos</option>
-                  <option value="no_prazo"    {% if request.GET.status == 'no_prazo' %}selected{% endif %}>Pago no Prazo</option>
-                  <option value="atrasado"    {% if request.GET.status == 'atrasado' %}selected{% endif %}>Com Atraso</option>
-                  <option value="quitado"     {% if request.GET.status == 'quitado' %}selected{% endif %}>Quitado</option>
-                  <option value="pendente" {% if request.GET.status == 'pendente' %}selected{% endif %}>
-                    Pendente (não atrasado)
-                  </option>
-                </select>
-              </div>
-
-              <!-- Filtro de Bloqueados -->
-              <div class="col-auto">
-                <div class="form-check form-check-inline">
-                  <input
-                    class="form-check-input"
-                    type="checkbox"
-                    id="bloqueado"
-                    name="bloqueado"
-                    value="1"
-                    {% if request.GET.bloqueado %}checked{% endif %}
-                  >
-                  <label class="form-check-label" for="bloqueado">Somente Bloqueados</label>
-                </div>
-              <div class="col-auto">
-                <div class="form-check form-check-inline">
-                  <input
-                    class="form-check-input"
-                    type="checkbox"
-                    id="pagamento_efetuado"
-                    name="pagamento_efetuado"
-                    value="1"
-                    {% if request.GET.pagamento_efetuado %}checked{% endif %}
-                  >
-                  <label class="form-check-label" for="pagamento_efetuado">Pagamento Sinalizado</label>
-                </div>
-              </div>
-
-              <!-- Botão Filtrar -->
-              <div class="col-auto">
-                <button type="submit" class="btn btn-primary btn-sm">Filtrar</button>
-              </div>
-            </form>
+    <!-- FILTROS -->
+    <div class="card-body border-bottom mt-3">
+      <form method="get" class="row g-3 align-items-end">
+        <!-- Pesquisa -->
+        <div class="col-md-3">
+          <div class="form-floating">
+            <input
+              type="text"
+              id="searchInput"
+              name="search"
+              value="{{ request.GET.search }}"
+              class="form-control form-control-sm"
+              placeholder="Pesquisar..."
+            >
+            <label for="searchInput">Pesquisar</label>
           </div>
         </div>
+        <!-- Status -->
+        <div class="col-md-2">
+          <div class="form-floating">
+            <select
+              id="statusSelect"
+              name="status"
+              class="form-select form-select-sm"
+            >
+              <option value="" {% if not request.GET.status %}selected{% endif %}>Todos</option>
+              <option value="no_prazo" {% if request.GET.status == 'no_prazo' %}selected{% endif %}>PAGO</option>
+              <option value="atrasado" {% if request.GET.status == 'atrasado' %}selected{% endif %}>ATRASADO</option>
+              <option value="quitado" {% if request.GET.status == 'quitado' %}selected{% endif %}>QUITADO</option>
+              <option value="pendente" {% if request.GET.status == 'pendente' %}selected{% endif %}>A VENCER</option>
+            </select>
+            <label for="statusSelect">Status</label>
+          </div>
+        </div>
+        <!-- Bloqueados -->
+        <div class="col-auto">
+          <div class="form-check form-switch">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              id="bloqueado"
+              name="bloqueado"
+              value="1"
+              {% if request.GET.bloqueado %}checked{% endif %}
+            >
+            <label class="form-check-label" for="bloqueado">Somente Bloqueados</label>
+          </div>
+        </div>
+        <!-- Pagamento sinalizado -->
+        <div class="col-auto">
+          <div class="form-check form-switch">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              id="pagamento_efetuado"
+              name="pagamento_efetuado"
+              value="1"
+              {% if request.GET.pagamento_efetuado %}checked{% endif %}
+            >
+            <label class="form-check-label" for="pagamento_efetuado">Pagamento Sinalizado</label>
+          </div>
+        </div>
+        <!-- Botão -->
+        <div class="col-auto">
+          <button type="submit" class="btn btn-primary btn-sm">
+            <i class="bi bi-funnel-fill me-1"></i> Filtrar
+          </button>
+        </div>
+      </form>
+    </div>
 
-        <!-- CARD BODY COM TABELA -->
-        <div class="card-body">
-          <div class="table-responsive">
-            <table class="table table-hover">
-              <thead>
-                <tr>
-                  <th>Venda</th>
-                  <th>Tipo de Pagamento</th>
-                  <th>Valor</th>
-                  <th>Parcelas</th>
-                  <th>1ª Parcela</th>
-                  <th>Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for conta in contas_a_receber %}
-                  {% if conta.bloqueado %}
-                    <tr class="table-purple">
-                  {% elif conta.com_parcela_atrasada %}
-                    <tr class="table-danger">
-                  {% elif conta.com_pagamento_pendente %}           {# novo #}
-                    <tr class="table-warning">
-                  {% elif conta.pago_dentro_prazo %}
-                    <tr class="table-success">
-                  {% elif conta.todas_parcelas_pagas %}
-                    <tr class="table-info">
-                  {% else %}
-                    <tr >
+    <!-- TABELA -->
+    <div class="card-body p-4">
+      <div class="table-responsive">
+        <table class="table table-striped table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              {% if user|has_perm:"vendas.can_view_all_stores" %}
+                <th>Loja</th>
+              {% endif %}
+              <th>Venda</th>
+              <th>Modelo</th>
+              <th class="text-end">Valor total</th>
+              <th class="text-end">Valor pendente</th>
+              <th class="text-center">Parcelas totais</th>
+              <th class="text-center">Parcelas pendentes</th>
+              <th>1ª Parcela</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for conta in contas_a_receber %}
+              <tr class="
+                {% if conta.bloqueado %}table-purple
+                {% elif conta.com_parcela_atrasada %}table-danger
+                {% elif conta.com_pagamento_pendente %}table-warning
+                {% elif conta.pago_dentro_prazo %}table-success
+                {% elif conta.todas_parcelas_pagas %}table-info
+                {% endif %}
+              ">
+                {% if user|has_perm:"vendas.can_view_all_stores" %}
+                  <td>
+                    <a href="{% url 'vendas:loja_detail' conta.venda.loja.id %}">
+                      {{ conta.venda.loja.nome|title }}
+                    </a>
+                  </td>
+                {% endif %}
+                <td>
+                  <a href="{% url 'vendas:cliente_update' conta.venda.cliente.id %}">
+                    {{ conta.venda.cliente.nome|title }}
+                  </a>
+                </td>
+                <td>
+                  <a href="{% url 'produtos:produto_detail' conta.venda.itens_venda.first.produto.id %}">
+                    {{ conta.venda.itens_venda.first.produto.nome|title }}
+                  </a>
+                </td>
+                <td class="text-end">{{ conta.valor|floatformat:2 }}</td>
+                <td class="text-end">{{ conta.valor_pendente|floatformat:2 }}</td>
+                <td class="text-center">{{ conta.parcelas }}</td>
+                <td class="text-center">{{ conta.parcelas_pendentes }}</td>
+                <td>{{ conta.data_primeira_parcela }}</td>
+                <td>
+                  {% if user|has_perm:"vendas.view_pagamento" %}
+                    <a
+                      href="{% url 'financeiro:contas_a_receber_update' conta.id %}"
+                      class="btn btn-outline-primary btn-sm"
+                    >
+                      <i class="bi bi-eye-fill"></i>
+                    </a>
                   {% endif %}
-                      <td>{{ conta.venda }}</td>
-                      <td>{{ conta.tipo_pagamento }}</td>
-                      <td>{{ conta.valor|floatformat:2 }}</td>
-                      <td>{{ conta.parcelas }}</td>
-                      <td>{{ conta.data_primeira_parcela }}</td>
-                      <td>
-                        {% if user|has_perm:"vendas.view_pagamento" %}
-                          <a
-                            href="{% url 'financeiro:contas_a_receber_update' conta.id %}"
-                            class="btn btn-sm btn-outline-primary"
-                          >Visualizar</a>
-                        {% endif %}
-                      </td>
-                    </tr>
-                {% empty %}
-                  <tr>
-                    <td colspan="6" class="text-center py-4">Nenhum registro encontrado</td>
-                  </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-
-            {% include "snippets/pagination.html" %}
-          </div>
-        </div>
-
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="9" class="text-center py-4">
+                  Nenhum registro encontrado
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% include "snippets/pagination.html" %}
       </div>
     </div>
   </div>
 </div>
 {% endblock %}
 
-
 {% block extra_scripts %}
-  <!-- Certifique-se de ter o bundle do Bootstrap (inclui Popper) carregado -->
   <script>
     document.addEventListener('DOMContentLoaded', function () {
-      var tooltipTriggerList = [].slice.call(
-        document.querySelectorAll('[data-bs-toggle="tooltip"]')
-      );
-      tooltipTriggerList.forEach(function (el) {
-        new bootstrap.Tooltip(el);
-      });
+      document
+        .querySelectorAll('[data-bs-toggle="tooltip"]')
+        .forEach(el => new bootstrap.Tooltip(el));
     });
   </script>
 {% endblock %}

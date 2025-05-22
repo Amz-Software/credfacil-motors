@@ -344,6 +344,9 @@ class Venda(Base):
     repasse_logista = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     is_deleted = models.BooleanField(default=False)
     
+    def qtd_total_parcelas(self):
+        return sum(pagamento.parcelas for pagamento in self.pagamentos.filter(tipo_pagamento__parcelas=True))
+    
     @cached_property
     def valor_caixa(self):
         return sum(pagamento.valor for pagamento in self.pagamentos.all().filter(tipo_pagamento__caixa=True))
@@ -466,12 +469,14 @@ class ContatoAdicional(Base):
     nome_adicional = models.CharField(max_length=100, null=True, blank=True)
     contato = models.CharField(max_length=20, null=True, blank=True)
     endereco_adicional = models.CharField(max_length=200, null=True, blank=True)
+    obteve_contato = models.BooleanField(default=False)
     
 
 class InformacaoPessoal(Base):
     nome = models.CharField(max_length=100, null=True, blank=True)
     contato = models.CharField(max_length=20, null=True, blank=True)
     endereco = models.CharField(max_length=200, null=True, blank=True)
+    obteve_contato = models.BooleanField(default=False)
     
 
 class Endereco(Base):
@@ -626,6 +631,12 @@ class Pagamento(Base):
     @property
     def valor_parcela(self):
         return self.valor / self.parcelas
+    
+    def valor_pendente(self):
+        return self.valor - sum(parcela.valor for parcela in self.parcelas_pagamento.filter(pago=True))
+    
+    def parcelas_pendentes(self):
+        return self.parcelas_pagamento.filter(pago=False).count()
     
     def __str__(self):
         return f"Pagamento de R$ {self.valor} via {self.tipo_pagamento.nome}"

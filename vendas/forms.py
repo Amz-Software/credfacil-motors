@@ -109,6 +109,12 @@ class ClienteForm(forms.ModelForm):
 
 
 class ContatoAdicionalForm(forms.ModelForm):
+    obteve_contato = forms.ChoiceField(
+        label='Obteve Contato',
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        choices=[(True, 'Sim'), (False, 'Não')]
+    )
     class Meta:
         model = ContatoAdicional
         fields = '__all__'
@@ -117,6 +123,7 @@ class ContatoAdicionalForm(forms.ModelForm):
             'nome_adicional': forms.TextInput(attrs={'class': 'form-control'}),
             'contato': forms.TextInput(attrs={'class': 'form-control'}),
             'endereco_adicional': forms.TextInput(attrs={'class': 'form-control'}),
+            'obteve_contato': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
         
     
@@ -126,28 +133,39 @@ class ContatoAdicionalForm(forms.ModelForm):
         for name, field in self.fields.items():
             if name not in ['email']:
                 field.required = True
+        
+        if not self.instance and user and not user.has_perm('vendas.change_status_analise'):
+            self.fields.pop('obteve_contato', None)
                 
         if self.instance and self.instance.pk:
             if user and not user.has_perm('vendas.change_status_analise'):
                 self.fields['nome_adicional'].disabled = True
                 self.fields['contato'].disabled = True
                 self.fields['endereco_adicional'].disabled = True
+                self.fields['obteve_contato'].disabled = True
                 
             if user and not user.has_perm('vendas.can_edit_finished_sale'):
                 if not self.instance.cliente.analise_credito.status == 'EA':
                     self.fields['nome_adicional'].disabled = True
                     self.fields['contato'].disabled = True
                     self.fields['endereco_adicional'].disabled = True
+                    self.fields['obteve_contato'].disabled = True
 
 class InformacaoPessoalForm(forms.ModelForm):
     nome_pessoal = forms.CharField(label='Nome', widget=forms.TextInput(attrs={'class': 'form-control'}))
     contato_pessoal = forms.CharField(label='Contato', widget=forms.TextInput(attrs={'class': 'form-control'}))
     endereco_pessoal = forms.CharField(label='Endereço', widget=forms.TextInput(attrs={'class': 'form-control'}))
+    obteve_contato_pessoal = forms.ChoiceField(
+        label='Obteve Contato',
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        choices=[(True, 'Sim'), (False, 'Não')]
+    )
 
     class Meta:
         model = InformacaoPessoal
         fields = '__all__'
-        exclude = ['cliente', 'loja', 'nome', 'contato', 'endereco']
+        exclude = ['cliente', 'loja', 'nome', 'contato', 'endereco', 'obteve_contato']
         
     
     def __init__(self, *args, **kwargs):
@@ -157,23 +175,30 @@ class InformacaoPessoalForm(forms.ModelForm):
         self.fields['nome_pessoal'].initial = self.instance.nome
         self.fields['contato_pessoal'].initial = self.instance.contato
         self.fields['endereco_pessoal'].initial = self.instance.endereco
+        self.fields['obteve_contato_pessoal'].initial = self.instance.obteve_contato
+        
+        if not self.instance and user and not user.has_perm('vendas.change_status_analise'):
+            self.fields.pop('obteve_contato_pessoal', None)
                 
         if self.instance and self.instance.pk:
             if user and not user.has_perm('vendas.change_status_analise'):
                 self.fields['nome_pessoal'].disabled = True
                 self.fields['contato_pessoal'].disabled = True
                 self.fields['endereco_pessoal'].disabled = True
+                self.fields['obteve_contato_pessoal'].disabled = True
                 
             if user and not user.has_perm('vendas.can_edit_finished_sale'):
                 if not self.instance.cliente.analise_credito.status == 'EA':
                     self.fields['nome_pessoal'].disabled = True
                     self.fields['contato_pessoal'].disabled = True
                     self.fields['endereco_pessoal'].disabled = True
+                    self.fields['obteve_contato_pessoal'].disabled = True
         
     def save(self, commit=True):
         self.instance.nome = self.cleaned_data.get('nome_pessoal')
         self.instance.contato = self.cleaned_data.get('contato_pessoal')
         self.instance.endereco = self.cleaned_data.get('endereco_pessoal')
+        self.instance.obteve_contato = self.cleaned_data.get('obteve_contato_pessoal')
         return super().save(commit=commit)
 
 

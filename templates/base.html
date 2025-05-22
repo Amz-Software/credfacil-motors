@@ -79,11 +79,11 @@
         <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
           <div class="app-brand demo d-flex align-items-center justify-content-between flex-nowrap" id="brand-container" style="padding: 0.5rem 1rem;">
             <a href="{% url 'vendas:index' %}" class="app-brand-link d-flex align-items-center flex-nowrap" style="text-decoration: none;">
-              <img src="{% static 'images/credfacil-logo-preta.png' %}" 
+              <img src="{% static 'images/logo.png' %}" 
                    style="max-width: 100px; height: auto; flex-shrink: 0;">
               <span class="app-brand-text text-truncate fw-medium text-capitalize ms-2" 
                     style="font-size: 18px; max-width: 160px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                {{ loja_atual }}
+                {{ loja_atual|title }}
               </span>
             </a>
             <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto">

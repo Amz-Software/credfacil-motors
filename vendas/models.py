@@ -505,6 +505,7 @@ class ComprovantesCliente(Base):
     
     consulta_serasa = models.FileField(upload_to='comprovantes_clientes', null=True, blank=True)
     consulta_serasa_analise = models.BooleanField(default=False)
+    restricao = models.BooleanField(default=False)
     
     class Meta:
         verbose_name_plural = 'Comprovantes Clientes'

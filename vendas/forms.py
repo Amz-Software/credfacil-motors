@@ -246,6 +246,12 @@ class AnaliseCreditoClienteForm(forms.ModelForm):
 
 
 class ComprovantesClienteForm(forms.ModelForm):
+    restricao = forms.ChoiceField(
+        label='Restrição',
+        required=None,
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        choices=[(True, 'Com Restrição'), (False, 'Sem Restrição')]
+    )
     class Meta:
         model = ComprovantesCliente
         exclude = ['cliente', 'loja']
@@ -268,6 +274,7 @@ class ComprovantesClienteForm(forms.ModelForm):
             'comprovante_residencia_analise': 'Análise Comprovante de Residência',
             'consulta_serasa': 'Consulta Serasa',
             'consulta_serasa_analise': 'Análise Consulta Serasa',
+            'restricao': 'Restrição',
         }
 
     def __init__(self, *args, **kwargs):
@@ -276,6 +283,8 @@ class ComprovantesClienteForm(forms.ModelForm):
         
         if not (user and user.has_perm('vendas.change_status_analise')):
             self.fields.pop('consulta_serasa', None)
+            self.fields.pop('consulta_serasa_analise', None)
+            self.fields.pop('restricao', None)
 
         # 1) Se não tiver permissão, remove todos os campos que terminam em "_analise"
         if not (user and user.has_perm('vendas.view_all_analise_credito')):
@@ -289,6 +298,7 @@ class ComprovantesClienteForm(forms.ModelForm):
             'documento_identificacao_verso_analise',
             'comprovante_residencia_analise',
             'consulta_serasa_analise',
+            'restricao',
         ):
             if analise_field in self.fields:
                 self.fields[analise_field].initial = False

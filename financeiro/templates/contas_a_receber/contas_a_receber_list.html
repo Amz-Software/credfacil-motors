@@ -138,7 +138,6 @@
               <th class="text-end">Valor pendente</th>
               <th class="text-center">Parcelas totais</th>
               <th class="text-center">Parcelas pendentes</th>
-              <th>1ª Parcela</th>
               <th>Ações</th>
             </tr>
           </thead>
@@ -173,7 +172,6 @@
                 <td class="text-end">{{ conta.valor_pendente|floatformat:2 }}</td>
                 <td class="text-center">{{ conta.parcelas }}</td>
                 <td class="text-center">{{ conta.parcelas_pendentes }}</td>
-                <td>{{ conta.data_primeira_parcela }}</td>
                 <td>
                   {% if user|has_perm:"vendas.view_pagamento" %}
                     <a

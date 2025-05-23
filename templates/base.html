@@ -1,301 +1,321 @@
 <!doctype html>
 {% load static %}
 <html lang="pt-br" class="light-style layout-navbar-fixed layout-menu-fixed layout-compact" dir="ltr"
-    data-theme="theme-default" data-assets-path="{% static 'sneat-template/assets/' %}"
-    data-template="vertical-menu-template">
+  data-theme="theme-default" data-assets-path="{% static 'sneat-template/assets/' %}"
+  data-template="vertical-menu-template">
 
 <head>
-    <!-- Meta Tags -->
-    <meta property="og:url" content="{{ request.scheme }}://{{ request.get_host }}{{ request.path }}" />
-    <meta name="theme-color" content="#FDC600" />
-    <meta property="og:type" content="website" />
-    <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{% static 'imagens/....webp' %}" />
-    <meta property="og:image:width" content="1200">
-    <meta property="og:image:height" content="600">
-    <meta property="og:title" content="Dr Smart" />
-    <meta name="description" content="O sistema de loja de celular oferece uma plataforma completa para gerenciar vendas, estoque, clientes e serviços de assistência técnica, proporcionando uma experiência de compra eficiente e integrada." />
-    <meta property="og:description" content="O sistema de loja de celular oferece uma plataforma completa para gerenciar vendas, estoque, clientes e serviços de assistência técnica, proporcionando uma experiência de compra eficiente e integrada." />
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
-    <title>
+  <!-- Meta Tags -->
+  <meta property="og:url" content="{{ request.scheme }}://{{ request.get_host }}{{ request.path }}" />
+  <meta name="theme-color" content="#FDC600" />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{% static 'imagens/....webp' %}" />
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="600">
+  <meta property="og:title" content="Dr Smart" />
+  <meta name="description"
+    content="O sistema de loja de celular oferece uma plataforma completa para gerenciar vendas, estoque, clientes e serviços de assistência técnica, proporcionando uma experiência de compra eficiente e integrada." />
+  <meta property="og:description"
+    content="O sistema de loja de celular oferece uma plataforma completa para gerenciar vendas, estoque, clientes e serviços de assistência técnica, proporcionando uma experiência de compra eficiente e integrada." />
+  <meta charset="utf-8" />
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
+  <title>
     {% block title %}{{ loja_atual|default:"CredFácil" }} - CredFácil{% endblock %}
-    </title>
-    <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="{% static '/images/logo.png' %}" />
+  </title>
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="{% static '/images/logo.png' %}" />
 
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap" rel="stylesheet" />
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Public+Sans&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans&display=swap"></noscript>
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap"
+    rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Public+Sans&display=swap" as="style"
+    onload="this.onload=null;this.rel='stylesheet'">
+  <noscript>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans&display=swap">
+  </noscript>
 
-    <!-- Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link rel="stylesheet" href="{% static 'sneat-template/assets/vendor/fonts/boxicons.css' %}" />
-    <link rel="stylesheet" href="{% static 'sneat-template/assets/vendor/fonts/fontawesome.css' %}" />
-    <link rel="stylesheet" href="{% static 'sneat-template/assets/vendor/fonts/flag-icons.css' %}" />
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="{% static 'sneat-template/assets/vendor/fonts/boxicons.css' %}" />
+  <link rel="stylesheet" href="{% static 'sneat-template/assets/vendor/fonts/fontawesome.css' %}" />
+  <link rel="stylesheet" href="{% static 'sneat-template/assets/vendor/fonts/flag-icons.css' %}" />
 
-    <!-- Core CSS -->
-    <link rel="stylesheet" href="{% static 'sneat-template/assets/vendor/css/rtl/core.css' %}" class="template-customizer-core-css" />
-    <link rel="stylesheet" href="{% static 'sneat-template/assets/vendor/css/rtl/theme-default.css' %}" class="template-customizer-theme-css" />
-    <link rel="stylesheet" href="{% static 'sneat-template/assets/css/demo.css' %}" />
+  <!-- Core CSS -->
+  <link rel="stylesheet" href="{% static 'sneat-template/assets/vendor/css/rtl/core.css' %}"
+    class="template-customizer-core-css" />
+  <link rel="stylesheet" href="{% static 'sneat-template/assets/vendor/css/rtl/theme-default.css' %}"
+    class="template-customizer-theme-css" />
+  <link rel="stylesheet" href="{% static 'sneat-template/assets/css/demo.css' %}" />
 
-    <!-- Vendors CSS -->
-    <link rel="stylesheet" href="{% static 'sneat-template/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css' %}" />
-    <link rel="stylesheet" href="{% static 'sneat-template/assets/vendor/libs/typeahead-js/typeahead.css' %}" />
-    <link rel="stylesheet" href="{% static 'sneat-template/assets/vendor/libs/apex-charts/apex-charts.css' %}" />
+  <!-- Vendors CSS -->
+  <link rel="stylesheet"
+    href="{% static 'sneat-template/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css' %}" />
+  <link rel="stylesheet" href="{% static 'sneat-template/assets/vendor/libs/typeahead-js/typeahead.css' %}" />
+  <link rel="stylesheet" href="{% static 'sneat-template/assets/vendor/libs/apex-charts/apex-charts.css' %}" />
 
-    <!-- Page CSS -->
+  <!-- Page CSS -->
 
-    <!-- Helpers -->
-    <script src="{% static 'sneat-template/assets/vendor/js/helpers.js' %}"></script>
-    <!--! Template customizer & Theme config files MUST be included after core stylesheets and helpers.js in the <head> section -->
-    <!--? Template customizer: To hide customizer set displayCustomizer value false in config.js.  -->
-    <script src="{% static 'sneat-template/assets/vendor/js/template-customizer.js' %}"></script>
-<!--? Config:  Mandatory theme config file contain global vars & default theme options, Set your preferred theme option in this file.  -->
-    <script src="{% static 'sneat-template/assets/js/config.js' %}"></script>
+  <!-- Helpers -->
+  <script src="{% static 'sneat-template/assets/vendor/js/helpers.js' %}"></script>
+  <!--! Template customizer & Theme config files MUST be included after core stylesheets and helpers.js in the <head> section -->
+  <!--? Template customizer: To hide customizer set displayCustomizer value false in config.js.  -->
+  <script src="{% static 'sneat-template/assets/vendor/js/template-customizer.js' %}"></script>
+  <!--? Config:  Mandatory theme config file contain global vars & default theme options, Set your preferred theme option in this file.  -->
+  <script src="{% static 'sneat-template/assets/js/config.js' %}"></script>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"
     integrity="sha512-pHVGpX7F/27yZ0ISY+VVjyULApbDlD0/X0rgGbTqCE7WFW5MezNTWG/dnhtbBuICzsd0WQPgpE4REBLv+UqChw=="
     crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
-    {% if form %}
-    <link rel="stylesheet" href="{% static 'sneat-template/assets/vendor/libs/select2/select2.css'%}"/>
-    {%endif%}
+  {% if form %}
+  <link rel="stylesheet" href="{% static 'sneat-template/assets/vendor/libs/select2/select2.css'%}" />
+  {%endif%}
 
 
-    {% block extra_head %}{% endblock extra_head %}
+  {% block extra_head %}{% endblock extra_head %}
 
-  </head>
+</head>
 
-  <body>
-    <!-- Layout wrapper -->
-    <div class="layout-wrapper layout-content-navbar">
-      <div class="layout-container">
-        <!-- Menu -->
+<body>
+  <!-- Layout wrapper -->
+  <div class="layout-wrapper layout-content-navbar">
+    <div class="layout-container">
+      <!-- Menu -->
 
-        <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
-          <div class="app-brand demo d-flex align-items-center justify-content-between flex-nowrap" id="brand-container" style="padding: 0.5rem 1rem;">
-            <a href="{% url 'vendas:index' %}" class="app-brand-link d-flex align-items-center flex-nowrap" style="text-decoration: none;">
-              <img src="{% static 'images/logo.png' %}" 
-                   style="max-width: 100px; height: auto; flex-shrink: 0;">
-              <span class="app-brand-text text-truncate fw-medium text-capitalize ms-2" 
-                    style="font-size: 18px; max-width: 160px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                {{ loja_atual|title }}
-              </span>
+      <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
+        <div class="app-brand demo d-flex align-items-center justify-content-between flex-nowrap" id="brand-container"
+          style="padding: 0.5rem 1rem;">
+          <a href="{% url 'vendas:index' %}" class="app-brand-link d-flex align-items-center flex-nowrap"
+            style="text-decoration: none;">
+            <img src="{% static 'images/logo.png' %}" style="max-width: 100px; height: auto; flex-shrink: 0;">
+            <span class="app-brand-text text-truncate fw-medium text-capitalize ms-2"
+              style="font-size: 18px; max-width: 160px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+              {{ loja_atual|title }}
+            </span>
+          </a>
+          <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto">
+            <i class="bx bx-chevron-left bx-sm align-middle"></i>
+          </a>
+        </div>
+
+
+        <ul class="menu-inner py-1">
+          {% for section, items in menu_items.items %}
+          <li class="menu-header small text-uppercase">
+            <span class="menu-header-text">{{ section }}</span>
+          </li>
+
+          {% for item in items %}
+          <li class="menu-item {% if item.active %}active open{% endif %}">
+            {% if item.url_name %}
+            <a href="{{ item.url }}" class="menu-link">
+              <i class="menu-icon tf-icons {{ item.icon }}"></i>
+              <div class="text-truncate">{{ item.label }}</div>
             </a>
-            <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto">
-              <i class="bx bx-chevron-left bx-sm align-middle"></i>
+            {% else %}
+            <a href="javascript:void(0);" class="menu-link menu-toggle">
+              <i class="menu-icon tf-icons {{ item.icon }}"></i>
+              <div class="text-truncate">{{ item.label }}</div>
+            </a>
+            {% if item.sub_items %}
+            <ul class="menu-sub">
+              {% for sub_item in item.sub_items %}
+              <li class="menu-item {% if sub_item.active %}active{% endif %}">
+                <a href="{{ sub_item.url }}" class="menu-link">
+                  <div class="text-truncate">{{ sub_item.label }}</div>
+                </a>
+              </li>
+              {% endfor %}
+            </ul>
+            {% endif %}
+            {% endif %}
+          </li>
+          {% endfor %}
+          {% endfor %}
+        </ul>
+
+      </aside>
+      <!-- / Menu -->
+
+      <!-- Layout container -->
+      <div class="layout-page">
+        <!-- Navbar -->
+
+        <nav
+          class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme"
+          id="layout-navbar">
+          <div class="layout-menu-toggle navbar-nav align-items-xl-center me-3 me-xl-0 d-xl-none">
+            <a class="nav-item nav-link px-0 me-xl-4" href="javascript:void(0)">
+              <i class="bx bx-menu bx-sm"></i>
             </a>
           </div>
-          
 
-          <ul class="menu-inner py-1">
-            {% for section, items in menu_items.items %}
-              <li class="menu-header small text-uppercase">
-                <span class="menu-header-text">{{ section }}</span>
-              </li>
-  
-              {% for item in items %}
-                <li class="menu-item {% if item.active %}active open{% endif %}">
-                  {% if item.url_name %}
-                    <a href="{{ item.url }}" class="menu-link">
-                      <i class="menu-icon tf-icons {{ item.icon }}"></i>
-                      <div class="text-truncate">{{ item.label }}</div>
+          <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
+            <div class="navbar-nav align-items-center">
+              <div class="nav-item dropdown-style-switcher dropdown me-2 me-xl-0">
+                <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
+                  <i class="bx bx-sm"></i>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-start dropdown-styles">
+                  <li>
+                    <a class="dropdown-item" href="javascript:void(0);" data-theme="light">
+                      <span class="align-middle"><i class="bx bx-sun me-2"></i>Light</span>
                     </a>
-                  {% else %}
-                    <a href="javascript:void(0);" class="menu-link menu-toggle">
-                      <i class="menu-icon tf-icons {{ item.icon }}"></i>
-                      <div class="text-truncate">{{ item.label }}</div>
+                  </li>
+                  <li>
+                    <a class="dropdown-item" href="javascript:void(0);" data-theme="dark">
+                      <span class="align-middle"><i class="bx bx-moon me-2"></i>Dark</span>
                     </a>
-                    {% if item.sub_items %}
-                      <ul class="menu-sub">
-                        {% for sub_item in item.sub_items %}
-                          <li class="menu-item {% if sub_item.active %}active{% endif %}">
-                            <a href="{{ sub_item.url }}" class="menu-link">
-                              <div class="text-truncate">{{ sub_item.label }}</div>
-                            </a>
-                          </li>
-                        {% endfor %}
-                      </ul>
-                    {% endif %}
-                  {% endif %}
-                </li>
-              {% endfor %}
-            {% endfor %}
-          </ul>
-
-        </aside>
-        <!-- / Menu -->
-
-        <!-- Layout container -->
-        <div class="layout-page">
-          <!-- Navbar -->
-
-          <nav
-            class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme"
-            id="layout-navbar">
-            <div class="layout-menu-toggle navbar-nav align-items-xl-center me-3 me-xl-0 d-xl-none">
-              <a class="nav-item nav-link px-0 me-xl-4" href="javascript:void(0)">
-                <i class="bx bx-menu bx-sm"></i>
-              </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item" href="javascript:void(0);" data-theme="system">
+                      <span class="align-middle"><i class="bx bx-desktop me-2"></i>System</span>
+                    </a>
+                  </li>
+                </ul>
+              </div>
             </div>
 
-            <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
-              <div class="navbar-nav align-items-center">
-                <div class="nav-item dropdown-style-switcher dropdown me-2 me-xl-0">
-                  <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
-                    <i class="bx bx-sm"></i>
-                  </a>
-                  <ul class="dropdown-menu dropdown-menu-start dropdown-styles">
-                    <li>
-                      <a class="dropdown-item" href="javascript:void(0);" data-theme="light">
-                        <span class="align-middle"><i class="bx bx-sun me-2"></i>Light</span>
-                      </a>
-                    </li>
-                    <li>
-                      <a class="dropdown-item" href="javascript:void(0);" data-theme="dark">
-                        <span class="align-middle"><i class="bx bx-moon me-2"></i>Dark</span>
-                      </a>
-                    </li>
-                    <li>
-                      <a class="dropdown-item" href="javascript:void(0);" data-theme="system">
-                        <span class="align-middle"><i class="bx bx-desktop me-2"></i>System</span>
-                      </a>
-                    </li>
-                  </ul>
-                </div>
-              </div>
+            <ul class="navbar-nav flex-row align-items-center ms-auto">
+              <link rel="stylesheet"
+                href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
-              <ul class="navbar-nav flex-row align-items-center ms-auto">
-                <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-                
-                <li class="nav-item dropdown">
-                  <a class="nav-link position-relative" href="#" id="notificacaoDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="bi bi-bell fs-5"></i>
-                    {% if notificacoes_nao_lidas %}
-                      <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                        {{ notificacoes_nao_lidas|length }}
-                        <span class="visually-hidden">notificações não lidas</span>
-                      </span>
-                    {% endif %}
-                  </a>
-                
-                  <ul class="dropdown-menu dropdown-menu-end shadow-sm p-2" aria-labelledby="notificacaoDropdown" style="width: 300px; max-height: 400px; overflow-y: auto;">
-                    <li class="dropdown-header fw-bold text-dark border-bottom pb-2 mb-2">Notificações</li>
-                    
-                    {% for n in notificacoes_nao_lidas %}
-                      <li class="mb-1">
-                        <a class="dropdown-item d-flex flex-column small text-wrap text-break"
-                        href="{{ n.target.get_absolute_url }}"
-                        onclick="event.preventDefault(); marcarComoLida('{{ n.id }}', '{{ n.target.get_absolute_url }}')">
+              <li class="nav-item dropdown">
+                <a class="nav-link position-relative" href="#" id="notificacaoDropdown" role="button"
+                  data-bs-toggle="dropdown" aria-expanded="false">
+                  <i class="bi bi-bell fs-5"></i>
+                  {% if notificacoes_nao_lidas %}
+                  <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                    {{ notificacoes_nao_lidas|length }}
+                    <span class="visually-hidden">notificações não lidas</span>
+                  </span>
+                  {% endif %}
+                </a>
 
-                          <span class="fw-semibold text-dark text-wrap text-break">{{ n.verb }}</span>
-                          <span class="text-muted text-wrap text-break">{{ n.description|truncatechars:40 }}</span>
-                          <small class="text-muted mt-1">{{ n.timestamp|date:"d M, H:i" }}</small>
-                        </a>
-                      </li>
-                    {% empty %}
-                      <li>
-                        <span class="dropdown-item text-muted">Sem notificações</span>
-                      </li>
-                    {% endfor %}
-                
-                    <li><hr class="dropdown-divider"></li>
-                    <li>
-                      <a class="dropdown-item text-center text-primary fw-semibold small" href="{% url 'notificacao_ler_todas' %}">Marcar todas como lida</a>
-                    </li>
-                  </ul>
-                </li>
-                
-                <!-- User -->
-                <li class="nav-item navbar-dropdown dropdown-user dropdown">
-                  <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
-                    <div class="avatar avatar-online">
-                      <img src="{% static 'sneat-template/assets/img/avatars/1.png' %}" alt class="w-px-40 h-auto rounded-circle" />
-                    </div>
-                  </a>
-                  <ul class="dropdown-menu dropdown-menu-end">
-                    <li>
-                      <a class="dropdown-item" href="#">
-                        <div class="d-flex">
-                          <div class="flex-shrink-0 me-3">
-                            <div class="avatar avatar-online">
-                              <img src="{% static 'sneat-template/assets/img/avatars/1.png' %}" alt class="w-px-40 h-auto rounded-circle" />
-                            </div>
-                          </div>
-                          <div class="flex-grow-1">
-                            <span class="fw-medium d-block">{{ user.get_full_name|default:user.username }}</span>
-                            <small class="text-muted">{{ user.profile.role|default:"User" }}</small>
+                <ul class="dropdown-menu dropdown-menu-end shadow-sm p-2" aria-labelledby="notificacaoDropdown"
+                  style="width: 300px; max-height: 400px; overflow-y: auto;">
+                  <li class="dropdown-header fw-bold text-dark border-bottom pb-2 mb-2">Notificações</li>
+
+                  {% for n in notificacoes_nao_lidas %}
+                  <li class="mb-1">
+                    <a class="dropdown-item d-flex flex-column small text-wrap text-break"
+                      href="{{ n.target.get_absolute_url }}"
+                      onclick="event.preventDefault(); marcarComoLida('{{ n.id }}', '{{ n.target.get_absolute_url }}')">
+
+                      <span class="fw-semibold text-dark text-wrap text-break">{{ n.verb }}</span>
+                      <span class="text-muted text-wrap text-break">{{ n.description|truncatechars:40 }}</span>
+                      <small class="text-muted mt-1">{{ n.timestamp|date:"d M, H:i" }}</small>
+                    </a>
+                  </li>
+                  {% empty %}
+                  <li>
+                    <span class="dropdown-item text-muted">Sem notificações</span>
+                  </li>
+                  {% endfor %}
+
+                  <li>
+                    <hr class="dropdown-divider">
+                  </li>
+                  <li>
+                    <a class="dropdown-item text-center text-primary fw-semibold small"
+                      href="{% url 'notificacao_ler_todas' %}">Marcar todas como lida</a>
+                  </li>
+                </ul>
+              </li>
+
+              <!-- User -->
+              <li class="nav-item navbar-dropdown dropdown-user dropdown">
+                <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
+                  <div class="avatar avatar-online">
+                    <img src="{% static 'sneat-template/assets/img/avatars/1.png' %}" alt
+                      class="w-px-40 h-auto rounded-circle" />
+                  </div>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end">
+                  <li>
+                    <a class="dropdown-item" href="#">
+                      <div class="d-flex">
+                        <div class="flex-shrink-0 me-3">
+                          <div class="avatar avatar-online">
+                            <img src="{% static 'sneat-template/assets/img/avatars/1.png' %}" alt
+                              class="w-px-40 h-auto rounded-circle" />
                           </div>
                         </div>
-                      </a>
-                    </li>
-                    <li>
-                      <div class="dropdown-divider"></div>
-                    </li>
-                    <li>
-                      <a class="dropdown-item" href="#">
-                        <i class="bx bx-user me-2"></i>
-                        <span class="align-middle">Meu Perfil</span>
-                      </a>
-                    </li>
-                    {% if 'Admin' in user.groups.all %} 
-                    <li>
-                      <a class="dropdown-item" href="#">
-                        <i class="bx bx-cog me-2"></i>
-                        <span class="align-middle">Settings</span>
-                      </a>
-                    </li>
-                    {% endif %}
-                    <li>
-                      <div class="dropdown-divider"></div>
-                    </li>
-                    <li>
-                      <a class="dropdown-item" href="{% url 'accounts:logout' %}">
-                        <i class="bx bx-power-off me-2"></i>
-                        <span class="align-middle">Sair</span>
-                      </a>
-                    </li>
-                  </ul>
-                </li>
-                <!--/ User -->
-              </ul>
-            </div>
-          </nav>
-
-          <!-- / Navbar -->
-          {% if messages %}
-          <!-- Alert messages -->
-          <div class="container my-3">
-              <div class="row">
-                  <div class="col-12">
-                      {% include 'snippets/alert_messages.html' %}
-                  </div>
-              </div>
+                        <div class="flex-grow-1">
+                          <span class="fw-medium d-block">{{ user.get_full_name|default:user.username }}</span>
+                          <small class="text-muted">{{ user.profile.role|default:"User" }}</small>
+                        </div>
+                      </div>
+                    </a>
+                  </li>
+                  <li>
+                    <div class="dropdown-divider"></div>
+                  </li>
+                  <li>
+                    <a class="dropdown-item" href="#">
+                      <i class="bx bx-user me-2"></i>
+                      <span class="align-middle">Meu Perfil</span>
+                    </a>
+                  </li>
+                  {% if 'Admin' in user.groups.all %}
+                  <li>
+                    <a class="dropdown-item" href="#">
+                      <i class="bx bx-cog me-2"></i>
+                      <span class="align-middle">Settings</span>
+                    </a>
+                  </li>
+                  {% endif %}
+                  <li>
+                    <div class="dropdown-divider"></div>
+                  </li>
+                  <li>
+                    <a class="dropdown-item" href="{% url 'accounts:logout' %}">
+                      <i class="bx bx-power-off me-2"></i>
+                      <span class="align-middle">Sair</span>
+                    </a>
+                  </li>
+                </ul>
+              </li>
+              <!--/ User -->
+            </ul>
           </div>
-          <!-- / Alert messages -->
-          {% endif %}
+        </nav>
+
+        <!-- / Navbar -->
+        {% if messages %}
+        <!-- Alert messages -->
+        <div class="container my-3">
+          <div class="row">
+            <div class="col-12">
+              {% include 'snippets/alert_messages.html' %}
+            </div>
+          </div>
+        </div>
+        <!-- / Alert messages -->
+        {% endif %}
 
 
-          <!-- Content wrapper -->
-          <div class="content-wrapper">
-            <!-- Content -->
+        <!-- Content wrapper -->
+        <div class="content-wrapper">
+          <!-- Content -->
 
-            {% block content %}
-            {% endblock %}
-            <!-- / Content -->
+          {% block content %}
+          {% endblock %}
+          <!-- / Content -->
 
-            <!-- Footer -->
-            <footer class="content-footer footer bg-footer-theme">
-              <div class="container-xxl d-flex flex-wrap justify-content-between py-2 flex-md-row flex-column">
-                <div class="mb-2 mb-md-0">
-                  © {% now "Y" %}, made with ❤️ by
-                  <a href="" target="_blank" class="footer-link fw-medium">Amz Software</a>
-                </div>
-                <!-- <div class="d-none d-lg-inline-block">
+          <!-- Footer -->
+          <footer class="content-footer footer bg-footer-theme">
+            <div class="container-xxl d-flex flex-wrap justify-content-between py-2 flex-md-row flex-column">
+              <div class="mb-2 mb-md-0">
+                © {% now "Y" %}, made with ❤️ by
+                <a href="" target="_blank" class="footer-link fw-medium">Amz Software</a>
+              </div>
+              <!-- <div class="d-none d-lg-inline-block">
                   <a
                     href="https://demos.themeselection.com/sneat-bootstrap-html-admin-template/documentation/"
                     target="_blank"
@@ -303,218 +323,223 @@
                     >Documentation</a
                   >
                 </div> -->
-              </div>
-            </footer>
-            <!-- / Footer -->
+            </div>
+          </footer>
+          <!-- / Footer -->
 
-            <div class="content-backdrop fade"></div>
-          </div>
-          <!-- Content wrapper -->
+          <div class="content-backdrop fade"></div>
         </div>
-        <!-- / Layout page -->
+        <!-- Content wrapper -->
       </div>
-
-      <!-- Overlay -->
-      <div class="layout-overlay layout-menu-toggle"></div>
-
-      <!-- Drag Target Area To SlideIn Menu On Small Screens -->
-      <div class="drag-target"></div>
+      <!-- / Layout page -->
     </div>
-    <!-- / Layout wrapper -->
 
-    <!-- Core JS -->
-    <!-- build:js assets/vendor/js/core.js -->
+    <!-- Overlay -->
+    <div class="layout-overlay layout-menu-toggle"></div>
 
-    <script src="{% static 'sneat-template/assets/vendor/libs/popper/popper.js' %}"></script>
-    <script src="{% static 'sneat-template/assets/vendor/js/bootstrap.js' %}"></script>
-    <script src="{% static 'sneat-template/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js' %}"></script>
-    <script src="{% static 'sneat-template/assets/vendor/libs/hammer/hammer.js' %}"></script>
-    <script src="{% static 'sneat-template/assets/vendor/libs/i18n/i18n.js' %}"></script>
-    <script src="{% static 'sneat-template/assets/vendor/libs/typeahead-js/typeahead.js' %}"></script>
-    <script src="{% static 'sneat-template/assets/vendor/js/menu.js' %}"></script>
+    <!-- Drag Target Area To SlideIn Menu On Small Screens -->
+    <div class="drag-target"></div>
+  </div>
+  <!-- / Layout wrapper -->
 
-    <!-- endbuild -->
+  <!-- Core JS -->
+  <!-- build:js assets/vendor/js/core.js -->
 
-    <!-- Vendors JS -->
-    <script src="{% static 'sneat-template/assets/vendor/libs/apex-charts/apexcharts.js' %}"></script>
+  <script src="{% static 'sneat-template/assets/vendor/libs/popper/popper.js' %}"></script>
+  <script src="{% static 'sneat-template/assets/vendor/js/bootstrap.js' %}"></script>
+  <script src="{% static 'sneat-template/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js' %}"></script>
+  <script src="{% static 'sneat-template/assets/vendor/libs/hammer/hammer.js' %}"></script>
+  <script src="{% static 'sneat-template/assets/vendor/libs/i18n/i18n.js' %}"></script>
+  <script src="{% static 'sneat-template/assets/vendor/libs/typeahead-js/typeahead.js' %}"></script>
+  <script src="{% static 'sneat-template/assets/vendor/js/menu.js' %}"></script>
 
-    <!-- Main JS -->
-    <script src="{% static 'sneat-template/assets/js/main.js' %}"></script>
+  <!-- endbuild -->
 
-    <!-- Page JS -->
-    <script src="{% static 'sneat-template/assets/js/dashboards-analytics.js' %}"></script>
-    {% if form %}
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/corejs-typeahead/1.3.1/typeahead.bundle.min.js"></script>
-    {{ form.media.js }}
-    {%endif%}
+  <!-- Vendors JS -->
+  <script src="{% static 'sneat-template/assets/vendor/libs/apex-charts/apexcharts.js' %}"></script>
 
-    <script>
-      $('.money').mask('000.000.000,00', {reverse: true});
-      // ao enviar o formulário, remove a máscara para enviar o valor sem formatação apenas com as casas decimais
-      $('form').submit(function(){
-        $('.money').each(function(){
-          var rawValue = $(this).cleanVal();
-          if (rawValue === "") return; // se estiver vazio, pula
-          // Converte para número considerando os dois últimos dígitos como decimais
-          var numericValue = parseInt(rawValue, 10) / 100;
-          // Garante duas casas decimais no valor final
-          $(this).val(numericValue.toFixed(2));
+  <!-- Main JS -->
+  <script src="{% static 'sneat-template/assets/js/main.js' %}"></script>
+
+  <!-- Page JS -->
+  <script src="{% static 'sneat-template/assets/js/dashboards-analytics.js' %}"></script>
+  {% if form %}
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/corejs-typeahead/1.3.1/typeahead.bundle.min.js"></script>
+  {{ form.media.js }}
+  {%endif%}
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+  <!-- jQuery Mask -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+
+  <script>
+    $('.money').mask('000.000.000,00', { reverse: true });
+    $('.tel').mask('00 00000-0000');
+    // ao enviar o formulário, remove a máscara para enviar o valor sem formatação apenas com as casas decimais
+    $('form').submit(function () {
+      $('.money').each(function () {
+        var rawValue = $(this).cleanVal();
+        if (rawValue === "") return; // se estiver vazio, pula
+        // Converte para número considerando os dois últimos dígitos como decimais
+        var numericValue = parseInt(rawValue, 10) / 100;
+        // Garante duas casas decimais no valor final
+        $(this).val(numericValue.toFixed(2));
+      });
+    });
+
+  </script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // Função para desabilitar os botões
+      function disableButtons() {
+        const buttons = document.querySelectorAll('button');
+        buttons.forEach(function (button) {
+          button.disabled = true;
+        });
+      }
+
+      // Função para habilitar os botões
+      function enableButtons() {
+        const buttons = document.querySelectorAll('button');
+        buttons.forEach(function (button) {
+          button.disabled = false;
+        });
+      }
+
+      // Limpar o estado de desabilitação ao recarregar ou voltar na navegação
+      window.addEventListener('pageshow', function (event) {
+        // Verifica se a navegação foi feita via cache (navegação 'voltar')
+        if (event.persisted) {
+          enableButtons();  // Garante que os botões serão habilitados
+        }
+      });
+
+      // Desabilitar botões ao enviar o formulário
+      document.querySelectorAll('form').forEach(function (form) {
+        form.addEventListener('submit', function () {
+          disableButtons();
         });
       });
 
-    </script>
-    <script>
-      document.addEventListener('DOMContentLoaded', function () {
-        // Função para desabilitar os botões
-        function disableButtons() {
-            const buttons = document.querySelectorAll('button');
-            buttons.forEach(function(button) {
-                button.disabled = true;
-            });
-        }
-    
-        // Função para habilitar os botões
-        function enableButtons() {
-            const buttons = document.querySelectorAll('button');
-            buttons.forEach(function(button) {
-                button.disabled = false;
-            });
-        }
-    
-        // Limpar o estado de desabilitação ao recarregar ou voltar na navegação
-        window.addEventListener('pageshow', function(event) {
-            // Verifica se a navegação foi feita via cache (navegação 'voltar')
-            if (event.persisted) {
-                enableButtons();  // Garante que os botões serão habilitados
-            }
-        });
-    
-        // Desabilitar botões ao enviar o formulário
-        document.querySelectorAll('form').forEach(function(form) {
-            form.addEventListener('submit', function() {
-                disableButtons();
-            });
-        });
-    
-        // Desabilitar botões durante requisições AJAX
-        document.addEventListener('ajaxStart', function() {
-            disableButtons();
-        });
-    
-        document.addEventListener('ajaxStop', function() {
-            enableButtons();
-        });
-    
-        // Para lidar com navegação de página (recarregamento)
-        window.addEventListener('beforeunload', function () {
-            disableButtons();
-        });
-    });
-      </script>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+      // Desabilitar botões durante requisições AJAX
+      document.addEventListener('ajaxStart', function () {
+        disableButtons();
+      });
 
-      <script>
-        // Função para pegar o CSRF Token
-        function getCookie(name) {
-          let cookieValue = null;
-          if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-              const cookie = cookies[i].trim();
-              if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
-              }
-            }
+      document.addEventListener('ajaxStop', function () {
+        enableButtons();
+      });
+
+      // Para lidar com navegação de página (recarregamento)
+      window.addEventListener('beforeunload', function () {
+        disableButtons();
+      });
+    });
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+  <script>
+    // Função para pegar o CSRF Token
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
           }
-          return cookieValue;
         }
-      
-        // 🔔 Marcar como lida via fetch
-        function marcarComoLida(notificationId, targetUrl) {
-          const csrf = getCookie('csrftoken');
-          console.log(`[WS] Marcando notificação ${notificationId} como lida...`);
-          console.log(`[WS] CSRF Token usado: ${csrf}`);
-      
-          fetch(`/notificacao/marcar-como-lida/${notificationId}/`, {
-            method: 'POST',
-            headers: {
-              'X-CSRFToken': csrf,
-            },
-          })
-            .then((res) => {
-              console.log(`[WS] Resposta do servidor: ${res.status}`);
-              if (res.status === 200) {
-                console.log("[WS] Notificação marcada como lida com sucesso.");
-              } else {
-                console.warn("[WS] Falha ao marcar como lida.");
-              }
-              window.location.href = targetUrl;
-            })
-            .catch((err) => {
-              console.error("[WS] Erro ao marcar como lida:", err);
-              window.location.href = targetUrl;
-            });
-        }
-      
-        const ws_scheme = window.location.protocol === "https:" ? "wss" : "ws";
-        const socket = new WebSocket(ws_scheme + '://' + window.location.host + '/ws/notifications/');
-        
-        console.log("[WS] Conectando...");
-      
-        socket.onopen = function () {
-          console.log("[WS] Conectado com sucesso!");
-        };
-      
-        socket.onerror = function (error) {
-          console.error("[WS] Erro na conexão:", error);
-        };
-      
-        socket.onmessage = function (e) {
-          console.log("[WS] Mensagem recebida:", e.data);
-          const data = JSON.parse(e.data);
-      
-          // Verifica ID
-          console.log("[WS] ID da notificação recebida:", data.notification_id);
-      
-          // 🔊 Som de notificação
-          const audio = new Audio("{% static 'sounds/notification.mp3' %}");
-          audio.volume = 1.0;
-          audio.play().then(() => {
-            console.log("[WS] Som tocado.");
-          }).catch((error) => {
-            console.warn("[WS] Som bloqueado pelo navegador até haver interação do usuário:", error);
-          });
-      
-          // 🔴 Atualiza badge
-          const badge = document.querySelector('#notificacaoDropdown .badge');
-          if (badge) {
-            badge.textContent = parseInt(badge.textContent || "0") + 1;
+      }
+      return cookieValue;
+    }
+
+    // 🔔 Marcar como lida via fetch
+    function marcarComoLida(notificationId, targetUrl) {
+      const csrf = getCookie('csrftoken');
+      console.log(`[WS] Marcando notificação ${notificationId} como lida...`);
+      console.log(`[WS] CSRF Token usado: ${csrf}`);
+
+      fetch(`/notificacao/marcar-como-lida/${notificationId}/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': csrf,
+        },
+      })
+        .then((res) => {
+          console.log(`[WS] Resposta do servidor: ${res.status}`);
+          if (res.status === 200) {
+            console.log("[WS] Notificação marcada como lida com sucesso.");
           } else {
-            const newBadge = document.createElement('span');
-            newBadge.className = "position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger";
-            newBadge.textContent = "1";
-            document.getElementById("notificacaoDropdown").appendChild(newBadge);
+            console.warn("[WS] Falha ao marcar como lida.");
           }
-      
-          // 📦 Localiza menu
-          const dropdownAnchor = document.querySelector("#notificacaoDropdown");
-          const dropdownLi = dropdownAnchor?.closest("li.dropdown");
-          const dropdownMenu = dropdownLi?.querySelector(".dropdown-menu");
-          if (!dropdownMenu) {
-            console.error("[WS] Dropdown menu não encontrado.");
-            return;
-          }
-      
-          // ❌ Remove "sem notificações"
-          const emptyMsg = dropdownMenu.querySelector(".text-muted");
-          if (emptyMsg && emptyMsg.innerText.includes("Sem notificações")) {
-            emptyMsg.parentElement.remove();
-          }
-      
-          // ✏️ Cria novo item
-          const novaNotificacao = document.createElement('li');
-          novaNotificacao.innerHTML = `
+          window.location.href = targetUrl;
+        })
+        .catch((err) => {
+          console.error("[WS] Erro ao marcar como lida:", err);
+          window.location.href = targetUrl;
+        });
+    }
+
+    const ws_scheme = window.location.protocol === "https:" ? "wss" : "ws";
+    const socket = new WebSocket(ws_scheme + '://' + window.location.host + '/ws/notifications/');
+
+    console.log("[WS] Conectando...");
+
+    socket.onopen = function () {
+      console.log("[WS] Conectado com sucesso!");
+    };
+
+    socket.onerror = function (error) {
+      console.error("[WS] Erro na conexão:", error);
+    };
+
+    socket.onmessage = function (e) {
+      console.log("[WS] Mensagem recebida:", e.data);
+      const data = JSON.parse(e.data);
+
+      // Verifica ID
+      console.log("[WS] ID da notificação recebida:", data.notification_id);
+
+      // 🔊 Som de notificação
+      const audio = new Audio("{% static 'sounds/notification.mp3' %}");
+      audio.volume = 1.0;
+      audio.play().then(() => {
+        console.log("[WS] Som tocado.");
+      }).catch((error) => {
+        console.warn("[WS] Som bloqueado pelo navegador até haver interação do usuário:", error);
+      });
+
+      // 🔴 Atualiza badge
+      const badge = document.querySelector('#notificacaoDropdown .badge');
+      if (badge) {
+        badge.textContent = parseInt(badge.textContent || "0") + 1;
+      } else {
+        const newBadge = document.createElement('span');
+        newBadge.className = "position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger";
+        newBadge.textContent = "1";
+        document.getElementById("notificacaoDropdown").appendChild(newBadge);
+      }
+
+      // 📦 Localiza menu
+      const dropdownAnchor = document.querySelector("#notificacaoDropdown");
+      const dropdownLi = dropdownAnchor?.closest("li.dropdown");
+      const dropdownMenu = dropdownLi?.querySelector(".dropdown-menu");
+      if (!dropdownMenu) {
+        console.error("[WS] Dropdown menu não encontrado.");
+        return;
+      }
+
+      // ❌ Remove "sem notificações"
+      const emptyMsg = dropdownMenu.querySelector(".text-muted");
+      if (emptyMsg && emptyMsg.innerText.includes("Sem notificações")) {
+        emptyMsg.parentElement.remove();
+      }
+
+      // ✏️ Cria novo item
+      const novaNotificacao = document.createElement('li');
+      novaNotificacao.innerHTML = `
             <a class="dropdown-item d-flex flex-column small fade show"
                style="animation: fadeIn 0.4s;"
                href="${data.target_url}"
@@ -524,40 +549,41 @@
               <small class="text-muted mt-1">${data.timestamp}</small>
             </a>
           `;
-      
-          // 🧩 Insere após o título
-          const header = dropdownMenu.querySelector(".dropdown-header");
-          let insertAfterHeader = header?.nextElementSibling;
-          if (insertAfterHeader?.classList.contains('dropdown-divider')) {
-            insertAfterHeader = null;
-          }
-      
-          if (insertAfterHeader) {
-            dropdownMenu.insertBefore(novaNotificacao, insertAfterHeader);
-          } else {
-            dropdownMenu.appendChild(novaNotificacao);
-          }
-      
-          // ⬆️ Scroll suave
-          dropdownMenu.scrollTo({ top: 0, behavior: 'smooth' });
-      
-          // 🌫️ Adiciona fade-in
-          if (!document.getElementById('fadeStyle')) {
-            const style = document.createElement("style");
-            style.id = "fadeStyle";
-            style.innerHTML = `
+
+      // 🧩 Insere após o título
+      const header = dropdownMenu.querySelector(".dropdown-header");
+      let insertAfterHeader = header?.nextElementSibling;
+      if (insertAfterHeader?.classList.contains('dropdown-divider')) {
+        insertAfterHeader = null;
+      }
+
+      if (insertAfterHeader) {
+        dropdownMenu.insertBefore(novaNotificacao, insertAfterHeader);
+      } else {
+        dropdownMenu.appendChild(novaNotificacao);
+      }
+
+      // ⬆️ Scroll suave
+      dropdownMenu.scrollTo({ top: 0, behavior: 'smooth' });
+
+      // 🌫️ Adiciona fade-in
+      if (!document.getElementById('fadeStyle')) {
+        const style = document.createElement("style");
+        style.id = "fadeStyle";
+        style.innerHTML = `
               @keyframes fadeIn {
                 from { opacity: 0; transform: translateY(-5px); }
                 to { opacity: 1; transform: translateY(0); }
               }
             `;
-            document.head.appendChild(style);
-          }
-        };
-      </script>
-      
-      
-      {% block extra_scripts %}{% endblock %}
+        document.head.appendChild(style);
+      }
+    };
+  </script>
 
-  </body>
+
+  {% block extra_scripts %}{% endblock %}
+
+</body>
+
 </html>

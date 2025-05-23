@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatório Vendas</title>
+    <style>
+        @media print {
+            * {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            margin: 0; padding: 0;
+            font-size: 12px;
+        }
+
+        h2, h3 {
+            text-align: center;
+            margin: 10px 0;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 20px 0;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #4CAF50;
+            color: white;
+            font-weight: bold;
+        }
+
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        tr:hover { background-color: #f1f1f1; }
+
+        .header { background-color: #4CAF50; color: white; font-weight: bold; }
+        .footer { font-weight: bold; background-color: #f4f4f4; }
+        .center { text-align: center; }
+        .right  { text-align: right; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Relatório de Saídas</h2>
+        <h3>Período: {{ data_inicial|default:"-" }} a {{ data_final|default:"-" }}</h3>
+        <h3>Loja: {{ lojas.nome|default:"-" }}</h3>
+
+        <table>
+            <thead>
+                <tr class="header">
+                    <th>Loja</th>
+                    <th>Data Solicitação</th>
+                    <th>Vendedor</th>
+                    <th>Status Solicitação</th>
+                    <th>Parcelas</th>
+                    <th>Produtos</th>
+                    <th>Venda Gerada?</th>
+                    <th>Valor Total</th>
+                    <th>Lucro Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cliente in solicitacoes %}
+                {% with ac=cliente.analise_credito %}
+                <tr>
+                    <!-- Loja da solicitação -->
+                    <td>{{ lojas.nome|default:"-" }}</td>
+
+                    <!-- Data de criação da solicitação -->
+                    <td>{{ cliente.criado_em|date:"d/m/Y" }}</td>
+
+                    <!-- Quem criou a análise de crédito -->
+                    <td>
+                        {{ ac.criado_por.get_full_name|default:ac.criado_por.username }}
+                    </td>
+
+                    <!-- Status da análise de crédito -->
+                    <td>
+                        {% if ac.status == "A" %}
+                            Aprovada
+                        {% elif ac.status == "R" %}
+                            Reprovada
+                        {% elif ac.status == "EA" %}
+                            Em Análise
+                        {% elif ac.status == "C" %}
+                            Cancelada
+                        {% else %}
+                            Desconhecido
+                        {% endif %}
+                    </td>
+
+                    <!-- Número de parcelas solicitado -->
+                    <td>{{ ac.numero_parcelas }}</td>
+
+                    <!-- Produtos associados à análise -->
+                    <td>
+                        {{ ac.produto.nome|title }}
+                    </td>
+
+                    <!-- Verifica se há venda vinculada -->
+                    <td class="center">
+                        {% if ac.venda %}
+                            Sim
+                        {% else %}
+                            Não
+                        {% endif %}
+                    </td>
+
+                    <!-- Se houve venda, mostra o total de pagamentos; senão 0 -->
+                    <td class="right">
+                        R$ {{ ac.venda.pagamentos_valor_total|default:"0.00"|floatformat:2 }}
+                    </td>
+
+                    <!-- Se houve venda, mostra o lucro; senão 0 -->
+                    <td class="right">
+                        R$ {{ ac.venda.lucro_total|default:"0.00"|floatformat:2 }}
+                    </td>
+                </tr>
+                {% endwith %}
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="center">
+                        Nenhuma solicitação encontrada com os filtros informados.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr class="footer">
+                    <td colspan="4"><strong>Total de Solicitações: {{ total_vendas }}</strong></td>
+                    <td colspan="2"><strong>Total Valor: R$ {{ total_valor|floatformat:2 }}</strong></td>
+                    <td colspan="2"><strong>Total Lucro: R$ {{ lucro|floatformat:2 }}</strong></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.2/html2pdf.bundle.min.js"></script>
+    <script>
+        window.onload = () => {
+            const opt = {
+                margin:       [10,10,10,10],
+                filename:     `relatorio_saidas.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 3 },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            html2pdf().set(opt).from(document.body).save();
+        };
+    </script>
+</body>
+</html>

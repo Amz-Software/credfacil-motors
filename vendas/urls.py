@@ -65,6 +65,8 @@ urlpatterns = [
     
     path('vendas/relatorio/', RelatorioVendasView.as_view(), name='venda_relatorio'),
     path('vendas/relatorio/folha/', FolhaRelatorioVendasView.as_view(), name='folha_venda_relatorio'),
+    path('vendas/solicitacao/folha/', FolhaRelatorioSolicitacoesView.as_view(), name='folha_solicitacao_relatorio'),
+    path('vendas/solicitacao/', RelatorioSolicitacoesView.as_view(), name='form_solicitacao_relatorio'),
     path('venda/contrato/<int:pk>/', contrato_view, name='gerar_contrato'),
     path('produtos-vendidos/', ProdutoVendidoListView.as_view(), name='produto_vendido_list'),
     

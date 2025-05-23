@@ -121,6 +121,11 @@ def menu_items(request):
                     "permission": "vendas.view_caixa"
                 },
                 {
+                    "label": "Relatório de Solicitações",
+                    "url_name": "vendas:form_solicitacao_relatorio",
+                    "permission": "vendas.can_generate_report_sale"
+                },
+                {
                     "label": "Relatório de Vendas",
                     "url_name": "vendas:venda_relatorio",
                     "permission": "vendas.can_generate_report_sale"

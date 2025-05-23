@@ -707,6 +707,105 @@ class RelatorioVendasForm(forms.Form):
             self.fields['lojas'].initial = loja
 
 
+class RelatorioSolicitacoesForm(forms.Form):
+    data_inicial = forms.DateField(
+        label='Data Inicial',
+        required=False,
+        widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date'})
+    )
+    data_final = forms.DateField(
+        label='Data Final',
+        required=False,
+        widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date'})
+    )
+
+    produtos = forms.ModelMultipleChoiceField(
+        label='Produtos',
+        queryset=Produto.objects.all(),
+        required=False,
+        widget=Select2MultipleWidget(attrs={'class': 'form-control'})
+    )
+    cliente = forms.ModelMultipleChoiceField(
+        label='Clientes',
+        queryset=Cliente.objects.all(),
+        required=False,
+        widget=Select2MultipleWidget(attrs={'class': 'form-control'})
+    )
+    vendedores = forms.ModelMultipleChoiceField(
+        label='Vendedores',
+        queryset=User.objects.all(),
+        required=False,
+        widget=Select2MultipleWidget(attrs={'class': 'form-control'})
+    )
+    lojas = forms.ModelMultipleChoiceField(
+        label='Lojas',
+        queryset=Loja.objects.all(),
+        required=False,
+        widget=Select2MultipleWidget(attrs={'class': 'form-control'})
+    )
+
+    status_solicitacao = forms.MultipleChoiceField(
+        label='Status da Solicitação',
+        required=False,
+        choices=[],  # serão preenchidas em __init__
+        widget=Select2MultipleWidget(attrs={'class': 'form-control'})
+    )
+    parcelas = forms.MultipleChoiceField(
+        label='Número de Parcelas',
+        required=False,
+        choices=[],  # serão preenchidas em __init__
+        widget=Select2MultipleWidget(attrs={'class': 'form-control'})
+    )
+    analise_serasa = forms.MultipleChoiceField(
+        label='Resultado Serasa',
+        required=False,
+        choices=[
+            ('Positiva', 'Positiva'),
+            ('Negativa', 'Negativa'),
+        ],
+        widget=Select2MultipleWidget(attrs={'class': 'form-control'})
+    )
+    venda_realizada = forms.TypedChoiceField(
+        label='Venda Realizada',
+        required=False,
+        choices=[
+            ('', '---------'),
+            ('True', 'Sim'),
+            ('False', 'Não'),
+        ],
+        coerce=lambda v: None if v == '' else (v == 'True'),
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+
+    def __init__(self, *args, **kwargs):
+        loja = kwargs.pop('loja', None)
+        super().__init__(*args, **kwargs)
+
+        # Se houver loja no contexto, limitamos alguns querysets
+        if loja:
+            self.fields['produtos'].queryset   = Produto.objects.filter(loja=loja)
+            self.fields['cliente'].queryset    = Cliente.objects.filter(loja=loja)
+            self.fields['vendedores'].queryset = User.objects.filter(loja=loja)
+            self.fields['lojas'].queryset      = Loja.objects.filter(pk=loja)
+            self.fields['lojas'].initial       = [loja]
+
+        # Carrega escolhas de status diretamente do modelo AnaliseCredito
+        self.fields['status_solicitacao'].choices = [
+            (code, label) for code, label in AnaliseCreditoCliente.STATUS_CHOICES
+        ]
+
+        # Carrega escolhas de parcelas a partir dos valores distintos no banco
+        parcelas_qs = (
+            AnaliseCreditoCliente.objects
+            .order_by('numero_parcelas')
+            .values_list('numero_parcelas', flat=True)
+            .distinct()
+        )
+        self.fields['parcelas'].choices = [
+            (num, str(num)) for num in parcelas_qs
+        ]
+
+
 # vendas/forms.py
 from django.core.validators import RegexValidator
 

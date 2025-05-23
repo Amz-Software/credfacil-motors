@@ -760,8 +760,8 @@ class RelatorioSolicitacoesForm(forms.Form):
         label='Resultado Serasa',
         required=False,
         choices=[
-            ('Positiva', 'Positiva'),
-            ('Negativa', 'Negativa'),
+            ('True', 'Positiva'),
+            ('False', 'Negativa'),
         ],
         widget=Select2MultipleWidget(attrs={'class': 'form-control'})
     )
@@ -786,7 +786,7 @@ class RelatorioSolicitacoesForm(forms.Form):
             self.fields['produtos'].queryset   = Produto.objects.filter(loja=loja)
             self.fields['cliente'].queryset    = Cliente.objects.filter(loja=loja)
             self.fields['vendedores'].queryset = User.objects.filter(loja=loja)
-            self.fields['lojas'].queryset      = Loja.objects.filter(pk=loja)
+            # self.fields['lojas'].queryset      = Loja.objects.filter(pk=loja)
             self.fields['lojas'].initial       = [loja]
 
         # Carrega escolhas de status diretamente do modelo AnaliseCredito

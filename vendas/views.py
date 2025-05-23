@@ -1806,103 +1806,114 @@ class FolhaRelatorioSolicitacoesView(PermissionRequiredMixin, TemplateView):
     template_name = 'relatorios/relatorio_solicitacoes.html'
     permission_required = 'vendas.can_generate_report_sale'
 
-    def get_context_data(self, **kwargs):
-        data_inicial = self.request.GET.get('data_inicial')
-        data_final = self.request.GET.get('data_final')
-        produtos = self.request.GET.get('produtos')
-        vendedores = self.request.GET.get('vendedores')
-        loja = self.request.GET.get('lojas')
-        status_solicitacao = self.request.GET.get('status_solicitacao')
-        parcelas = self.request.GET.get('parcelas')
-        analise_serasa = self.request.GET.get('analise_serasa')
-        vr = self.request.GET.get('venda_realizada', '').lower()
-
+    def get(self, request, *args, **kwargs):
+        # --- Extrai parâmetros ---
+        data_inicial    = request.GET.get('data_inicial')
+        data_final      = request.GET.get('data_final')
+        produtos        = request.GET.getlist('produtos')
+        vendedores      = request.GET.getlist('vendedores')
+        loja_id         = request.GET.get('lojas')
+        status_solicitacao = request.GET.get('status_solicitacao')
+        parcelas        = request.GET.get('parcelas')
+        analise_serasa  = request.GET.get('analise_serasa')
+        vr              = request.GET.get('venda_realizada', '').lower()
 
         filtros = {}
-        
+
+        # status_solicitacao
         if status_solicitacao:
-            status_solicitacao = status_solicitacao.split(',')
-            filtros['analise_credito__status__in'] = status_solicitacao
-            
+            filtros['analise_credito__status__in'] = status_solicitacao.split(',')
+
+        # parcelas
         if parcelas:
-            parcelas = parcelas.split(',')
-            filtros['analise_credito__numero_parcelas__in'] = parcelas
-            
+            filtros['analise_credito__numero_parcelas__in'] = parcelas.split(',')
+
+        # serasa
         if analise_serasa:
-            analise_serasa = analise_serasa.split(',')
-            filtros['analise_credito__serasa__in'] = analise_serasa
-            
+            filtros['comprovantes__consulta_serasa_analise__in'] = analise_serasa.split(',')
+
+        # venda realizada?
         if vr in ('true', '1'):
             filtros['analise_credito__venda__isnull'] = False
         elif vr in ('false', '0'):
             filtros['analise_credito__venda__isnull'] = True
 
-        # Adiciona filtros para datas, se informadas
+        # datas
         if data_inicial and data_final:
-            data_final = datetime.strptime(data_final, '%Y-%m-%d')
-            data_inicial = datetime.strptime(data_inicial, '%Y-%m-%d')
-            
-            data_final = data_final + timedelta(days=1)
-            filtros['criado_em__range'] = [data_inicial, data_final]
+            di = datetime.strptime(data_inicial, '%Y-%m-%d')
+            df = datetime.strptime(data_final, '%Y-%m-%d') + timedelta(days=1)
+            filtros['criado_em__range'] = [
+                timezone.make_aware(di),
+                timezone.make_aware(df),
+            ]
         elif data_inicial:
-            filtros['criado_em__gte'] = data_inicial
+            di = datetime.strptime(data_inicial, '%Y-%m-%d')
+            filtros['criado_em__gte'] = timezone.make_aware(di)
         elif data_final:
-            data_final = datetime.strptime(data_final, '%Y-%m-%d')  # Converte data_final para datetime
-            filtros['criado_em__lte'] = data_final
-        
+            df = datetime.strptime(data_final, '%Y-%m-%d')
+            filtros['criado_em__lte'] = timezone.make_aware(df)
+
+        # outros filtros simples
         if vendedores:
             filtros['analise_credito__criado_por__in'] = vendedores
-
         if produtos:
             filtros['analise_credito__produto__in'] = produtos
+        if loja_id:
+            filtros['loja__id'] = loja_id
+            self.loja = Loja.objects.filter(pk=loja_id).first()
+        else:
+            self.loja = None
 
-        if loja:
-            filtros['loja__id'] = loja
-            loja = Loja.objects.filter(id=loja).first()
-
-        solicitacoes = Cliente.objects.filter(**filtros).distinct()
-        
-        if not solicitacoes:
-            messages.warning(self.request, 'Nenhuma solicitação encontrada com os filtros informados')
+        # executa consulta
+        qs = Cliente.objects.filter(**filtros).distinct()
+        if not qs.exists():
+            messages.warning(request, 'Nenhuma solicitação encontrada com os filtros informados')
             return redirect('vendas:form_solicitacao_relatorio')
 
-        total_vendas = solicitacoes.count()
-        total_valor = 0
-        total_lucro = 0
-        
-        solicitacoes = solicitacoes.prefetch_related('vendas')
+        # pré-carrega vendas para calcular totais
+        self.solicitacoes = qs.prefetch_related('vendas')
+        self.total_vendas = self.solicitacoes.count()
 
-        # soma do total de pagamentos
-        total_valor = sum(
+        # soma totais
+        self.total_valor = sum(
             venda.pagamentos_valor_total
-            for solicitacao in solicitacoes
-            for venda in solicitacao.vendas.all()
+            for cliente in self.solicitacoes
+            for venda in cliente.vendas.all()
         )
-
-        # soma do lucro (chamando o método em cada venda)
-        total_lucro = sum(
+        self.total_lucro = sum(
             venda.lucro_total()
-            for solicitacao in solicitacoes
-            for venda in solicitacao.vendas.all()
+            for cliente in self.solicitacoes
+            for venda in cliente.vendas.all()
         )
 
-
+        # formata datas para exibição
+        self.data_inicial_str = (
+            datetime.strptime(data_inicial, '%Y-%m-%d').strftime('%d/%m/%Y')
+            if data_inicial else None
+        )
         if data_final:
-            data_final = data_final - timedelta(days=1)  # Subtrai o timedelta apenas se data_final for datetime
+            df_back = datetime.strptime(data_final, '%Y-%m-%d')
+            self.data_final_str = df_back.strftime('%d/%m/%Y')
+        else:
+            self.data_final_str = None
 
-        context = super().get_context_data(**kwargs)
+        return super().get(request, *args, **kwargs)
 
-        context['solicitacoes'] = solicitacoes
-        context['total_vendas'] = total_vendas
-        context['total_valor'] = total_valor
-        context['data_inicial'] = f'{data_inicial.strftime("%d/%m/%Y")}' if data_inicial else None
-        context['data_final'] = f'{data_final.strftime("%d/%m/%Y")}' if data_final else None
-        context['lojas'] = loja
-        context['lucro'] = total_lucro
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx.update({
+            'solicitacoes': self.solicitacoes,
+            'total_vendas': self.total_vendas,
+            'total_valor':   self.total_valor,
+            'lucro':         self.total_lucro,
+            'data_inicial':  self.data_inicial_str,
+            'data_final':    self.data_final_str,
+            'lojas':         self.loja,
+        })
+        return ctx
 
-        return context
 
-        
+
 class FolhaRelatorioVendasView(PermissionRequiredMixin, TemplateView):
     template_name = 'relatorios/folha_relatorio_vendas.html'
     permission_required = 'vendas.can_generate_report_sale'

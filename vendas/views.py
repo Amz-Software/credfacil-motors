@@ -1907,75 +1907,94 @@ class FolhaRelatorioVendasView(PermissionRequiredMixin, TemplateView):
     template_name = 'relatorios/folha_relatorio_vendas.html'
     permission_required = 'vendas.can_generate_report_sale'
 
-    def get_context_data(self, **kwargs):
-        data_inicial = self.request.GET.get('data_inicial')
-        data_final = self.request.GET.get('data_final')
-        produtos = self.request.GET.get('produtos')
-        vendedores = self.request.GET.get('vendedores')
-        loja = self.request.GET.get('lojas')
-        tipos_venda = self.request.GET.get('tipos_venda')
+    def get(self, request, *args, **kwargs):
+        # --- montamos filtros exatamente como antes ---
+        data_inicial = request.GET.get('data_inicial')
+        data_final = request.GET.get('data_final')
+        produtos = request.GET.getlist('produtos')
+        vendedores = request.GET.getlist('vendedores')
+        loja_id   = request.GET.get('lojas')
+        tipos_venda = request.GET.getlist('tipos_venda')
 
         filtros = {}
 
-        # Adiciona filtros para datas, se informadas
+        # datas
         if data_inicial and data_final:
-            data_final = datetime.strptime(data_final, '%Y-%m-%d')
-            data_inicial = datetime.strptime(data_inicial, '%Y-%m-%d')
-            
-            data_final = data_final + timedelta(days=1)
-            filtros['data_venda__range'] = [data_inicial, data_final]
+            di = datetime.strptime(data_inicial, '%Y-%m-%d')
+            df = datetime.strptime(data_final, '%Y-%m-%d') + timedelta(days=1)
+            # deixamos as datetimes timezone-aware
+            filtros['data_venda__range'] = [
+                timezone.make_aware(di),
+                timezone.make_aware(df),
+            ]
         elif data_inicial:
-            filtros['data_venda__gte'] = data_inicial
+            di = datetime.strptime(data_inicial, '%Y-%m-%d')
+            filtros['data_venda__gte'] = timezone.make_aware(di)
         elif data_final:
-            data_final = datetime.strptime(data_final, '%Y-%m-%d')  # Converte data_final para datetime
-            filtros['data_venda__lte'] = data_final
-        
+            df = datetime.strptime(data_final, '%Y-%m-%d')
+            filtros['data_venda__lte'] = timezone.make_aware(df)
+
+        # outros filtros simples
         if vendedores:
             filtros['vendedor__in'] = vendedores
-
         if produtos:
             filtros['produtos__in'] = produtos
+        if loja_id:
+            filtros['loja__id'] = loja_id
+            self.loja = Loja.objects.filter(pk=loja_id).first()
+        else:
+            self.loja = None
 
-        if loja:
-            filtros['loja__id'] = loja
-            loja = Loja.objects.filter(id=loja).first()
+        # faz a query
+        self.vendas = Venda.objects.filter(**filtros).distinct()
 
-        vendas = Venda.objects.filter(**filtros).distinct()
-        
-        if not vendas:
-            messages.warning(self.request, 'Nenhuma venda encontrada com os filtros informados')
+        # se não encontrou, redireciona antes de chamar get_context_data
+        if not self.vendas.exists():
+            messages.warning(request, 'Nenhuma venda encontrada com os filtros informados')
             return redirect('vendas:venda_relatorio')
 
-        total_vendas = vendas.count()
-        total_valor = 0
-        total_lucro = 0
-        
+        # pré-calcula totais para usar no contexto
+        self.total_vendas = self.vendas.count()
         if tipos_venda:
-            for venda in vendas:
-                    for pagamento in venda.pagamentos.filter(tipo_pagamento__in=tipos_venda):
-                        if not pagamento.tipo_pagamento.nao_contabilizar:
-                            total_valor += pagamento.valor
-                            total_lucro += venda.lucro_total()
+            total_valor = 0
+            total_lucro = 0
+            for venda in self.vendas:
+                for pagamento in venda.pagamentos.filter(tipo_pagamento__in=tipos_venda):
+                    if not pagamento.tipo_pagamento.nao_contabilizar:
+                        total_valor += pagamento.valor
+                        total_lucro += venda.lucro_total()
+            self.total_valor = total_valor
+            self.total_lucro = total_lucro
         else:
-            total_valor = sum(venda.pagamentos_valor_total for venda in vendas)
-            total_lucro = sum(venda.lucro_total() for venda in vendas)
+            self.total_valor = sum(v.pagamentos_valor_total for v in self.vendas)
+            self.total_lucro = sum(v.lucro_total() for v in self.vendas)
 
+        # guarda strings formatadas
+        self.data_inicial_str = datetime.strptime(data_inicial, '%Y-%m-%d').strftime("%d/%m/%Y") if data_inicial else None
+        # subtrai o dia extra que adicionamos
         if data_final:
-            data_final = data_final - timedelta(days=1)  # Subtrai o timedelta apenas se data_final for datetime
+            df_back = datetime.strptime(data_final, '%Y-%m-%d') 
+            self.data_final_str = df_back.strftime("%d/%m/%Y")
+        else:
+            self.data_final_str = None
 
+        # tudo certo: chama o TemplateView para renderizar
+        return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        # aqui já sabemos que self.vendas existe e é um QuerySet
         context = super().get_context_data(**kwargs)
-
-        context['vendas'] = vendas
-        context['total_vendas'] = total_vendas
-        context['total_valor'] = total_valor
-        context['data_inicial'] = f'{data_inicial.strftime("%d/%m/%Y")}' if data_inicial else None
-        context['data_final'] = f'{data_final.strftime("%d/%m/%Y")}' if data_final else None
-        context['lojas'] = loja
-        context['lucro'] = total_lucro
-
+        context.update({
+            'vendas': self.vendas,
+            'total_vendas': self.total_vendas,
+            'total_valor': self.total_valor,
+            'lucro': self.total_lucro,
+            'data_inicial': self.data_inicial_str,
+            'data_final': self.data_final_str,
+            'lojas': self.loja,
+        })
         return context
-
-        
+    
 class ProdutoVendidoListView(PermissionRequiredMixin, ListView):
     model = ProdutoVenda
     template_name = 'produto_vendido/produto_vendido_list.html'

@@ -1815,6 +1815,7 @@ class RelatorioSolicitacoesView(PermissionRequiredMixin, FormView):
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs['loja'] = self.request.session.get('loja_id')
+        kwargs['user'] = self.request.user
         return kwargs
     
     

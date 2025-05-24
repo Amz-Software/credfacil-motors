@@ -809,6 +809,7 @@ class RelatorioSolicitacoesForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         loja = kwargs.pop('loja', None)
+        user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
 
         # Se houver loja no contexto, limitamos alguns querysets
@@ -816,7 +817,8 @@ class RelatorioSolicitacoesForm(forms.Form):
             self.fields['produtos'].queryset   = Produto.objects.filter(loja=loja)
             self.fields['cliente'].queryset    = Cliente.objects.filter(loja=loja)
             self.fields['vendedores'].queryset = User.objects.filter(loja=loja)
-            # self.fields['lojas'].queryset      = Loja.objects.filter(pk=loja)
+            if user and not user.has_perm('vendas.can_view_all_stores'):
+                self.fields['lojas'].queryset = Loja.objects.filter(pk=loja)
             self.fields['lojas'].initial       = [loja]
 
         # Carrega escolhas de status diretamente do modelo AnaliseCredito

@@ -35,5 +35,7 @@ urlpatterns = [
     
     path('estoque-imei-search/', EstoqueImeiSearchView.as_view(), name='estoque-imei-search'),
     path('estoque-imei-search-edit/', EstoqueImeiSearchEditView.as_view(), name='estoque-imei-search-edit'),
+    
+    path('estoque/entrada/liberar/<int:pk>/', liberar_entrada, name='liberar_entrada'),
 
 ]

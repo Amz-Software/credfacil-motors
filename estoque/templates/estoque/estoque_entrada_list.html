@@ -11,17 +11,23 @@ Estoque
       <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
           <h4 class="card-title">Entradas</h4>
-          <div>
+            <div>
             <form action="" method="get" class="d-inline-block me-2" id="searchForm">
               <input type="text" name="search" class="form-control d-inline-block me-2" style="width: auto;" placeholder="Pesquisar..." onchange="document.getElementById('searchForm').submit();">
+              <select name="liberada" class="form-control d-inline-block me-2" style="width: auto;" onchange="document.getElementById('searchForm').submit();">
+              <option value="">-----</option>
+              <option value="true">Liberado</option>
+              <option value="false">Não liberado</option>
+              </select>
+              <button type="button" class="btn btn-secondary me-2" onclick="window.location.href=window.location.pathname">Limpar Filtro</button>
             </form>
             {% if user|has_perm:"estoque.add_entradaestoque" %}
-            <a type="button" class="btn btn-primary" href={% url "estoque:estoque_entrada" %}>
-                <i class="bx bx-plus me-1"></i>
-                Adicionar Entrada
-              </a>
+            <a type="button" class="btn btn-primary" href="{% url 'estoque:estoque_entrada' %}">
+              <i class="bx bx-plus me-1"></i>
+              Adicionar Entrada
+            </a>
             {% endif %}
-          </div>
+            </div>
         </div>
         <div class="card-body">
           <div class="table-responsive">
@@ -34,6 +40,7 @@ Estoque
                   {% endif %}
                   <th scope="col" class="text-center">Número da Nota</th>
                   <th scope="col" class="text-center">Data da Entrada</th>
+                  <th scope="col" class="text-center">Liberada p/ Venda</th>
                   <th scope="col" class="text-center">Emitida por</th>
                   <th scope="col" class="text-center">Modificada por</th>
                   <th scope="col" class="text-center">Ações</th>
@@ -50,6 +57,13 @@ Estoque
                         <td class="text-center">{{ entrada.numero_nota }}</td>
                         {% comment %} <td class="text-center">{{ entrada.custo_total|floatformat:2 }}</td> {% endcomment %}
                         <td class="text-center">{{ entrada.data_entrada }}</td>
+                        <td class="text-center">
+                          {% if entrada.venda_liberada %}
+                            <span class="badge bg-label-success">Sim</span>
+                          {% else %}
+                            <span class="badge bg-label-danger">Não</span>
+                          {% endif %}
+                        </td>
                         <td class="text-center">{{ entrada.criado_por|title }}</td>
                         <td class="text-center">{{ entrada.modificado_por|title }}</td>
                       {% comment %} <td class="text-end">{{ produto.preco|floatformat:2 }}</td> {% endcomment %}
@@ -73,6 +87,12 @@ Estoque
                                     <a class="dropdown-item" href="{% url "estoque:entrada_update" entrada.pk %}">
                                     <i class="bx bx-edit me-1"></i>
                                     Editar
+                                    </a>
+                                  {% endif %}
+                                  {% if user|has_perm:"estoque.can_liberar_venda" and not entrada.venda_liberada %}
+                                    <a class="dropdown-item" href="{% url "estoque:liberar_entrada" entrada.pk %}">
+                                    <i class="bx bx-check me-1"></i>
+                                    Liberar Para Venda
                                     </a>
                                   {% endif %}
                                 </div>

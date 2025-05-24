@@ -740,6 +740,11 @@ def gerar_venda(request, cliente_id):
 
     cliente = get_object_or_404(Cliente, id=cliente_id)
     loja = get_object_or_404(Loja, id=request.session.get('loja_id'))
+    credfacil = get_object_or_404(Loja, nome__icontains='CREDFÁCIL')
+    
+    if not credfacil or not loja or not cliente:
+        messages.error(request, "❌ Loja ou cliente não encontrado.")
+        return redirect('vendas:cliente_list')
 
     # Verifica caixa aberto
     caixa = Caixa.objects.filter(
@@ -788,17 +793,22 @@ def gerar_venda(request, cliente_id):
     )
     analise.venda = venda
     analise.save()
-
+    
+    porcentagem_desconto = 0
+    
     # Define valores e número de parcelas
     if analise.numero_parcelas == '4':
         valor_credfacil = produto.valor_4_vezes
         parcelas = 4
+        porcentagem_desconto = credfacil.porcentagem_desconto_4
     elif analise.numero_parcelas == '6':
         valor_credfacil = produto.valor_6_vezes
         parcelas = 6
+        porcentagem_desconto = credfacil.porcentagem_desconto_6
     elif analise.numero_parcelas == '8':
         valor_credfacil = produto.valor_8_vezes
         parcelas = 8
+        porcentagem_desconto = credfacil.porcentagem_desconto_8
 
     # Cria ProdutoVenda
     ProdutoVenda.objects.create(
@@ -838,7 +848,7 @@ def gerar_venda(request, cliente_id):
         valor=valor_credfacil,
         parcelas=parcelas,
         data_primeira_parcela=data1,
-        porcentagem_desconto=loja.porcentagem_desconto
+        porcentagem_desconto=porcentagem_desconto
     )
 
     criar_parcelas(pagamento_entrada, loja)

@@ -423,6 +423,7 @@ class ContasAReceberListView(BaseView, PermissionRequiredMixin, ListView):
         return "Em dia"
     
 
+
 class ContasAReceberDetailView(PermissionRequiredMixin, DetailView):
     model = Pagamento
     template_name = 'contas_a_receber/contas_a_receber_detail.html'
@@ -432,31 +433,51 @@ class ContasAReceberDetailView(PermissionRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         conta_a_receber = self.get_object()
-        context['parcela_form'] = ParcelaInlineFormSet(instance=conta_a_receber, form_kwargs={'user': self.request.user})
+        context['parcela_form'] = ParcelaInlineFormSet(
+            instance=conta_a_receber,
+            form_kwargs={'user': self.request.user}
+        )
         return context
-    
+
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
         user = request.user
-        
+
+        # 1) Atualiza o desconto, se veio no POST
+        if 'porcentagem_desconto' in request.POST:
+            if not user.has_perm('vendas.change_pagamento'):
+                messages.error(request, "Você não tem permissão para alterar o desconto.")
+            else:
+                try:
+                    novo = Decimal(request.POST['porcentagem_desconto'])
+                    self.object.porcentagem_desconto = novo
+                    self.object.save(update_fields=['porcentagem_desconto'])
+                    messages.success(request, "% de desconto atualizado com sucesso!")
+                except Exception:
+                    messages.error(request, "Valor de desconto inválido.")
+            return redirect(request.path)
+
+        # 2) Senão, processa o formset de parcelas
         if not user.has_perm('vendas.change_pagamento'):
             messages.error(request, "Você não tem permissão para editar parcelas.")
             return redirect('financeiro:contas_a_receber_list')
-        conta_a_receber = self.object
-        parcela_form = ParcelaInlineFormSet(request.POST, instance=conta_a_receber, form_kwargs={'user': request.user})
 
+        parcela_form = ParcelaInlineFormSet(
+            request.POST,
+            instance=self.object,
+            form_kwargs={'user': user}
+        )
         if parcela_form.is_valid():
             parcela_form.save()
             messages.success(request, "Parcelas atualizadas com sucesso!")
-            return redirect('financeiro:contas_a_receber_update', pk=conta_a_receber.pk)
+            return redirect(request.path)
         else:
-            # Se o formset não for válido, exibir mensagens de erro
             for form in parcela_form:
-                if form.errors:
-                    for error in form.errors:
-                        messages.error(request, f"Erro no campo {form.instance}: {error}")
-        messages.error(request, "Erro ao atualizar as parcelas.")   
-        return self.render_to_response(self.get_context_data(parcela_form=parcela_form))
+                for field, errors in form.errors.items():
+                    messages.error(request, f"Erro em {field}: {'; '.join(errors)}")
+            messages.error(request, "Erro ao atualizar as parcelas.")
+            return self.render_to_response(self.get_context_data(parcela_form=parcela_form))
+
     
 class RelatorioSaidaView(BaseView, PermissionRequiredMixin, TemplateView):
     template_name = 'relatorio/relatorio_saida.html'

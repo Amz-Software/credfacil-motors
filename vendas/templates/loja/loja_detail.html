@@ -172,7 +172,9 @@ Detalhes da Loja
                         <i class="bx bx-purchase-tag fs-2 me-3"></i>
                         <div>
                         <h6 class="card-subtitle mb-1">Porcentagem Desconto</h6>
-                        <p class="card-text mb-0">{{ loja.porcentagem_desconto|default:"N/A" }}</p>
+                        <p class="card-text mb-0">4x - {{ loja.porcentagem_desconto_4|default:"N/A"|floatformat:0 }}%</p>
+                        <p class="card-text mb-0">6x - {{ loja.porcentagem_desconto_6|default:"N/A"|floatformat:0 }}%</p>
+                        <p class="card-text mb-0">8x - {{ loja.porcentagem_desconto_8|default:"N/A"|floatformat:0 }}%</p>
                         </div>
                     </div>
                   </div>
@@ -328,7 +330,7 @@ Detalhes da Loja
                     <i class="bx bx-cart fs-1 me-3"></i>
                     <div>
                       <h6 class="card-subtitle mb-1">Total de Vendas</h6>
-                      <h2 class="card-title m-0">{{ kpi.qtd_vendas }}</h2>
+                      <h2 class="card-title m-0 text-white">{{ kpi.qtd_vendas }}</h2>
                     </div>
                   </div>
                 </div>
@@ -339,7 +341,7 @@ Detalhes da Loja
                     <i class="bx bx-dollar fs-1 me-3"></i>
                     <div>
                       <h6 class="card-subtitle mb-1">Valor Total</h6>
-                      <h2 class="card-title m-0">R$ {{ kpi.valor_total|floatformat:2 }}</h2>
+                      <h2 class="card-title m-0 text-white">R$ {{ kpi.valor_total|floatformat:2 }}</h2>
                     </div>
                   </div>
                 </div>
@@ -350,7 +352,7 @@ Detalhes da Loja
                     <i class="bx bx-transfer-alt fs-1 me-3"></i>
                     <div>
                       <h6 class="card-subtitle mb-1">Valor de Repasse</h6>
-                      <h2 class="card-title m-0">R$ {{ kpi.valor_repasse|floatformat:2 }}</h2>
+                      <h2 class="card-title m-0 text-white">R$ {{ kpi.valor_repasse|floatformat:2 }}</h2>
                     </div>
                   </div>
                 </div>

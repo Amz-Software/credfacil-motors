@@ -164,7 +164,9 @@ class Loja(Base):
     gerentes = models.ManyToManyField('accounts.User', related_name='lojas_gerenciadas')
     chave_pix = models.CharField(max_length=100, null=True, blank=True)
     credfacil = models.BooleanField(default=False)
-    porcentagem_desconto = models.DecimalField(max_digits=5, decimal_places=2, default=25.00)
+    porcentagem_desconto_4 = models.DecimalField(max_digits=5, decimal_places=2, default=25.00)
+    porcentagem_desconto_6 = models.DecimalField(max_digits=5, decimal_places=2, default=25.00)
+    porcentagem_desconto_8 = models.DecimalField(max_digits=5, decimal_places=2, default=25.00)
     qr_code_aplicativo = models.ImageField(upload_to='qr_codes_aplicativo/', null=True, blank=True)
     codigo_aplicativo = models.CharField(max_length=100, null=True, blank=True)
     objects = LojaQuerySet.as_manager()
@@ -506,6 +508,8 @@ class ComprovantesCliente(Base):
     consulta_serasa = models.FileField(upload_to='comprovantes_clientes', null=True, blank=True)
     consulta_serasa_analise = models.BooleanField(default=False)
     restricao = models.BooleanField(default=False)
+    
+    foto_cliente = models.FileField(upload_to='comprovantes_clientes', null=True, blank=True)
     
     class Meta:
         verbose_name_plural = 'Comprovantes Clientes'

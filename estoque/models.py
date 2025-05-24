@@ -7,6 +7,7 @@ class EntradaEstoque(Base):
     fornecedor = models.ForeignKey('estoque.Fornecedor', on_delete=models.PROTECT, related_name='entradas_estoque', verbose_name='Fornecedor', blank=True, null=True)
     data_entrada = models.DateTimeField(verbose_name='Data de Entrada', auto_now_add=True)
     numero_nota = models.CharField(max_length=20, verbose_name='Número da Nota')
+    venda_liberada = models.BooleanField(default=False, verbose_name='Liberada para Venda')
     
     @property
     def custo_total(self):
@@ -42,6 +43,9 @@ class EntradaEstoque(Base):
         verbose_name = 'Entrada de Estoque'
         verbose_name_plural = 'Entradas de Estoque'
         ordering = ['-data_entrada']
+        permissions = (
+            ('can_liberar_venda', 'Pode liberar venda'),
+        )
 
 class ProdutoEntrada(Base):
     entrada = models.ForeignKey(EntradaEstoque, on_delete=models.CASCADE, related_name='produtos', verbose_name='Entrada de Estoque')

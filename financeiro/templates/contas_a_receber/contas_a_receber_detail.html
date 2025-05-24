@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static iam_tags %}
+{% load static iam_tags l10n %}
 {% block title %}Contas a Receber{% endblock title %}
 
 {% block content %}
@@ -116,6 +116,21 @@
                 </div>
               {% endif %}
             </div>
+              <small class="text-muted">% Desconto</small>
+              <form id="descontoForm" method="post">
+                {% csrf_token %}
+                {% localize off %}
+                  <input
+                    type="number"
+                    name="porcentagem_desconto"
+                    step="0.01"
+                    class="form-control"
+                    value="{{ conta_a_receber.porcentagem_desconto }}"
+                    onchange="this.form.submit()"
+                    {% if not user|has_perm:"vendas.change_pagamento" %}disabled{% endif %}
+                  />
+                {% endlocalize %}
+              </form>
           </div>
         </div>
       </div>

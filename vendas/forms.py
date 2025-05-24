@@ -9,6 +9,11 @@ from django_select2.forms import ModelSelect2MultipleWidget, HeavySelect2Widget
 from collections import OrderedDict
 
 
+class ProdutoChoiceField(forms.ModelChoiceField):
+    def label_from_instance(self, obj):
+        # aqui você define exatamente como quer que apareça cada opção
+        return f"{obj.nome} – Entrada: R$ {obj.entrada_cliente}"
+
 class EstoqueImeiSelectWidgetEdit(HeavySelect2Widget):
     data_view = 'estoque:estoque-imei-search-edit'
     
@@ -204,11 +209,15 @@ class InformacaoPessoalForm(forms.ModelForm):
 
 
 class AnaliseCreditoClienteForm(forms.ModelForm):
+    produto = ProdutoChoiceField(
+        queryset=Produto.objects.all(),
+        widget=Select2Widget(attrs={'class': 'form-control'}),
+        label='Produto'
+    )
     class Meta:
         model = AnaliseCreditoCliente
         fields = ['produto','data_pagamento','numero_parcelas', 'imei', 'observacao']
         widgets = {
-            'produto': Select2Widget(attrs={'class': 'form-control'}),
             'data_pagamento': forms.Select(attrs={'class': 'form-control'}),
             'numero_parcelas': forms.Select(attrs={'class': 'form-control'}),
             'imei': EstoqueImeiSelectWidget(
@@ -264,6 +273,7 @@ class ComprovantesClienteForm(forms.ModelForm):
             'comprovante_residencia_analise': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'consulta_serasa': forms.FileInput(attrs={'class': 'form-control'}),
             'consulta_serasa_analise': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'foto_cliente': forms.FileInput(attrs={'class': 'form-control'}),
         }
         labels = {
             'documento_identificacao_frente': 'Documento de Identificação Frente*',
@@ -275,6 +285,7 @@ class ComprovantesClienteForm(forms.ModelForm):
             'consulta_serasa': 'Consulta Serasa',
             'consulta_serasa_analise': 'Análise Consulta Serasa',
             'restricao': 'Restrição',
+            'foto_cliente': 'Foto do Cliente*',
         }
 
     def __init__(self, *args, **kwargs):
@@ -320,12 +331,17 @@ class ComprovantesClienteForm(forms.ModelForm):
                 self.fields['documento_identificacao_frente'].disabled = True
                 self.fields['documento_identificacao_verso'].disabled = True
                 self.fields['comprovante_residencia'].disabled = True
+                self.fields['consulta_serasa'].disabled = True
+                self.fields['foto_cliente'].disabled = True
                 
             if user and not user.has_perm('vendas.can_edit_finished_sale'):
                 if self.instance.cliente.analise_credito and self.instance.cliente.analise_credito.status == 'EA':
                     self.fields['documento_identificacao_frente'].disabled = True
                     self.fields['documento_identificacao_verso'].disabled = True
                     self.fields['comprovante_residencia'].disabled = True
+                    self.fields['consulta_serasa'].disabled = True
+                    self.fields['foto_cliente'].disabled = True
+                    
                     
             
 
@@ -644,8 +660,14 @@ class LojaForm(forms.ModelForm):
         if user_loja_id:
             self.fields['loja'].initial = Loja.objects.get(id=user_loja_id)
 
-        if self.instance and self.instance.porcentagem_desconto is not None:
-            self.initial['porcentagem_desconto'] = str(self.instance.porcentagem_desconto).replace(',', '.')
+        if self.instance and self.instance.porcentagem_desconto_4 is not None:
+            self.initial['porcentagem_desconto_4'] = str(self.instance.porcentagem_desconto_4).replace(',', '.')
+            
+        if self.instance and self.instance.porcentagem_desconto_6 is not None:
+            self.initial['porcentagem_desconto_6'] = str(self.instance.porcentagem_desconto_6).replace(',', '.')
+            
+        if self.instance and self.instance.porcentagem_desconto_8 is not None:
+            self.initial['porcentagem_desconto_8'] = str(self.instance.porcentagem_desconto_8).replace(',', '.')
 
 
     def save(self, commit=True):

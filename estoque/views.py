@@ -9,7 +9,7 @@ from estoque.models import EntradaEstoque, Estoque, EstoqueImei, ProdutoEntrada
 from django.contrib import messages
 from django.db.models import Q
 from django.contrib.auth.mixins import PermissionRequiredMixin
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 from produtos.models import Produto
 from vendas.models import Loja
 from .forms import EntradaEstoqueForm, EstoqueImeiForm, ProdutoEntradaForm, ProdutoEntradaFormSet, ProdutoEntradaEditFormSet, EstoqueImeiEditForm
@@ -77,6 +77,13 @@ class EntradaListView(BaseView, PermissionRequiredMixin, ListView):
         loja_id = self.request.session.get('loja_id')
         loja = get_object_or_404(Loja, pk=loja_id)
         search = self.request.GET.get('search', None)
+        liberada = self.request.GET.get('liberada', None)
+        
+        if liberada:
+            if liberada == 'true':
+                query = query.filter(venda_liberada=True)
+            else:
+                query = query.filter(venda_liberada=False)
         
         if not self.request.user.has_perm('estoque.can_view_all_imei'):
             query = query.filter(loja=loja)
@@ -85,6 +92,7 @@ class EntradaListView(BaseView, PermissionRequiredMixin, ListView):
             query = query.filter(Q(numero_nota__icontains=search))
             
         return query.order_by('-criado_em')
+    
     
 class EntradaDetailView(PermissionRequiredMixin, DetailView):
     model = EntradaEstoque
@@ -95,6 +103,7 @@ class EntradaDetailView(PermissionRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         return context
+    
     
 class EntradaUpdateView(PermissionRequiredMixin, UpdateView):
     # levar em consideração que pode ter uma venda e diminuir o estoque
@@ -153,6 +162,7 @@ class EntradaUpdateView(PermissionRequiredMixin, UpdateView):
         else:
             return self.form_invalid(form)
 
+
 class AdicionarEntradaEstoqueView(PermissionRequiredMixin, CreateView):
     model = EntradaEstoque
     form_class = EntradaEstoqueForm
@@ -199,6 +209,21 @@ class AdicionarEntradaEstoqueView(PermissionRequiredMixin, CreateView):
         else:
             return self.form_invalid(form)
         
+
+
+@permission_required('estoque.can_liberar_venda', raise_exception=True)
+def liberar_entrada(request, pk):
+    entrada = get_object_or_404(EntradaEstoque, pk=pk)
+
+    if entrada.venda_liberada:
+        messages.info(request, "Esta Nota de entrada já está liberada para venda.")
+    else:
+        entrada.venda_liberada = True
+        entrada.save(update_fields=['venda_liberada'])
+        messages.success(request, "Nota de entrada liberada para venda com sucesso.")
+
+    return redirect('estoque:entrada_detail', pk=pk)
+
 
 class EstoqueImeiListView(BaseView, PermissionRequiredMixin, ListView):
     model = EstoqueImei
@@ -262,7 +287,7 @@ class EstoqueImeiSearchView(View):
         produto_id = request.GET.get('produto_id', None)
         loja_id = self.request.session.get('loja_id')
         loja = get_object_or_404(Loja, pk=loja_id)
-        queryset = EstoqueImei.objects.filter(vendido=False).filter(
+        queryset = EstoqueImei.objects.filter(vendido=False, produto_entrada__entrada__venda_liberada=True).filter(
             Q(imei__icontains=term) | Q(produto__nome__icontains=term) | Q(loja__nome__icontains=term)
         )
         

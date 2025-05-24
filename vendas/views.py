@@ -106,17 +106,20 @@ class IndexView(LoginRequiredMixin, TemplateView):
             total_geral_parcelas = 0
 
             for venda in vendas: 
-                parcelas = Parcela.objects.filter(pagamento__venda=venda, pagamento__tipo_pagamento__nome='CREDFACIL')
+                parcelas = list(Parcela.objects.filter(
+                    pagamento__venda=venda,
+                    pagamento__tipo_pagamento__nome='CREDFACIL'
+                ).order_by('data_vencimento')[:3])
 
-                parcelas_vencidas = parcelas.filter(data_vencimento__lt=timezone.now(), pago=False, pagamento_efetuado=False)
-                parcelas_pagas = parcelas.filter(pago=True, pagamento_efetuado=False)
-                total_geral_parcelas += parcelas.count()
+                parcelas_vencidas = [p for p in parcelas if p.data_vencimento < timezone.now().date() and not p.pago and not p.pagamento_efetuado]
+                parcelas_pagas = [p for p in parcelas if p.pago and not p.pagamento_efetuado]
+                total_geral_parcelas += len(parcelas)
 
-                qtd_vencidas = parcelas_vencidas.count()
-                qtd_pagas = parcelas_pagas.count()
+                qtd_vencidas = len(parcelas_vencidas)
+                qtd_pagas = len(parcelas_pagas)
 
-                valor_vencidas = parcelas_vencidas.aggregate(Sum('valor'))['valor__sum'] or 0
-                valor_pagas = parcelas_pagas.aggregate(Sum('valor'))['valor__sum'] or 0
+                valor_vencidas = sum(p.valor for p in parcelas_vencidas)
+                valor_pagas = sum(p.valor for p in parcelas_pagas)
 
                 total_de_parcelas_vencidas += qtd_vencidas
                 total_de_parcelas_pagas += qtd_pagas
@@ -152,16 +155,21 @@ class IndexView(LoginRequiredMixin, TemplateView):
                 loja_nome = venda.loja.nome  
                 valores_por_loja[loja_nome]['total_vendas'] += 1
 
-                parcelas = Parcela.objects.filter(pagamento__venda=venda, pagamento__tipo_pagamento__nome='CREDFACIL')
+                parcelas = Parcela.objects.filter(pagamento__venda=venda, pagamento__tipo_pagamento__nome='CREDFACIL').order_by('data_vencimento')[:3]
 
-                parcelas_vencidas = parcelas.filter(data_vencimento__lt=timezone.now(), pago=False, pagamento_efetuado=False)
-                parcelas_pagas = parcelas.filter(pago=True, pagamento_efetuado=False)
+                parcelas = list(Parcela.objects.filter(
+                    pagamento__venda=venda,
+                    pagamento__tipo_pagamento__nome='CREDFACIL'
+                ).order_by('data_vencimento')[:3])
 
-                qtd_vencidas = parcelas_vencidas.count()
-                qtd_pagas = parcelas_pagas.count()
+                parcelas_vencidas = [p for p in parcelas if p.data_vencimento < timezone.now().date() and not p.pago and not p.pagamento_efetuado]
+                parcelas_pagas = [p for p in parcelas if p.pago and not p.pagamento_efetuado]
 
-                valor_vencidas = float(parcelas_vencidas.aggregate(Sum('valor'))['valor__sum'] or 0)
-                valor_pagas = float(parcelas_pagas.aggregate(Sum('valor'))['valor__sum'] or 0)
+                qtd_vencidas = len(parcelas_vencidas)
+                qtd_pagas = len(parcelas_pagas)
+
+                valor_vencidas = sum(p.valor for p in parcelas_vencidas)
+                valor_pagas = sum(p.valor for p in parcelas_pagas)
 
                 # Totais por loja
                 valores_por_loja[loja_nome]['qtd_vencidas'] += qtd_vencidas
@@ -179,7 +187,7 @@ class IndexView(LoginRequiredMixin, TemplateView):
                     valores['pct_pagas'] = 0
                     valores['pct_vencidas'] = 0
 
-            context['dados_lojas'] = json.dumps(valores_por_loja)
+            context['dados_lojas'] = json.dumps(valores_por_loja, default=str)
 
         context['loja'] = loja
         context['caixa_diario'] = caixa_diario_loja

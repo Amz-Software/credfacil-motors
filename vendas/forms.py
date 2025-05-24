@@ -126,7 +126,7 @@ class ContatoAdicionalForm(forms.ModelForm):
         exclude = ['cliente', 'loja']
         widgets = {
             'nome_adicional': forms.TextInput(attrs={'class': 'form-control'}),
-            'contato': forms.TextInput(attrs={'class': 'form-control'}),
+            'contato': forms.TextInput(attrs={'class': 'form-control tel'}),
             'endereco_adicional': forms.TextInput(attrs={'class': 'form-control'}),
             'obteve_contato': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
@@ -158,7 +158,7 @@ class ContatoAdicionalForm(forms.ModelForm):
 
 class InformacaoPessoalForm(forms.ModelForm):
     nome_pessoal = forms.CharField(label='Nome', widget=forms.TextInput(attrs={'class': 'form-control'}))
-    contato_pessoal = forms.CharField(label='Contato', widget=forms.TextInput(attrs={'class': 'form-control'}))
+    contato_pessoal = forms.CharField(label='Contato', widget=forms.TextInput(attrs={'class': 'form-control tel'}))
     endereco_pessoal = forms.CharField(label='Endereço', widget=forms.TextInput(attrs={'class': 'form-control'}))
     obteve_contato_pessoal = forms.ChoiceField(
         label='Obteve Contato',
@@ -637,10 +637,6 @@ class UsuarioSelectWidget(ModelSelect2MultipleWidget):
     
 
 class LojaForm(forms.ModelForm):
-    class Meta:
-        model = Loja
-        fields = '__all__'
-
     usuarios = forms.ModelMultipleChoiceField(
         queryset=User.objects.all(),
         widget=UsuarioSelectWidget(attrs={'class': 'form-control'}),
@@ -652,6 +648,18 @@ class LojaForm(forms.ModelForm):
         widget=UsuarioSelectWidget(attrs={'class': 'form-control'}),
         required=False
     )
+
+    class Meta:
+        model = Loja
+        fields = '__all__'
+
+        widgets = {
+            'telefone': forms.TextInput(attrs={'class': 'form-control tel'}),
+            'meta_vendas_diaria': forms.NumberInput(attrs={'class': 'form-control money'}),
+            'meta_vendas_mensal': forms.NumberInput(attrs={'class': 'form-control money'}),
+            'entrada_caixa_diaria': forms.NumberInput(attrs={'class': 'form-control money'}),
+            'porcentagem_desconto': forms.NumberInput(attrs={'class': 'form-control money'}),
+        }        
 
     def __init__(self, *args, **kwargs):
         user_loja_id = kwargs.pop('user_loja', None)

@@ -59,5 +59,20 @@ Adicionar Entrada
 {% endblock %}
 
 {% block extra_scripts %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+<script>
+    $('.money').mask('000.000.000,00', { reverse: true });
+    $('form').submit(function () {
+      $('.money').each(function () {
+        var rawValue = $(this).cleanVal();
+        if (rawValue === "") return; // se estiver vazio, pula
+        // Converte para número considerando os dois últimos dígitos como decimais
+        var numericValue = parseInt(rawValue, 10) / 100;
+        // Garante duas casas decimais no valor final
+        $(this).val(numericValue.toFixed(2));
+      });
+    });
+</script>
 <script src="{% static "js/entrada.js" %}"></script>
 {% endblock extra_scripts %}

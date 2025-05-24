@@ -86,6 +86,26 @@
             <label for="statusSelect">Status</label>
           </div>
         </div>
+        <!-- Loja -->
+        {% if user|has_perm:"vendas.can_view_all_stores" %}
+          <div class="col-md-3">
+            <div class="form-floating">
+              <select
+                id="lojaSelect"
+                name="loja"
+                class="form-select form-select-sm"
+              >
+                <option value="" {% if not request.GET.loja %}selected{% endif %}>Todas as Lojas</option>
+                {% for loja in lojas %}
+                  <option value="{{ loja.id }}" {% if request.GET.loja == loja.id %}selected{% endif %}>
+                    {{ loja.nome|title }}
+                  </option>
+                {% endfor %}
+              </select>
+              <label for="lojaSelect">Loja</label>
+            </div>
+          </div>
+        {% endif %}
         <!-- Bloqueados -->
         <div class="col-auto">
           <div class="form-check form-switch">
@@ -138,6 +158,11 @@
               <th class="text-end">Valor pendente</th>
               <th class="text-center">Parcelas totais</th>
               <th class="text-center">Parcelas pendentes</th>
+              <th class="text-center">IMEI</th>
+              <th class="text-center">Contato do cliente</th>
+              <th class="text-end">Total a vencer</th>
+              <th class="text-end">Total em atraso</th>
+              <th class="text-end">Total quitado</th>              
               <th>Ações</th>
             </tr>
           </thead>
@@ -172,6 +197,24 @@
                 <td class="text-end">{{ conta.valor_pendente|floatformat:2 }}</td>
                 <td class="text-center">{{ conta.parcelas }}</td>
                 <td class="text-center">{{ conta.parcelas_pendentes }}</td>
+                <td>
+                  {% if conta.venda.itens_venda.first.imei %}
+                      {{ conta.venda.itens_venda.first.imei }}
+                  {% else %}
+                    -
+                  {% endif %}
+                </td>
+                <td>
+                  {% if conta.venda.cliente.telefone %}
+                      {{ conta.venda.cliente.telefone }}
+
+                  {% else %}
+                    -
+                  {% endif %}
+                </td>
+                <td class="text-center">{{ conta.total_a_vencer }}</td>
+                <td class="text-center">{{ conta.total_atrasos }}</td>
+                <td class="text-center">{{ conta.total_pago }}</td>
                 <td>
                   {% if user|has_perm:"vendas.view_pagamento" %}
                     <a

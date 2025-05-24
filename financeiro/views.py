@@ -402,6 +402,16 @@ class ContasAReceberListView(BaseView, PermissionRequiredMixin, ListView):
         elif status == 'pendente':                              # novo
             qs = qs.filter(com_pagamento_pendente=True)
 
+        loja = self.request.GET.get('loja')
+
+        if loja:
+            try:
+                loja = Loja.objects.get(id=loja)
+                qs = qs.filter(loja=loja)
+            except Loja.DoesNotExist:
+                messages.error(self.request, "Loja não encontrada.")
+                return redirect('financeiro:contas_a_receber_list')
+
         return qs.order_by('-criado_em').exclude(tipo_pagamento__caixa=True).filter(tipo_pagamento__parcelas=True)
 
     def get_context_data(self, **kwargs):
@@ -411,6 +421,8 @@ class ContasAReceberListView(BaseView, PermissionRequiredMixin, ListView):
             status = self.verificar_atraso_parcela(pagamento)
             pagamento.atrasado = status
         context['contas_a_receber'] = queryset
+        if self.request.user.has_perm('vendas.can_view_all_stores'):
+            context['lojas'] = Loja.objects.all()
         return context
 
     def verificar_atraso_parcela(self, pagamento):

@@ -109,10 +109,10 @@
                     <tr
                       class="clickable-row
                         {% if conta.bloqueado %} table-purple
+                        {% elif conta.todas_parcelas_pagas %} table-info
                         {% elif conta.com_parcela_atrasada %} table-danger
                         {% elif conta.com_pagamento_pendente %} table-warning
                         {% elif conta.pago_dentro_prazo %} table-success
-                        {% elif conta.todas_parcelas_pagas %} table-info
                         {% endif %}"
                       onclick="window.location.href='{% url 'vendas:pagamento_detail' conta.id %}'"
                     >
@@ -121,10 +121,10 @@
                       <td>{{ conta.parcelas }}</td>
                       <td>{{ conta.next_vencimento }}</td>
                       <td>
-                        {% if conta.com_parcela_atrasada %}Atrasado
+                        {% if conta.todas_parcelas_pagas %}Quitado
+                        {% elif conta.com_parcela_atrasada %}Atrasado
                         {% elif conta.com_pagamento_pendente %}Pendente
                         {% elif conta.pago_dentro_prazo %}Pago no Prazo
-                        {% elif conta.todas_parcelas_pagas %}Quitado
                         {% endif %}
                       </td>
                     </tr>

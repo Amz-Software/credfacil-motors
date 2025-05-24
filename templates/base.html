@@ -367,27 +367,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/corejs-typeahead/1.3.1/typeahead.bundle.min.js"></script>
   {{ form.media.js }}
   {%endif%}
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-  <!-- jQuery Mask -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
-
-  <script>
-    $('.money').mask('000.000.000,00', { reverse: true });
-    $('.tel').mask('00 00000-0000');
-    // ao enviar o formulário, remove a máscara para enviar o valor sem formatação apenas com as casas decimais
-    $('form').submit(function () {
-      $('.money').each(function () {
-        var rawValue = $(this).cleanVal();
-        if (rawValue === "") return; // se estiver vazio, pula
-        // Converte para número considerando os dois últimos dígitos como decimais
-        var numericValue = parseInt(rawValue, 10) / 100;
-        // Garante duas casas decimais no valor final
-        $(this).val(numericValue.toFixed(2));
-      });
-    });
-
-  </script>
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       // Função para desabilitar os botões
@@ -502,11 +482,19 @@
       // Verifica ID
       console.log("[WS] ID da notificação recebida:", data.notification_id);
 
-      // 🔊 Som de notificação
-      const audio = new Audio("{% static 'sounds/notification.mp3' %}");
+      // 🔊 Som de notificação baseado no tipo
+      let soundFile = "notification.mp3"; // som padrão
+      
+      if(data.type_notification === "analise_credito_cliente") {
+        soundFile = "notification.mp3";
+      } else if(data.type_notification === "entrada_estoque") {
+        soundFile = "notification-alert.mp3";
+      }
+      
+      const audio = new Audio(`{% static 'sounds/' %}${soundFile}`);
       audio.volume = 1.0;
       audio.play().then(() => {
-        console.log("[WS] Som tocado.");
+        console.log("[WS] Som tocado:", soundFile);
       }).catch((error) => {
         console.warn("[WS] Som bloqueado pelo navegador até haver interação do usuário:", error);
       });

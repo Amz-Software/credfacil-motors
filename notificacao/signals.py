@@ -4,6 +4,7 @@ from vendas.models import AnaliseCreditoCliente, Cliente
 from django.contrib.auth import get_user_model
 from notifications.signals import notify
 from notificacao.utils import enviar_ws_para_usuario
+from estoque.models import EntradaEstoque
 
 User = get_user_model()
 
@@ -44,5 +45,42 @@ def notificar_status_analise_credito(sender, instance, created, **kwargs):
                     notification_id=ultima_notificacao.id,
                     verb=verb,
                     description=description,
-                    target_url=instance.cliente.get_absolute_url()
+                    target_url=instance.cliente.get_absolute_url(),
+                    type_notification='analise_credito_cliente',
+                )
+
+@receiver(post_save, sender=EntradaEstoque)
+def notificar_entrada_estoque(sender, instance, created, **kwargs):
+    if created:
+        verb = f'Nova entrada de estoque registrada.'
+        description = f'Entrada Estoque'
+
+        # Notificar administradores e analistas
+        usuarios_para_notificar = list(
+            User.objects.filter(groups__name__in=['ADMINISTRADOR', 'ANALISTA']).exclude(id=instance.criado_por_id)
+        )
+
+        if instance.criado_por:
+            usuarios_para_notificar.append(instance.criado_por)
+
+        for user in usuarios_para_notificar:
+            notify.send(
+                instance,
+                recipient=user,
+                verb=verb, 
+                description=description,
+                target=instance,
+            )
+
+            # WebSocket
+            ultima_notificacao = user.notifications.unread().order_by('-timestamp').first()
+            if ultima_notificacao:
+                enviar_ws_para_usuario(
+                    usuario=user,
+                    instance=instance,
+                    notification_id=ultima_notificacao.id,
+                    verb=verb,
+                    description=description,
+                    target_url=instance.get_absolute_url(),
+                    type_notification='entrada_estoque',
                 )

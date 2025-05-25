@@ -29,7 +29,6 @@ class MarcarNotificacaoComoLidaView(View):
         notificacao = get_object_or_404(Notification, pk=pk, recipient=request.user)
         notificacao.mark_as_read()
         return JsonResponse({'status': 'ok'})
-    
 
 
 class NotificacaoListView(LoginRequiredMixin, ListView):
@@ -78,6 +77,7 @@ class NotificacaoListView(LoginRequiredMixin, ListView):
         return context
 
 
+
 class MarcarNotificacaoComoLidaRedirectView(LoginRequiredMixin, RedirectView):
     permanent = False
 
@@ -88,3 +88,31 @@ class MarcarNotificacaoComoLidaRedirectView(LoginRequiredMixin, RedirectView):
         # pega o destino: parâmetro next ou o próprio target
         destino = self.request.GET.get('next') or notif.target.get_absolute_url()
         return destino
+    
+    
+
+@login_required
+def marcar_selecionadas(request):
+    if request.method == 'POST':
+        ids = request.POST.getlist('selected_notifications')
+        if ids:
+            # marca apenas as não-lidas dentre as selecionadas
+            request.user.notifications.unread().filter(id__in=ids).mark_all_as_read()
+    next_url = (
+        request.GET.get('next')
+        or request.POST.get('next')
+        or request.META.get('HTTP_REFERER')
+        or 'notificacoes:lista'
+    )
+    return redirect(next_url)
+
+
+@login_required
+def ler_todas(request):
+    if request.method == 'POST':
+        request.user.notifications.unread().mark_all_as_read()
+    next_url = request.GET.get('next') \
+               or request.POST.get('next') \
+               or request.META.get('HTTP_REFERER') \
+               or 'notificacoes:lista'
+    return redirect(next_url)

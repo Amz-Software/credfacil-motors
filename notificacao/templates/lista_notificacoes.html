@@ -1,0 +1,145 @@
+<!-- templates/notificacoes/lista_notificacoes.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-4">
+  <h3>Minhas Notificações</h3>
+
+  <form method="get" class="row g-2 mb-3">
+    <div class="col-md-6">
+      <input type="text" name="search" class="form-control" placeholder="Buscar..." value="{{ search }}">
+    </div>
+    <div class="col-md-3">
+      <select name="status" class="form-select">
+        <option value="">Todas</option>
+        <option value="nao_lida" {% if status == 'nao_lida' %}selected{% endif %}>Não lidas</option>
+        <option value="lida" {% if status == 'lida' %}selected{% endif %}>Lidas</option>
+      </select>
+    </div>
+    <div class="col-md-3">
+      <button class="btn btn-primary w-100" type="submit">Filtrar</button>
+    </div>
+  </form>
+
+<form method="post">
+  {% csrf_token %}
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <div>
+      <input type="checkbox" id="select-all"> 
+      <label for="select-all" class="ms-1">Selecionar todos</label>
+    </div>
+    <button type="submit" class="btn btn-sm btn-primary">
+      Marcar selecionadas como lidas
+    </button>
+  </div>
+
+  <ul class="list-group">
+    {% for n in notificacoes %}
+      <li
+        id="notificacao-{{ n.id }}"
+        class="list-group-item d-flex align-items-center justify-content-between py-2"
+        style="border-radius: .25rem; cursor: pointer;"
+        onclick="if (event.target.type !== 'checkbox') location.href='{% url 'notificacao_marcar_lida' n.id %}?next={{ n.target.get_absolute_url }}';"
+      >
+        <div class="d-flex align-items-center">
+          <!-- checkbox -->
+          <div class="form-check me-3">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              name="selected_notifications"
+              value="{{ n.id }}"
+              onclick="event.stopPropagation()"
+              {% if not n.unread %}disabled{% endif %}
+            >
+          </div>
+
+          <!-- indicador minimalista -->
+          {% if n.unread %}
+            <span class="bg-warning rounded-circle me-2" style="width:8px; height:8px; display:inline-block;"></span>
+          {% else %}
+            <span class="bg-transparent rounded-circle me-2" style="width:8px; height:8px; display:inline-block;"></span>
+          {% endif %}
+
+          <!-- texto -->
+          <div>
+            <div class="fw-semibold {% if n.unread %}text-dark{% else %}text-muted{% endif %}">
+              {{ n.verb }}
+            </div>
+            <small class="text-muted">{{ n.description }}</small>
+          </div>
+        </div>
+
+        <small class="text-muted">{{ n.timestamp|date:"d/m H:i" }}</small>
+      </li>
+    {% empty %}
+      <li class="list-group-item text-center text-muted">
+        Nenhuma notificação encontrada.
+      </li>
+    {% endfor %}
+  </ul>
+
+  {% if is_paginated %}
+    <nav class="mt-3">
+      <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}&search={{ search }}&status={{ status }}">Anterior</a>
+          </li>
+        {% endif %}
+        <li class="page-item disabled">
+          <span class="page-link">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+        </li>
+        {% if page_obj.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}&search={{ search }}&status={{ status }}">Próxima</a>
+          </li>
+        {% endif %}
+      </ul>
+    </nav>
+  {% endif %}
+</form>
+
+
+</div>
+
+<script>
+  function getCSRFToken() {
+    return document.cookie
+      .split('; ')
+      .find(row => row.startsWith('csrftoken='))
+      ?.split('=')[1];
+  }
+
+  document.querySelectorAll('.notification-item').forEach(elem => {
+    elem.addEventListener('click', function(e) {
+      const li = this.closest('li');
+      const id = this.dataset.id;
+      const targetUrl = this.dataset.url;
+      console.log("[Notificações] clicou em id =", id);
+
+      // Chama o marker e só redireciona após sucesso
+      fetch(`/notificacao/marcar-como-lida/${id}/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCSRFToken() },
+      })
+      .then(res => {
+        console.log("[Notificações] status", res.status);
+        if (res.ok) {
+          // Remove o ponto amarelo
+          li.querySelector('.status-indicator').classList.remove('bg-warning');
+          // Opcionalmente muda para cinza
+          li.querySelector('.status-indicator').classList.add('bg-transparent');
+        }
+      })
+      .catch(err => console.error("[Notificações] erro ao marcar:", err))
+      .finally(() => {
+        // Redireciona no fim
+        window.location.href = targetUrl;
+      });
+    });
+  });
+</script>
+
+
+{% endblock %}

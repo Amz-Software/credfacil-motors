@@ -148,29 +148,3 @@ def atualizar_estoque_apos_editar_venda(sender, created, instance, **kwargs):
                 raise Exception(f"Estoque não encontrado para o produto {instance.produto.nome} na loja {instance.loja}.")
             
             
-                
-@receiver(post_save, sender=EntradaEstoque)
-def notificar_administradores_entrada(sender, instance, created, **kwargs):
-    if created:
-        loja_nome = instance.loja.nome.capitalize()
-        criado_por = instance.criado_por.get_full_name()
-        criado_por = criado_por.capitalize() if criado_por else instance.criado_por.username.capitalize()
-        admins = User.objects.filter(groups__name__icontains="ADMINISTRADOR").exclude(id=instance.criado_por_id)
-        for admin in admins:
-            notificacoes = notify.send(
-                instance,
-                recipient=admin,
-                verb=f'Nova entrada de estoque registrada na {loja_nome.capitalize()} por {criado_por.capitalize()}',
-                description=f'Entrada {instance.numero_nota}',
-                target=instance,
-            )
-
-            # Extrai a notificação criada
-            notification = admin.notifications.unread().order_by('-timestamp').first()
-
-            if notification:
-                enviar_ws_para_usuario(admin, instance, notification.id, 
-                verb=f'Nova entrada de estoque registrada na {loja_nome.capitalize()} por {criado_por.capitalize()}', 
-                description=f'Entrada {instance.numero_nota}',
-                target_url=instance.get_absolute_url()
-                )

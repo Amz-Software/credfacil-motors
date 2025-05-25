@@ -152,9 +152,10 @@ class ContatoAdicionalForm(forms.ModelForm):
             if user and not user.has_perm('vendas.can_edit_finished_sale'):
                 if not self.instance.cliente.analise_credito.status == 'EA':
                     self.fields['nome_adicional'].disabled = True
-                    self.fields['contato'].disabled = True
                     self.fields['endereco_adicional'].disabled = True
                     self.fields['obteve_contato'].disabled = True
+                    if self.instance.cliente.analise_credito.venda:
+                        self.fields['contato'].disabled = True
 
 class InformacaoPessoalForm(forms.ModelForm):
     nome_pessoal = forms.CharField(label='Nome', widget=forms.TextInput(attrs={'class': 'form-control'}))
@@ -195,9 +196,11 @@ class InformacaoPessoalForm(forms.ModelForm):
             if user and not user.has_perm('vendas.can_edit_finished_sale'):
                 if not self.instance.cliente.analise_credito.status == 'EA':
                     self.fields['nome_pessoal'].disabled = True
-                    self.fields['contato_pessoal'].disabled = True
+                    # self.fields['contato_pessoal'].disabled = True
                     self.fields['endereco_pessoal'].disabled = True
                     self.fields['obteve_contato_pessoal'].disabled = True
+                    if self.instance.cliente.analise_credito.venda:
+                        self.fields['contato_pessoal'].disabled = True
         
     def save(self, commit=True):
         self.instance.nome = self.cleaned_data.get('nome_pessoal')
@@ -247,10 +250,11 @@ class AnaliseCreditoClienteForm(forms.ModelForm):
             if user and not user.has_perm('vendas.can_edit_finished_sale'):
                 if not self.instance.cliente.analise_credito.status == 'EA':
                     self.fields['produto'].disabled = True
-                    # self.fields['imei'].disabled = True
                     self.fields['numero_parcelas'].disabled = True
                     self.fields['data_pagamento'].disabled = True
                     self.fields['observacao'].disabled = True
+                    if self.instance.venda:
+                        self.fields['imei'].disabled = True
 
 
 

@@ -199,7 +199,13 @@
 
                 <ul class="dropdown-menu dropdown-menu-end shadow-sm p-2" aria-labelledby="notificacaoDropdown"
                   style="width: 300px; max-height: 400px; overflow-y: auto;">
-                  <li class="dropdown-header fw-bold text-dark border-bottom pb-2 mb-2">Notificações</li>
+                  <li class="dropdown-header fw-bold text-dark border-bottom pb-2 mb-2 d-flex justify-content-between align-items-center">
+                    <span>Notificações</span>
+                    <a href="{% url 'notificacao_list' %}" class="btn btn-sm btn-outline-primary px-2 py-0 d-flex align-items-center" style="font-size: 0.75rem;">
+                      <i class="bi bi-list-ul me-1"></i> Ver todas
+                    </a>
+                  </li>
+
 
                   {% for n in notificacoes_nao_lidas %}
                   <li class="mb-1">

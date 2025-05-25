@@ -5,13 +5,10 @@ from notifications.models import Notification
 from django.views import View
 from django.http import JsonResponse
 from django.utils.decorators import method_decorator
-
-class NotificacaoListView(ListView):
-    model = Notification
-    template_name = 'notificacao/lista.html'
-
-    def get_queryset(self):
-        return self.request.user.notifications.unread()
+from django.views.generic import ListView
+from django.db.models import Q
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import RedirectView
 
 @login_required
 def marcar_como_lida(request, pk):
@@ -32,3 +29,62 @@ class MarcarNotificacaoComoLidaView(View):
         notificacao = get_object_or_404(Notification, pk=pk, recipient=request.user)
         notificacao.mark_as_read()
         return JsonResponse({'status': 'ok'})
+    
+
+
+class NotificacaoListView(LoginRequiredMixin, ListView):
+    model = Notification
+    template_name = 'lista_notificacoes.html'
+    context_object_name = 'notificacoes'
+    paginate_by = 20
+
+    def get_queryset(self):
+        user = self.request.user
+        qs = Notification.objects.filter(recipient=user)
+        search = self.request.GET.get('search')
+        status = self.request.GET.get('status')
+        if search:
+            qs = qs.filter(Q(verb__icontains=search) | Q(description__icontains=search))
+        if status == 'nao_lida':
+            qs = qs.filter(unread=True)
+        elif status == 'lida':
+            qs = qs.filter(unread=False)
+        return qs.order_by('-timestamp')
+
+    def post(self, request, *args, **kwargs):
+        # IDs vindos do form
+        ids = request.POST.getlist('selected_notifications')
+        if ids:
+            # Apenas as do usuário e que estejam não lidas
+            notifs = Notification.objects.filter(
+                recipient=request.user,
+                id__in=ids,
+                unread=True
+            )
+            # marca todas como lidas
+            notifs.update(unread=False)
+        # volta pra mesma página, preservando filtros de GET
+        params = request.GET.urlencode()
+        url = request.path
+        if params:
+            url += f'?{params}'
+        return redirect(url)
+
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['search'] = self.request.GET.get('search', '')
+        context['status'] = self.request.GET.get('status', '')
+        return context
+
+
+class MarcarNotificacaoComoLidaRedirectView(LoginRequiredMixin, RedirectView):
+    permanent = False
+
+    def get_redirect_url(self, *args, **kwargs):
+        pk = kwargs['pk']
+        notif = get_object_or_404(Notification, pk=pk, recipient=self.request.user)
+        notif.mark_as_read()  # marca como lida
+        # pega o destino: parâmetro next ou o próprio target
+        destino = self.request.GET.get('next') or notif.target.get_absolute_url()
+        return destino

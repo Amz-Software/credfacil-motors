@@ -335,7 +335,6 @@ class ComprovantesClienteForm(forms.ModelForm):
                 self.fields['documento_identificacao_frente'].disabled = True
                 self.fields['documento_identificacao_verso'].disabled = True
                 self.fields['comprovante_residencia'].disabled = True
-                self.fields['consulta_serasa'].disabled = True
                 self.fields['foto_cliente'].disabled = True
                 
             if user and not user.has_perm('vendas.can_edit_finished_sale'):

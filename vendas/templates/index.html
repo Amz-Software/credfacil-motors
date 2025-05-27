@@ -265,29 +265,12 @@
     </div>
     {% endif %}
 
-    {% if user|has_perm:'vendas.can_view_all_dashboard' %}
-    <hr>
-    <h2 class="text-center">Dados Gerais</h2>
-    <div class="row mb-4">
-      <div class="col-12">
-        <div class="card shadow-sm border-0">
-          <div class="card-body">
-            <h4 class="card-title text-center mb-4">Balanço por Loja</h4>
-            <div class="d-flex justify-content-center">
-              <canvas id="graficoLojas" style="max-width: 600px; width: 100%;" height="200"></canvas>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    {% endif %}
-
   </div>
 </div>
 {% endblock %}
 {% block extra_scripts %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.min.js"></script>
-<script data-dados="{{ dash }}" data-lojas="{{ dados_lojas }}" type="text/javascript">
+<script data-dados="{{ dash }}" type="text/javascript">
   const dados = JSON.parse(document.currentScript.getAttribute('data-dados'));
   const ctx = document.getElementById('parcelasChart').getContext('2d');
 
@@ -344,70 +327,6 @@
           },
           max: 100
         },
-      }
-    }
-  });
-
-  const dadosLojas = JSON.parse(document.currentScript.getAttribute('data-lojas'));
-  const labels = Object.keys(dadosLojas);
-  const pctPagas = labels.map(loja => dadosLojas[loja].pct_pagas);
-  const pctVencidas = labels.map(loja => dadosLojas[loja].pct_vencidas);
-  const totalPagas = labels.map(loja => dadosLojas[loja].total_pagas);
-  const totalVencidas = labels.map(loja => dadosLojas[loja].total_vencidas);
-  const totais = labels.map(loja =>
-    dadosLojas[loja].total_pagas + dadosLojas[loja].total_vencidas
-  );
-  const ctxLojas = document.getElementById('graficoLojas').getContext('2d');
-
-  const grafico = new Chart(ctxLojas, {
-    type: 'bar',
-    data: {
-      labels: labels,
-      datasets: [
-        {
-          label: '% Pagas',
-          data: pctPagas,
-          totalValores: totalPagas,
-          backgroundColor: 'rgba(75, 192, 192, 0.6)',
-          stack: 'percentual'
-        },
-        {
-          label: '% Vencidas',
-          data: pctVencidas,
-          totalValores: totalVencidas,
-          backgroundColor: 'rgba(255, 99, 132, 0.6)',
-          stack: 'percentual'
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      scales: {
-        x: {
-          stacked: true
-        },
-        y: {
-          stacked: true,
-          beginAtZero: true,
-          max: 100,
-          ticks: {
-            callback: value => value + '%'
-          }
-        }
-      },
-      plugins: {
-        tooltip: {
-          callbacks: {
-            label: function(context) {
-              const loja = context.label;
-              const percentual = context.parsed.y;
-              const valor = context.dataset.totalValores[context.dataIndex];
-              const total = totais[context.dataIndex];
-
-              return `${context.dataset.label}: ${percentual}% (R$ ${valor.toLocaleString('pt-BR')})\nTotal Loja: R$ ${total.toLocaleString('pt-BR')}`;
-            }
-          }
-        }
       }
     }
   });

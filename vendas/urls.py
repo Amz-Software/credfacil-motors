@@ -113,4 +113,6 @@ urlpatterns = [
         name='cliente_status_app_update'
     ),
 
+    path('graficos/', GraficoTemplateView.as_view(), name='grafico'),
+
 ]

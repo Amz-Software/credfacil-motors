@@ -98,11 +98,13 @@ class IndexView(LoginRequiredMixin, TemplateView):
         if self.request.user.has_perm('vendas.can_view_your_dashboard'):
             vendas = Venda.objects.filter(loja=loja)
 
-            total_pagas = 0
-            total_vencidas = 0
             total_vendas = vendas.count()
             total_de_parcelas_vencidas = 0
             total_de_parcelas_pagas = 0
+            total_de_parcelas_a_vencer = 0
+            total_pagas = 0
+            total_vencidas = 0
+            total_a_vencer = 0
             total_geral_parcelas = 0
 
             for venda in vendas: 
@@ -113,81 +115,46 @@ class IndexView(LoginRequiredMixin, TemplateView):
 
                 parcelas_vencidas = [p for p in parcelas if p.data_vencimento < timezone.now().date() and not p.pago and not p.pagamento_efetuado]
                 parcelas_pagas = [p for p in parcelas if p.pago and not p.pagamento_efetuado]
+                parcelas_a_vencer = [p for p in parcelas if p.data_vencimento >= timezone.now().date() and not p.pago and not p.pagamento_efetuado]
+
                 total_geral_parcelas += len(parcelas)
 
                 qtd_vencidas = len(parcelas_vencidas)
                 qtd_pagas = len(parcelas_pagas)
-
-                valor_vencidas = sum(p.valor for p in parcelas_vencidas)
-                valor_pagas = sum(p.valor for p in parcelas_pagas)
+                qtd_a_vencer = len(parcelas_a_vencer)
 
                 total_de_parcelas_vencidas += qtd_vencidas
                 total_de_parcelas_pagas += qtd_pagas
-                total_vencidas += valor_vencidas
-                total_pagas += valor_pagas
-                
-            total_geral = float(total_pagas) + float(total_vencidas)
-            pct_pagas = round((float(total_pagas) / total_geral * 100), 2) if total_geral else 0
-            pct_vencidas = round((float(total_vencidas) / total_geral * 100), 2) if total_geral else 0
+                total_de_parcelas_a_vencer += qtd_a_vencer
 
-            context['total_vendas_loja'] = total_vendas
-            context['total_de_parcelas'] = total_de_parcelas_vencidas + total_de_parcelas_pagas
-            context['total_de_parcelas_geral'] = total_geral_parcelas
-            context['valor_total_parcelas'] = total_geral
-            context['valor_total_pagas'] = float(total_pagas)
-            context['valor_total_vencidas'] = float(total_vencidas)
+                valor_vencidas = sum(p.valor for p in parcelas_vencidas)
+                valor_pagas = sum(p.valor for p in parcelas_pagas)
+                valor_a_vencer = sum(p.valor for p in parcelas_a_vencer)    
+
+                total_pagas += valor_pagas
+                total_vencidas += valor_vencidas
+                total_a_vencer += valor_a_vencer
+
+
+            context['total_vendas_loja'] = total_vendas # quantidade de vendas
+            context['total_de_parcelas_geral'] = total_geral_parcelas # quantidade total de parcelas
+            context['parcelas_vencidas'] = total_de_parcelas_vencidas # quantidade de parcelas vencidas
+            context['parcelas_pagas'] = total_de_parcelas_pagas # quantidade de parcelas pagas
+            context['parcelas_a_vencer'] = total_de_parcelas_a_vencer  # quantidade de parcelas a vencer
+
+            context['total_geral_parcelas'] = total_pagas + total_vencidas + total_a_vencer # valor total de parcelas
+            context['total_pagas'] = total_pagas # valor total de parcelas pagas
+            context['total_vencidas'] = total_vencidas # valor total de parcelas vencidas
+            context['total_a_vencer'] = total_a_vencer # valor total de parcelas a vencer
+
+            total_geral_grafico = float(total_pagas) + float(total_vencidas) + float(total_a_vencer)
+            pct_pagas = round((float(total_pagas) / total_geral_grafico * 100), 2) if total_geral_grafico else 0
+            pct_vencidas = round((float(total_vencidas) / total_geral_grafico * 100), 2) if total_geral_grafico else 0
+
             context['dash'] = json.dumps({
                 'labels': ['Pagas', 'Vencidas'],
                 'data': [pct_pagas, pct_vencidas],
             })
-
-        if self.request.user.has_perm('vendas.can_view_all_dashboard'):
-            valores_por_loja = defaultdict(lambda: {
-                'total_pagas': 0,
-                'total_vencidas': 0,
-                'qtd_pagas': 0,
-                'qtd_vencidas': 0,
-                'total_vendas': 0,
-            })
-            vendas = Venda.objects.all()
-
-            for venda in vendas.select_related('loja'):  # otimiza acesso à loja
-                loja_nome = venda.loja.nome  
-                valores_por_loja[loja_nome]['total_vendas'] += 1
-
-                parcelas = Parcela.objects.filter(pagamento__venda=venda, pagamento__tipo_pagamento__nome='CREDFACIL').order_by('data_vencimento')[:3]
-
-                parcelas = list(Parcela.objects.filter(
-                    pagamento__venda=venda,
-                    pagamento__tipo_pagamento__nome='CREDFACIL'
-                ).order_by('data_vencimento')[:3])
-
-                parcelas_vencidas = [p for p in parcelas if p.data_vencimento < timezone.now().date() and not p.pago and not p.pagamento_efetuado]
-                parcelas_pagas = [p for p in parcelas if p.pago and not p.pagamento_efetuado]
-
-                qtd_vencidas = len(parcelas_vencidas)
-                qtd_pagas = len(parcelas_pagas)
-
-                valor_vencidas = sum(p.valor for p in parcelas_vencidas)
-                valor_pagas = sum(p.valor for p in parcelas_pagas)
-
-                # Totais por loja
-                valores_por_loja[loja_nome]['qtd_vencidas'] += qtd_vencidas
-                valores_por_loja[loja_nome]['qtd_pagas'] += qtd_pagas
-                valores_por_loja[loja_nome]['total_vencidas'] += valor_vencidas
-                valores_por_loja[loja_nome]['total_pagas'] += valor_pagas
-
-            # Calcula porcentagem para cada loja
-            for loja_nome, valores in valores_por_loja.items():
-                total_geral = valores['total_pagas'] + valores['total_vencidas']
-                if total_geral > 0:
-                    valores['pct_pagas'] = round((valores['total_pagas'] / total_geral) * 100, 2)
-                    valores['pct_vencidas'] = round((valores['total_vencidas'] / total_geral) * 100, 2)
-                else:
-                    valores['pct_pagas'] = 0
-                    valores['pct_vencidas'] = 0
-
-            context['dados_lojas'] = json.dumps(valores_por_loja, default=str)
 
         context['loja'] = loja
         context['caixa_diario'] = caixa_diario_loja
@@ -2315,4 +2282,78 @@ class InformarTodosPagamentosView(View):
         messages.success(request, msg)
         return redirect('vendas:pagamento_detail', pk=pagamento.pk)
     
-    
+class GraficoTemplateView(TemplateView):
+    template_name = 'dash/index.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        loja_get = self.request.GET.get('loja')
+        loja = Loja.objects.filter(id=loja_get) if loja_get else Loja.objects.all()
+
+        vendas = Venda.objects.filter(is_deleted=False, loja__in=loja)
+        parcelas_qs = Parcela.objects.filter(
+            pagamento__venda__in=vendas,
+            pagamento__tipo_pagamento__nome='CREDFACIL'
+        ).select_related('pagamento', 'pagamento__venda')
+
+        parcelas_por_venda = defaultdict(list)
+
+        for parcela in parcelas_qs:
+            parcelas_por_venda[parcela.pagamento.venda_id].append(parcela)
+
+        total_vendas = vendas.count()
+        total_de_parcelas_vencidas = total_de_parcelas_pagas = total_de_parcelas_a_vencer = 0
+        total_pagas = total_vencidas = total_a_vencer = total_geral_parcelas = 0
+
+        valores_por_loja = defaultdict(lambda: {
+            'total_pagas': 0, 'total_vencidas': 0, 'total_a_vencer': 0,
+        })
+
+        for venda in vendas:
+            loja_nome = venda.loja.nome if venda.loja else 'Desconhecida'
+            parcelas = parcelas_por_venda.get(venda.id, [])
+
+            parcelas_vencidas = [p for p in parcelas if p.data_vencimento < timezone.now().date() and not p.pago and not p.pagamento_efetuado]
+            parcelas_pagas = [p for p in parcelas if p.pago and not p.pagamento_efetuado]
+            parcelas_a_vencer = [p for p in parcelas if p.data_vencimento >= timezone.now().date() and not p.pago and not p.pagamento_efetuado]
+
+            total_geral_parcelas += len(parcelas)
+            qtd_vencidas, qtd_pagas, qtd_a_vencer = len(parcelas_vencidas), len(parcelas_pagas), len(parcelas_a_vencer)
+
+            total_de_parcelas_vencidas += qtd_vencidas
+            total_de_parcelas_pagas += qtd_pagas
+            total_de_parcelas_a_vencer += qtd_a_vencer
+
+            valor_vencidas = sum(p.valor for p in parcelas_vencidas)
+            valor_pagas = sum(p.valor for p in parcelas_pagas)
+            valor_a_vencer = sum(p.valor for p in parcelas_a_vencer)
+
+            total_vencidas += valor_vencidas
+            total_pagas += valor_pagas
+            total_a_vencer += valor_a_vencer
+
+            valores_por_loja[loja_nome]['total_a_vencer'] += valor_a_vencer
+            valores_por_loja[loja_nome]['total_vencidas'] += valor_vencidas
+            valores_por_loja[loja_nome]['total_pagas'] += valor_pagas
+
+        for loja_nome, valores in valores_por_loja.items():
+            total_geral = valores['total_pagas'] + valores['total_vencidas'] + valores['total_a_vencer']
+            valores['pct_pagas'] = round((valores['total_pagas'] / total_geral) * 100, 2) if total_geral else 0
+            valores['pct_vencidas'] = round((valores['total_vencidas'] / total_geral) * 100, 2) if total_geral else 0
+
+        context.update({
+            'loja_get': int(loja_get) if loja_get else None,
+            'lojas': Loja.objects.all(),
+            'total_vendas_loja': total_vendas,
+            'total_de_parcelas_geral': total_geral_parcelas,
+            'parcelas_vencidas': total_de_parcelas_vencidas,
+            'parcelas_pagas': total_de_parcelas_pagas,
+            'parcelas_a_vencer': total_de_parcelas_a_vencer,
+            'valor_total_parcelas': total_pagas + total_vencidas + total_a_vencer,
+            'total_pagas': total_pagas,
+            'total_vencidas': total_vencidas,
+            'total_a_vencer': total_a_vencer,
+            'dados_lojas': json.dumps(valores_por_loja, default=str),
+        })
+
+        return context

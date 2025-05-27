@@ -43,6 +43,13 @@ def menu_items(request):
             "url_name": "vendas:caixa_list",
             "section": "Vendas"
         },
+        {          
+            "label": "Gráfico",
+            "icon": "bx bx-chart",
+            "permission": "vendas.can_view_all_dashboard",
+            "url_name": "vendas:grafico",
+            "section": "Gráfico"
+        },
         {
             "label": "Estoque",
             "icon": "bx bx-box",

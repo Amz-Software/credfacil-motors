@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+{% load static iam_tags %}
+{% load humanize %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <form method="get" class="mb-3 d-flex justify-content-center align-items-center gap-2">
+                <label for="loja-select" class="form-label mb-0">Filtrar por loja:</label>
+                <select id="loja-select" name="loja" class="form-select w-auto">
+                    <option value="">Todas</option>
+                    {% for loja in lojas %}
+                        <option value="{{ loja.id }}"{% if loja.id == loja_get %} selected{% endif %}>{{ loja.nome|title }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="btn btn-primary">Filtrar</button>
+            </form>
+        </div>
+    </div>
+    <!-- KPIs Grid -->
+    <div class="row g-4 mb-5">
+        {% comment %} KPIs agrupados por categoria {% endcomment %}
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card kpi-card shadow-sm h-100 border-0">
+                <div class="card-body d-flex align-items-center">
+                    <span class="avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width:56px;height:56px;">
+                        <i class="bx bx-bar-chart-alt-2 fs-2"></i>
+                    </span>
+                    <div>
+                        <h6 class="card-title mb-1 text-muted">Total de Vendas</h6>
+                        <h3 class="mb-0 fw-bold" id="kpi-total-vendas">{{ total_vendas_loja|default:"0" }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card kpi-card shadow-sm h-100 border-0">
+                <div class="card-body d-flex align-items-center">
+                    <span class="avatar bg-info text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width:56px;height:56px;">
+                        <i class="bx bx-list-ol fs-2"></i>
+                    </span>
+                    <div>
+                        <h6 class="card-title mb-1 text-muted">Total de Parcelas</h6>
+                        <h3 class="mb-0 fw-bold" id="kpi-total-parcelas">{{ total_de_parcelas_geral|default:"0" }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card kpi-card shadow-sm h-100 border-0">
+                <div class="card-body d-flex align-items-center">
+                    <span class="avatar bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width:56px;height:56px;">
+                        <i class="bx bx-wallet fs-2"></i>
+                    </span>
+                    <div>
+                        <h6 class="card-title mb-1 text-muted">Valor Total</h6>
+                        <div class="small text-muted mb-1">pagas + vencidas + a vencer</div>
+                        <h3 class="mb-0 fw-bold" id="kpi-total-parcelas">{{valor_total_parcelas|intcomma}}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Pagas -->
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card kpi-card shadow-sm h-100 border-0">
+                <div class="card-body d-flex align-items-center">
+                    <span class="avatar bg-success text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width:56px;height:56px;">
+                        <i class="bx bx-money fs-2"></i>
+                    </span>
+                    <div>
+                        <h6 class="card-title mb-1 text-muted">Parcelas Pagas</h6>
+                        <h3 class="mb-0 fw-bold" id="kpi-total-parcelas">{{ parcelas_pagas|intcomma }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card kpi-card shadow-sm h-100 border-0">
+                <div class="card-body d-flex align-items-center">
+                    <span class="avatar bg-success text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width:56px;height:56px;">
+                        <i class="bx bx-credit-card fs-2"></i>
+                    </span>
+                    <div>
+                        <h6 class="card-title mb-1 text-muted">Valor Pago</h6>
+                        <h3 class="mb-0 fw-bold" id="kpi-total-parcelas">{{ total_pagas|intcomma }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Vencidas -->
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card kpi-card shadow-sm h-100 border-0">
+                <div class="card-body d-flex align-items-center">
+                    <span class="avatar bg-danger text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width:56px;height:56px;">
+                        <i class="bx bx-error-circle fs-2"></i>
+                    </span>
+                    <div>
+                        <h6 class="card-title mb-1 text-muted">Parcelas Vencidas</h6>
+                        <h3 class="mb-0 fw-bold" id="kpi-total-parcelas">{{ parcelas_vencidas|default:"0" }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card kpi-card shadow-sm h-100 border-0">
+                <div class="card-body d-flex align-items-center">
+                    <span class="avatar bg-danger text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width:56px;height:56px;">
+                        <i class="bx bx-money-withdraw fs-2"></i>
+                    </span>
+                    <div>
+                        <h6 class="card-title mb-1 text-muted">Valor Parcelas Vencidas</h6>
+                        <h3 class="mb-0 fw-bold" id="kpi-total-parcelas">{{ total_vencidas|intcomma }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- A vencer -->
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card kpi-card shadow-sm h-100 border-0">
+                <div class="card-body d-flex align-items-center">
+                    <span class="avatar bg-warning text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width:56px;height:56px;">
+                        <i class="bx bx-time-five fs-2"></i>
+                    </span>
+                    <div>
+                        <h6 class="card-title mb-1 text-muted">Parcelas a Vencer</h6>
+                        <h3 class="mb-0 fw-bold" id="kpi-total-parcelas">{{ parcelas_a_vencer|default:"0" }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card kpi-card shadow-sm h-100 border-0">
+                <div class="card-body d-flex align-items-center">
+                    <span class="avatar bg-warning text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width:56px;height:56px;">
+                        <i class="bx bx-wallet-alt fs-2"></i>
+                    </span>
+                    <div>
+                        <h6 class="card-title mb-1 text-muted">Valor Parcelas a Vencer</h6>
+                        <h3 class="mb-0 fw-bold" id="kpi-total-parcelas">{{ total_a_vencer|intcomma }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Dados Gerais -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <h4 class="card-title text-center mb-4">Balanço por Loja</h4>
+                    <div class="d-flex justify-content-center">
+                        <canvas id="graficoLojas" width="200"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.min.js"></script>
+<script data-lojas="{{ dados_lojas }}" type="text/javascript">
+    const dadosLojas = JSON.parse(document.currentScript.getAttribute('data-lojas'));
+    const labels = Object.keys(dadosLojas);
+    const pctPagas = labels.map(loja => dadosLojas[loja].pct_pagas);
+    const pctVencidas = labels.map(loja => dadosLojas[loja].pct_vencidas);
+    const totalPagas = labels.map(loja => dadosLojas[loja].total_pagas);
+    const totalVencidas = labels.map(loja => dadosLojas[loja].total_vencidas);
+    const totais = labels.map(loja =>
+        Number(dadosLojas[loja].total_pagas) + Number(dadosLojas[loja].total_vencidas) + Number(dadosLojas[loja].total_a_vencer)
+    );
+    const ctxLojas = document.getElementById('graficoLojas').getContext('2d');
+
+    const grafico = new Chart(ctxLojas, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: '% Pagas',
+                    data: pctPagas,
+                    totalValores: totalPagas,
+                    backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                    stack: 'percentual'
+                },
+                {
+                    label: '% Vencidas',
+                    data: pctVencidas,
+                    totalValores: totalVencidas,
+                    backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                    stack: 'percentual'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                x: {
+                    stacked: true
+                },
+                y: {
+                    stacked: true,
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: {
+                        callback: value => value + '%'
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function (context) {
+                            const loja = context.label;
+                            const percentual = context.parsed.y;
+                            const valor = context.dataset.totalValores[context.dataIndex];
+                            const total = totais[context.dataIndex];
+
+                            return `${context.dataset.label}: ${percentual}% (R$ ${valor.toLocaleString('pt-BR')})\nTotal Loja: R$ ${total.toLocaleString('pt-BR')}`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

@@ -95,110 +95,162 @@
     {% if user|has_perm:'vendas.can_view_your_dashboard' %}
     <div class="row g-4 align-items-stretch mb-4">
       <hr>
-      <h2 class="text-center">Loja {{ loja|title }}</h2>
-      <div class="col-md-4">
-        <div class="card kpi-card shadow-sm h-100 border-0">
-          <div class="card-body d-flex align-items-center">
-            <div class="me-3">
-              <span class="avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center"
-                style="width:56px;height:56px;">
-                <i class="bx bx-bar-chart-alt-2 fs-2"></i>
-              </span>
-            </div>
-            <div>
-              <h6 class="card-title mb-1 text-muted">Total de Vendas</h6>
-              <h3 class="mb-0 fw-bold" id="kpi-total-vendas">{{ total_vendas_loja|default:"0" }}</h3>
-            </div>
-          </div>
+      <h2 class="text-center mb-4">Loja {{ loja|title }}</h2>
+      <!-- KPIs: 3 por linha em desktop, 2 em tablet, 1 em mobile -->
+      <div class="col-12 col-md-6 col-lg-4">
+      <div class="card kpi-card shadow-sm h-100 border-0">
+        <div class="card-body d-flex align-items-center">
+        <div class="me-3">
+          <span class="avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center"
+          style="width:56px;height:56px;">
+          <i class="bx bx-bar-chart-alt-2 fs-2"></i>
+          </span>
+        </div>
+        <div>
+          <h6 class="card-title mb-1 text-muted">Total de Vendas</h6>
+          <h3 class="mb-0 fw-bold" id="kpi-total-vendas">{{ total_vendas_loja|default:"0" }}</h3>
+        </div>
         </div>
       </div>
-      <div class="col-md-4">
-        <div class="card kpi-card shadow-sm h-100 border-0">
-          <div class="card-body d-flex align-items-center">
-            <div class="me-3">
-              <span class="avatar bg-info text-white rounded-circle d-flex align-items-center justify-content-center"
-                style="width:56px;height:56px;">
-                <i class="bx bx-list-ol fs-2"></i>
-              </span>
-            </div>
-            <div>
-              <h6 class="card-title mb-1 text-muted">Total de Parcelas</h6>
-              <div class="small text-muted mb-1">Todas as 3 primeiras parcelas</div>
-              <h3 class="mb-0 fw-bold" id="kpi-total-parcelas">{{ total_de_parcelas_geral|default:"0" }}</h3>
-            </div>
-          </div>
+      </div>
+      <div class="col-12 col-md-6 col-lg-4">
+      <div class="card kpi-card shadow-sm h-100 border-0">
+        <div class="card-body d-flex align-items-center">
+        <div class="me-3">
+          <span class="avatar bg-info text-white rounded-circle d-flex align-items-center justify-content-center"
+          style="width:56px;height:56px;">
+          <i class="bx bx-list-ol fs-2"></i>
+          </span>
+        </div>
+        <div>
+          <h6 class="card-title mb-1 text-muted">Total de Parcelas</h6>
+          <div class="small text-muted mb-1">Todas as 3 primeiras parcelas</div>
+          <h3 class="mb-0 fw-bold" id="kpi-total-parcelas">{{ total_de_parcelas_geral|default:"0" }}</h3>
+        </div>
         </div>
       </div>
-      <div class="col-md-4">
-        <div class="card kpi-card shadow-sm h-100 border-0">
-          <div class="card-body d-flex align-items-center">
-            <div class="me-3">
-              <span class="avatar bg-info text-white rounded-circle d-flex align-items-center justify-content-center"
-                style="width:56px;height:56px;">
-                <i class="bx bx-list-ol fs-2"></i>
-              </span>
-            </div>
-            <div>
-              <h6 class="card-title mb-1 text-muted">Total de Parcelas</h6>
-              <div class="small text-muted mb-1">3 primeiras (pagas + a vencer)</div>
-              <h3 class="mb-0 fw-bold" id="kpi-total-parcelas">{{ total_de_parcelas|default:"0" }}</h3>
-            </div>
-          </div>
+      </div>
+      <div class="col-12 col-md-6 col-lg-4">
+      <div class="card kpi-card shadow-sm h-100 border-0">
+        <div class="card-body d-flex align-items-center">
+        <div class="me-3">
+          <span class="avatar bg-info text-white rounded-circle d-flex align-items-center justify-content-center"
+          style="width:56px;height:56px;">
+          <i class="bx bx-list-ol fs-2"></i>
+          </span>
+        </div>
+        <div>
+          <h6 class="card-title mb-1 text-muted">Valor Total</h6>
+          <div class="small text-muted mb-1">3 primeiras parcelas (pagas + vencidas + a vencer)</div>
+          <h3 class="mb-0 fw-bold" id="kpi-total-parcelas">{{total_geral_parcelas|intcomma}}</h3>
+        </div>
         </div>
       </div>
-      <div class="col-md-4">
-        <div class="card kpi-card shadow-sm h-100 border-0">
-          <div class="card-body d-flex align-items-center">
-            <div class="me-3">
-              <span class="avatar bg-success text-white rounded-circle d-flex align-items-center justify-content-center"
-                style="width:56px;height:56px;">
-                <i class="bx bx-money fs-2"></i>
-              </span>
-            </div>
-            <div>
-              <h6 class="card-title mb-1 text-muted">Valor Total Parcelas</h6>
-              <div class="small text-muted mb-1">3 primeiras (pagas + a vencer)</div>
-              <h3 class="mb-0 fw-bold" id="kpi-total-parcelas">{{ valor_total_parcelas|intcomma }}</h3>
-            </div>
-          </div>
+      </div>
+      <div class="col-12 col-md-6 col-lg-4">
+      <div class="card kpi-card shadow-sm h-100 border-0">
+        <div class="card-body d-flex align-items-center">
+        <div class="me-3">
+          <span class="avatar bg-success text-white rounded-circle d-flex align-items-center justify-content-center"
+          style="width:56px;height:56px;">
+          <i class="bx bx-money fs-2"></i>
+          </span>
+        </div>
+        <div>
+          <h6 class="card-title mb-1 text-muted">Parcelas Pagas</h6>
+          <div class="small text-muted mb-1">3 primeiras Parcelas</div>
+          <h3 class="mb-0 fw-bold" id="kpi-total-parcelas">{{ parcelas_pagas|intcomma }}</h3>
+        </div>
         </div>
       </div>
-      <div class="col-md-4">
-        <div class="card kpi-card shadow-sm h-100 border-0">
-          <div class="card-body d-flex align-items-center">
-            <div class="me-3">
-              <span
-                class="avatar bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center"
-                style="width:56px;height:56px;">
-                <i class="bx bx-check-circle fs-2"></i>
-              </span>
-            </div>
-            <div>
-              <h6 class="card-title mb-1 text-muted">Valor Parcelas Pagas</h6>
-              <h3 class="mb-0 fw-bold" id="kpi-total-parcelas">{{ valor_total_pagas|intcomma }}</h3>
-              <div class="small text-muted mb-1">3 primeiras (pagas)</div>
-            </div>
-          </div>
+      </div>
+      <div class="col-12 col-md-6 col-lg-4">
+      <div class="card kpi-card shadow-sm h-100 border-0">
+        <div class="card-body d-flex align-items-center">
+        <div class="me-3">
+          <span class="avatar bg-success text-white rounded-circle d-flex align-items-center justify-content-center"
+          style="width:56px;height:56px;">
+          <i class="bx bx-money fs-2"></i>
+          </span>
+        </div>
+        <div>
+          <h6 class="card-title mb-1 text-muted">Valor Pago</h6>
+          <h3 class="mb-0 fw-bold" id="kpi-total-parcelas">{{ total_pagas|intcomma }}</h3>
+          <div class="small text-muted mb-1">3 primeiras parcelas</div>
+        </div>
         </div>
       </div>
-      <div class="col-md-4">
-        <div class="card kpi-card shadow-sm h-100 border-0">
-          <div class="card-body d-flex align-items-center">
-            <div class="me-3">
-              <span class="avatar bg-danger text-white rounded-circle d-flex align-items-center justify-content-center"
-                style="width:56px;height:56px;">
-                <i class="bx bx-error-circle fs-2"></i>
-              </span>
-            </div>
-            <div>
-              <h6 class="card-title mb-1 text-muted">Valor Parcelas Vencidas</h6>
-              <h3 class="mb-0 fw-bold" id="kpi-total-parcelas">{{ valor_total_vencidas|intcomma }}</h3>
-              <div class="small text-muted mb-1">3 primeiras (vencidas)</div>
-            </div>
-          </div>
+      </div>
+      <div class="col-12 col-md-6 col-lg-4">
+      <div class="card kpi-card shadow-sm h-100 border-0">
+        <div class="card-body d-flex align-items-center">
+        <div class="me-3">
+          <span class="avatar bg-danger text-white rounded-circle d-flex align-items-center justify-content-center"
+          style="width:56px;height:56px;">
+          <i class="bx bx-error-circle fs-2"></i>
+          </span>
         </div>
+        <div>
+          <h6 class="card-title mb-1 text-muted">Parcelas Vencidas</h6>
+          <h3 class="mb-0 fw-bold" id="kpi-total-parcelas">{{ parcelas_vencidas|default:"0" }}</h3>
+          <div class="small text-muted mb-1">3 primeiras parcelas</div>
+        </div>
+        </div>
+      </div>
+      </div>
+      <div class="col-12 col-md-6 col-lg-4">
+      <div class="card kpi-card shadow-sm h-100 border-0">
+        <div class="card-body d-flex align-items-center">
+        <div class="me-3">
+          <span class="avatar bg-danger text-white rounded-circle d-flex align-items-center justify-content-center"
+          style="width:56px;height:56px;">
+          <i class="bx bx-error-circle fs-2"></i>
+          </span>
+        </div>
+        <div>
+          <h6 class="card-title mb-1 text-muted">Valor Parcelas Vencidas</h6>
+          <h3 class="mb-0 fw-bold" id="kpi-total-parcelas">{{ total_vencidas|intcomma }}</h3>
+          <div class="small text-muted mb-1">3 primeiras parcelas</div>
+        </div>
+        </div>
+      </div>
+      </div>
+      <div class="col-12 col-md-6 col-lg-4">
+      <div class="card kpi-card shadow-sm h-100 border-0">
+        <div class="card-body d-flex align-items-center">
+        <div class="me-3">
+          <span class="avatar bg-warning text-white rounded-circle d-flex align-items-center justify-content-center"
+          style="width:56px;height:56px;">
+          <i class="bx bx-time-five fs-2"></i>
+          </span>
+        </div>
+        <div>
+          <h6 class="card-title mb-1 text-muted">Parcelas a Vencer</h6>
+          <h3 class="mb-0 fw-bold" id="kpi-total-parcelas">{{ parcelas_a_vencer|default:"0" }}</h3>
+          <div class="small text-muted mb-1">3 primeiras parcelas</div>
+        </div>
+        </div>
+      </div>
+      </div>
+      <div class="col-12 col-md-6 col-lg-4">
+      <div class="card kpi-card shadow-sm h-100 border-0">
+        <div class="card-body d-flex align-items-center">
+        <div class="me-3">
+          <span class="avatar bg-warning text-white rounded-circle d-flex align-items-center justify-content-center"
+          style="width:56px;height:56px;">
+          <i class="bx bx-time-five fs-2"></i>
+          </span>
+        </div>
+        <div>
+          <h6 class="card-title mb-1 text-muted">Valor Parcelas a Vencer</h6>
+          <h3 class="mb-0 fw-bold" id="kpi-total-parcelas">{{ total_a_vencer|intcomma }}</h3>
+          <div class="small text-muted mb-1">3 primeiras parcelas</div>
+        </div>
+        </div>
+      </div>
       </div>
     </div>
+
     <div class="row mb-4">
       <div class="col-12">
         <div class="card shadow-sm border-0">

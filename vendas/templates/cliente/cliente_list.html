@@ -155,7 +155,7 @@ Clientes
                   <i class="bx bx-dots-vertical-rounded"></i>
                 </button>
                 <div class="dropdown-menu">
-                  {% if user|has_perm:"vendas.change_cliente" and cliente.analise_credito.status == 'EA' %}
+                  {% if user|has_perm:"vendas.change_cliente" %}
                   <a
                     class="dropdown-item d-flex align-items-center"
                     href="{% url 'vendas:cliente_update' cliente.pk %}"

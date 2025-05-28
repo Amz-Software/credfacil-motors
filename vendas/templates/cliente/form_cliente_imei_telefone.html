@@ -87,6 +87,9 @@
             <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-dados" type="button">Dados</button>
           </li>
           <li class="nav-item" role="presentation">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-comprovantes" type="button">Comprovantes</button>
+          </li>
+          <li class="nav-item" role="presentation">
             <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-analise" type="button">Produto</button>
           </li>
         </ul>
@@ -118,6 +121,54 @@
                     </div>
                   </div>
                 {% endif %}
+              {% endfor %}
+            </div>
+
+            <h3 class="mt-3">Informações Comerciais</h3>
+            <hr>
+            <div class="row">
+                {% for field in form_adicional %}
+                    <div class="col-md-6">
+                        <div class="form-group mt-3">
+                            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            {{ field }}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <h3 class="mt-3">Informações Pessoais</h3>
+            <hr>
+            <div class="row">
+                {% for field in form_informacao %}
+                    <div class="col-md-6">
+                        <div class="form-group mt-3">
+                            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            {{ field }}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+          </div>
+
+          <!-- ABA COMPROVANTES -->
+          <div class="tab-pane fade" id="tab-comprovantes" role="tabpanel">
+            <h5>Comprovantes</h5><hr>
+            <div class="row">
+              {% for field in form_comprovantes %}
+                <div class="col-md-12 mb-3">
+                  <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                  {% if field.field.widget.input_type == 'checkbox' %}
+                    <input type="hidden" name="{{ field.html_name }}" value="False">
+                  {% endif %}
+                  {% if field.value and field.field.widget.input_type != 'checkbox' %}
+                    <a href="{{ field.value.url }}" target="_blank" class="d-block mb-2">
+                      <img src="{{ field.value.url }}" class="img-thumbnail" style="max-height:100px;">
+                    </a>
+                    <small>Escolha um novo arquivo se quiser substituir.</small>
+                  {% endif %}
+                  {{ field }}
+                </div>
               {% endfor %}
             </div>
           </div>

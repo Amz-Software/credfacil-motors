@@ -12,7 +12,7 @@ from estoque.models import Estoque, EstoqueImei
 from financeiro.forms import RepasseForm
 from financeiro.models import Repasse
 from produtos.models import Produto
-from vendas.forms import AnaliseCreditoClienteForm, ClienteConsultaForm, ClienteForm, ComprovantesClienteForm, ContatoAdicionalForm, FormaPagamentoEditFormSet, InformacaoPessoalForm, LojaForm, ProdutoVendaEditFormSet, RelatorioSolicitacoesForm, RelatorioVendasForm, VendaForm, ProdutoVendaFormSet, FormaPagamentoFormSet, LancamentoForm, LancamentoCaixaTotalForm
+from vendas.forms import AnaliseCreditoClienteForm, ClienteConsultaForm, ClienteForm, ComprovantesClienteForm, ContatoAdicionalForm, FormaPagamentoEditFormSet, InformacaoPessoalForm, LojaForm, ProdutoVendaEditFormSet, RelatorioSolicitacoesForm, RelatorioVendasForm, VendaForm, ProdutoVendaFormSet, FormaPagamentoFormSet, LancamentoForm, LancamentoCaixaTotalForm, ClienteTelefoneForm, AnaliseCreditoClienteImeiForm
 from .models import AnaliseCreditoCliente, Caixa, Cliente, Loja, Pagamento, Parcela, ProdutoVenda, TipoPagamento, Venda, LancamentoCaixa, LancamentoCaixaTotal
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.utils import timezone
@@ -529,9 +529,6 @@ class ClienteCreateView(PermissionRequiredMixin, CreateView):
         )
         return self.render_to_response(context)
 
-
-
-
 class ClienteUpdateView(PermissionRequiredMixin, UpdateView):
     model = Cliente
     form_class = ClienteForm
@@ -603,6 +600,48 @@ class ClienteUpdateView(PermissionRequiredMixin, UpdateView):
             form_cliente=form_cliente,
             form_adicional=form_adicional,
             form_comprovantes=form_comprovantes,
+            form_analise_credito=form_analise_credito,
+        )
+        return self.render_to_response(context)
+    
+class ClienteUpdateImeiTelefoneView(PermissionRequiredMixin, UpdateView):
+    model = Cliente
+    form_class = ClienteForm
+    template_name = 'cliente/form_cliente_imei_telefone.html'
+    success_url = reverse_lazy('vendas:cliente_list')
+    permission_required = 'vendas.change_cliente'
+    context_object_name = 'cliente'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        cliente = self.get_object()
+
+        context['form_cliente'] = kwargs.get('form_cliente', ClienteTelefoneForm(instance=cliente, user=self.request.user))
+        context['form_analise_credito'] = kwargs.get('form_analise_credito', AnaliseCreditoClienteImeiForm(instance=cliente.analise_credito, user=self.request.user))
+        context['cliente_id'] = cliente.id
+        context['analise_credito'] = cliente.analise_credito
+        context['status_app_choices'] = AnaliseCreditoCliente.STATUS_APP_CHOICES
+
+        return context
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        user = request.user
+
+        form_cliente = ClienteTelefoneForm(request.POST, instance=self.object, user=user)
+        form_analise_credito = AnaliseCreditoClienteImeiForm(request.POST, instance=self.object.analise_credito, user=request.user)
+
+        if form_cliente.is_valid() and form_analise_credito.is_valid():
+            form_analise_credito.save()
+            cliente = form_cliente.save(commit=False)
+            cliente.save(user=user)
+            messages.success(request, "✅ Soliticitação atualizada com sucesso")
+            return redirect(self.success_url)
+        else:
+            messages.error(request, "❌ Erro ao atualizar Soliticitação. Verifique os dados e tente novamente.")
+
+        context = self.get_context_data(
+            form_cliente=form_cliente,
             form_analise_credito=form_analise_credito,
         )
         return self.render_to_response(context)

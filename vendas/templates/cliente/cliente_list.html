@@ -155,13 +155,22 @@ Clientes
                   <i class="bx bx-dots-vertical-rounded"></i>
                 </button>
                 <div class="dropdown-menu">
-                  {% if user|has_perm:"vendas.change_cliente" %}
+                  {% if user|has_perm:"vendas.change_cliente" and cliente.analise_credito.status == 'EA' %}
                   <a
                     class="dropdown-item d-flex align-items-center"
                     href="{% url 'vendas:cliente_update' cliente.pk %}"
                   >
                     <i class="bx bx-edit-alt me-1"></i>
                     Editar
+                  </a>
+                  {% endif %}
+                  
+                  {% if cliente.analise_credito.status == 'A' and cliente.analise_credito.venda is None and user|has_perm:"vendas.change_cliente" %} 
+                  <a
+                    class="dropdown-item d-flex align-items-center"
+                    href="{% url 'vendas:cliente_update_imei_telefone' cliente.pk %}">
+                    <i class="bx bx-edit me-1"></i>
+                    Editar IMEI/Telefone
                   </a>
                   {% endif %}
             

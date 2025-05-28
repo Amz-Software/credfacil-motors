@@ -9,6 +9,10 @@ def has_perm(user, perm):
 
 register.filter('has_perm', has_perm)
 
+@register.filter
+def has_group(user, group_name):
+    return user.groups.filter(name=group_name).exists()
+
 
 @register.filter
 def total_vendas(produto, loja_id):

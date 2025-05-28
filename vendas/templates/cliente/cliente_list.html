@@ -165,13 +165,16 @@ Clientes
                   </a>
                   {% endif %}
                   
-                  {% if cliente.analise_credito.status == 'A' and cliente.analise_credito.venda is None and user|has_perm:"vendas.change_cliente" %} 
+                  {% if cliente.analise_credito.status == 'A' and cliente.analise_credito.venda is None %} 
+                  {% if user|has_group:"ANALISTA" or user|has_group:"SUPERVISOR" %}
                   <a
                     class="dropdown-item d-flex align-items-center"
                     href="{% url 'vendas:cliente_update_imei_telefone' cliente.pk %}">
                     <i class="bx bx-edit me-1"></i>
                     Editar IMEI/Telefone
                   </a>
+                  
+                  {% endif %}
                   {% endif %}
             
                   {# 1) Pendente: abre modal de instalação #}

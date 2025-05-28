@@ -25,6 +25,7 @@ urlpatterns = [
     path('clientes/editar/', cliente_editar_view, name='cliente_edit_form'),
     path('clientes/cliente_create/', ClienteCreateView.as_view(), name='cliente_create'),
     path('clientes/cliente_editar/<int:pk>/', ClienteUpdateView.as_view(), name='cliente_update'),
+    path('clientes/cliente_editar_imei_telefone/<int:pk>/', ClienteUpdateImeiTelefoneView.as_view(), name='cliente_update_imei_telefone'),
     
     path('aprovar_analise/<int:id>/', aprovar_analise_credito, name='aprovar_analise'),
     path('reprovar_analise/<int:id>/', reprovar_analise_credito, name='reprovar_analise'),

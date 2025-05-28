@@ -112,6 +112,50 @@ class ClienteForm(forms.ModelForm):
                 self.fields['endereco'].disabled = True
                 self.fields['cidade'].disabled = True
 
+class ClienteTelefoneForm(forms.ModelForm):
+    class Meta:
+        model = Cliente
+        fields = '__all__'
+        exclude = ['comprovantes', 'contato_adicional', 'informacao_pessoal','loja']
+        widgets = {
+            'nome': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'telefone': forms.TextInput(attrs={'class': 'form-control tel'}),
+            'cpf': forms.TextInput(attrs={'class': 'form-control'}),
+            'nascimento': forms.DateInput(
+                attrs={'class': 'form-control', 'type': 'date'},
+                format='%Y-%m-%d'
+            ),
+            'rg': forms.TextInput(attrs={'class': 'form-control'}),
+            'cep': forms.TextInput(attrs={'class': 'form-control'}),
+            'bairro': forms.TextInput(attrs={'class': 'form-control'}),
+            'endereco': forms.TextInput(attrs={'class': 'form-control'}),
+            'cidade': forms.TextInput(attrs={'class': 'form-control'}),
+        }
+        labels = {
+            'nome': 'Nome*',
+            'telefone': 'Telefone*',
+            'cpf': 'CPF*',
+            'nascimento': 'Data de Nascimento*',
+            'rg': 'RG*',
+            'cep': 'CEP*',
+            'bairro': 'Bairro*',
+            'endereco': 'Endereço*',
+            'cidade': 'Cidade*',
+        }
+
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+        for name, field in self.fields.items():
+            print(name, field)
+            if name == 'telefone':
+                field.required = True
+                field.disabled = False
+            else:
+                field.required = False
+                field.disabled = True
+
 
 class ContatoAdicionalForm(forms.ModelForm):
     obteve_contato = forms.ChoiceField(
@@ -255,6 +299,38 @@ class AnaliseCreditoClienteForm(forms.ModelForm):
                     self.fields['observacao'].disabled = True
                     if self.instance.venda:
                         self.fields['imei'].disabled = True
+class AnaliseCreditoClienteImeiForm(forms.ModelForm):
+    produto = ProdutoChoiceField(
+        queryset=Produto.objects.all(),
+        widget=Select2Widget(attrs={'class': 'form-control'}),
+        label='Produto'
+    )
+    class Meta:
+        model = AnaliseCreditoCliente
+        fields = ['produto','data_pagamento','numero_parcelas', 'imei', 'observacao']
+        widgets = {
+            'data_pagamento': forms.Select(attrs={'class': 'form-control'}),
+            'numero_parcelas': forms.Select(attrs={'class': 'form-control'}),
+            'imei': EstoqueImeiSelectWidget(
+                max_results=10,
+                attrs={
+                    'class': 'form-control',
+                    'data-minimum-input-length': '0',
+                    'data-placeholder': 'Selecione um IMEI',
+                    'data-allow-clear': 'true',
+                }
+            ),
+            'observacao': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+
+        # Desabilita todos os campos, exceto 'imei'
+        for field_name in ['produto', 'data_pagamento', 'numero_parcelas', 'observacao']:
+            self.fields[field_name].disabled = True
+        # 'imei' permanece habilitado
 
 
 

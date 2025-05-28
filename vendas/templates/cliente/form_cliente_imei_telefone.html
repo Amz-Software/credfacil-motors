@@ -1,0 +1,268 @@
+{% extends 'base.html' %}
+{% load static iam_tags l10n %}
+
+{% block extra_head %}
+  {{ form_analise_credito.media.css }}
+  <style>
+    .card-footer {
+      position: sticky;
+      bottom: 0;
+      background: white;
+      padding: 1rem;
+      border-top: 1px solid #ddd;
+      z-index: 10;
+    }
+  </style>
+{% endblock extra_head %}
+
+{% block title %}
+  {% if cliente.pk %}Editar Análise de Crédito{% else %}Criar Análise de Crédito{% endif %}
+{% endblock title %}
+
+{% block content %}
+<div class="container-xxl mt-4">
+  <div class="card">
+    <!-- aqui -->
+    {# dentro de card-header, no lugar do badge estático #}
+    <div class="card-header d-flex align-items-center p-3">
+      <h4 class="mb-0">
+        {% if cliente.pk %}Editar Análise de Crédito{% else %}Criar Análise de Crédito{% endif %}
+      </h4>
+
+      {# badge de análise de crédito continua igual… #}
+      {% if cliente.pk and cliente.analise_credito %}
+        {% with analise=cliente.analise_credito %}
+          <span class="badge fs-5 p-2
+            {% if analise.status == 'A' %}bg-success
+            {% elif analise.status == 'R' %}bg-danger
+            {% elif analise.status == 'C' %}bg-secondary
+            {% else %}bg-warning text-dark{% endif %} ms-3">
+            {{ analise.get_status_display }}
+          </span>
+        {% endwith %}
+      {% endif %}
+
+      {# dropdown de Status App #}
+      {% if cliente.pk and user|has_perm:"vendas.change_cliente" %}
+      <form method="post"
+            action="{% url 'vendas:cliente_status_app_update' cliente.pk %}"
+            class="ms-auto d-flex align-items-center">
+        {% csrf_token %}
+        <div class="input-group input-group-sm w-auto">
+          <label class="input-group-text" for="statusAppSelect{{ cliente.pk }}">
+            App
+          </label>
+          <select name="status_app"
+                  id="statusAppSelect{{ cliente.pk }}"
+                  class="form-select"
+                  onchange="this.form.submit()">
+            <option value="" disabled>—</option>
+            {% for code,label in status_app_choices %}
+              <option value="{{ code }}"
+                {% if analise_credito.status_aplicativo == code %}selected{% endif %}>
+                {{ label }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+      </form>
+
+      {% else %}
+        {# só exibe badge se sem permissão #}
+        <span class="badge fs-6 p-2 ms-auto
+          {% if cliente.analise_credito.status_aplicativo == 'P' %}bg-warning text-dark
+          {% elif cliente.analise_credito.status_aplicativo == 'C' %}bg-info text-white
+          {% else %}bg-success{% endif %}">
+          {{ cliente.get_status_aplicativo_display }}
+        </span>
+      {% endif %}
+    </div>
+
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div class="card-body">
+        <!-- Nav tabs -->
+        <ul class="nav nav-tabs mb-3" id="clienteTabs" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-dados" type="button">Dados</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-analise" type="button">Produto</button>
+          </li>
+        </ul>
+
+        <div class="tab-content">
+          <!-- ABA DADOS CLIENTE -->
+          <div class="tab-pane fade show active" id="tab-dados" role="tabpanel">
+            <h5>Dados Cliente</h5><hr>
+            <div class="row">
+              {% for field in form_cliente %}
+                {% if field.label == 'Cliente cred facil' %}
+                  <div class="col-md-12">
+                    <div class="form-check form-switch mt-3">
+                      {{ field }} 
+                      <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    </div>
+                  </div>
+                {% elif field.label == 'Nascimento' %}
+                  <div class="col-md-6">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    <input type="date" class="form-control" id="{{ field.id_for_label }}" name="{{ field.name }}"
+                           value="{{ field.value|date:'Y-m-d' }}">
+                  </div>
+                {% else %}
+                  <div class="col-md-6">
+                    <div class="mb-3">
+                      <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                      {{ field }}
+                    </div>
+                  </div>
+                {% endif %}
+              {% endfor %}
+            </div>
+          </div>
+
+          <!-- ABA ANÁLISE DE CRÉDITO -->
+          <div class="tab-pane fade" id="tab-analise" role="tabpanel">
+            <h5>Produto</h5><hr>
+            <div class="row">
+              {% for field in form_analise_credito %}
+                <div class="col-md-12 mb-3">
+                  <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                  {{ field }}
+                </div>
+              {% endfor %}
+              <div class="row text-center mb-4" id="parcelas-info">
+                <div class="col-12 col-md-4 mb-2">
+                  <div class="card border-primary h-100">
+                    <div class="card-body">
+                      <h6 class="card-subtitle fs-5 fw-semibold text-primary text-uppercase">
+                        Entrada
+                      </h6>
+                      <p class="card-text display-6" id="info-entrada">—</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-12 col-md-4 mb-2">
+                  <div class="card border-success h-100">
+                    <div class="card-body">
+                      <h6 class="card-subtitle fs-5 fw-semibold text-success text-uppercase">
+                        Total
+                      </h6>
+                      <p class="card-text display-6" id="info-total">—</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-12 col-md-4 mb-2">
+                  <div class="card border-warning h-100">
+                    <div class="card-body">
+                      <h6 class="card-subtitle fs-5 fw-semibold text-warning text-uppercase">
+                        Parcelas
+                      </h6>
+                      <p class="card-text display-6" id="info-parcela">—</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FOOTER FIXO COM AÇÕES -->
+      <div class="card-footer d-flex justify-content-between align-items-center">
+        {# ações de análise, agrupadas e à esquerda #}
+        <div>
+          {% if cliente.pk and cliente.analise_credito %}
+            <div class="btn-group" role="group" aria-label="Análise de Crédito">
+              <a href="{% url 'vendas:aprovar_analise' cliente.analise_credito.id %}"
+                 class="btn btn-success">
+                <i class="bx bx-check me-1"></i> Aprovar
+              </a>
+              <a href="{% url 'vendas:reprovar_analise' cliente.analise_credito.id %}"
+                 class="btn btn-danger">
+                <i class="bx bx-x me-1"></i> Reprovar
+              </a>
+              <a href="{% url 'vendas:cancelar_analise' cliente.analise_credito.id %}"
+                 class="btn btn-outline-secondary">
+                <i class="bx bx-reset me-1"></i> Cancelar
+              </a>
+            </div>
+          {% endif %}
+        </div>
+      
+        {# ações de salvar/voltar, à direita #}
+        <div>
+          {% if user|has_perm:'vendas.change_cliente' %}
+            <button type="submit" class="btn btn-primary me-2">
+              <i class="bx bx-save me-1"></i> Salvar
+            </button>
+          {% endif %}
+          <a href="{% url 'vendas:cliente_list' %}" class="btn btn-secondary">
+            <i class="bx bx-arrow-back me-1"></i> Voltar
+          </a>
+        </div>
+      </div>
+      
+    </form>
+  </div>
+</div>
+{% endblock content %}
+
+{% block extra_scripts %}
+  {{ form_analise_credito.media.js }}
+  <script>
+    $(function(){
+      // lista de produtos do contexto
+      const produtos = JSON.parse('{{ produtos_json|escapejs }}');
+
+      function formatBRL(v) {
+        return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      }
+
+      function atualizaInfo() {
+        const prodId = $('#id_produto').val();
+        const np     = $('#id_numero_parcelas').val();
+
+        // se não houver produto selecionado, limpa tudo
+        if (!prodId) {
+          $('#info-entrada, #info-total, #info-parcela').text('—');
+          return;
+        }
+
+        // busca dados do produto
+        const p = produtos.find(x => x.id == prodId) || {};
+        const entrada = p.entrada  || 0;
+        const valor4  = p.valor4   || 0;
+        const valor6  = p.valor6   || 0;
+        const valor8  = p.valor8   || 0;
+
+        // escolhe total conforme parcelas
+        const total = { '4': valor4, '6': valor6, '8': valor8 }[np] || 0;
+        const parcela = (np && total)
+          ? total / parseInt(np, 10)
+          : 0;
+
+        // preenche os cards
+        $('#info-entrada').text(formatBRL(entrada));
+        $('#info-total')  .text(formatBRL(total));
+
+        const textoParcela = np
+          ? `${np}× de ${formatBRL(parcela)}`
+          : '—';
+        $('#info-parcela').text(textoParcela);
+      }
+
+      // dispara ao mudar produto (Select2) ou número de parcelas
+      $('#id_produto')
+        .on('change select2:select', atualizaInfo);
+      $('#id_numero_parcelas')
+        .on('change', atualizaInfo);
+
+      // inicializa ao carregar a página
+      atualizaInfo();
+    });
+  </script>
+
+{% endblock extra_scripts %}

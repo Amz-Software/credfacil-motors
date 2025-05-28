@@ -563,8 +563,12 @@ class ClienteUpdateView(PermissionRequiredMixin, UpdateView):
         self.object = self.get_object()
         user = request.user
 
-        if not user.has_perm('vendas.can_edit_finished_sale') and not self.object.analise_credito.status == 'EA':
+        if not user.has_perm('vendas.change_status_analise') and not self.object.analise_credito.status == 'EA':
             messages.warning(request, "❌ Somente Soliticitação em análise de crédito em andamento podem ser editados.")
+            return redirect(self.success_url)
+        
+        if not user.has_perm('vendas.can_edit_finished_sale') and self.object.analise_credito.venda:
+            messages.warning(request, "❌ Somente Solicitações sem venda gerada pode ser editada.")
             return redirect(self.success_url)
 
         form_cliente = ClienteForm(request.POST, instance=self.object, user=user)
@@ -667,16 +671,39 @@ class ClienteStatusAppUpdateView(PermissionRequiredMixin, View):
 def calcular_data_primeira_parcela(data_pagamento_str):
     """
     Sempre joga a 1ª parcela pro próximo mês no dia escolhido.
+    Caso o dia escolhido seja menor que 10 e a data calculada fique a menos de 10 dias de hoje,
+    pula mais um mês.
     """
     hoje = timezone.now().date()
     dia = int(data_pagamento_str)
 
-    # próximo mês
-    ano = hoje.year + (hoje.month // 12)
-    mes = hoje.month % 12 + 1
-    ultimo = calendar.monthrange(ano, mes)[1]
-    dia = min(dia, ultimo)
-    return date(ano, mes, dia)
+    # Calcula para o próximo mês
+    if hoje.month < 12:
+        next_year = hoje.year
+        next_month = hoje.month + 1
+    else:
+        next_year = hoje.year + 1
+        next_month = 1
+
+    ultimo = calendar.monthrange(next_year, next_month)[1]
+    dia_calculado = min(dia, ultimo)
+    data_primeira = date(next_year, next_month, dia_calculado)
+
+    # Se o dia escolhido for menor que 10 e a data encontrada estiver a menos de 10 dias de hoje,
+    # pula mais um mês.
+    if dia < 10 and (data_primeira - hoje).days < 10:
+        if next_month < 12:
+            final_year = next_year
+            final_month = next_month + 1
+        else:
+            final_year = next_year + 1
+            final_month = 1
+
+        ultimo = calendar.monthrange(final_year, final_month)[1]
+        dia_calculado = min(dia, ultimo)
+        data_primeira = date(final_year, final_month, dia_calculado)
+
+    return data_primeira
 
 
 def criar_parcelas(pagamento, loja):

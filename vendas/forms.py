@@ -466,7 +466,7 @@ class ComprovantesClienteForm(forms.ModelForm):
                 self.fields['documento_identificacao_verso'].disabled = True
                 self.fields['comprovante_residencia'].disabled = True
                 self.fields['foto_cliente'].disabled = True
-                
+            
             if user and not user.has_perm('vendas.can_edit_finished_sale'):
                 if self.instance.cliente.analise_credito and self.instance.cliente.analise_credito.status == 'EA':
                     self.fields['documento_identificacao_frente'].disabled = True
@@ -513,12 +513,57 @@ class ComprovantesClienteEditForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
-        for name, field in self.fields.items():
-            field.disabled = True
-                    
-                    
-            
+        
+        if not (user and user.has_perm('vendas.change_status_analise')):
+            self.fields.pop('consulta_serasa', None)
+            self.fields.pop('consulta_serasa_analise', None)
+            self.fields.pop('restricao', None)
 
+        # 1) Se não tiver permissão, remove todos os campos que terminam em "_analise"
+        if not (user and user.has_perm('vendas.view_all_analise_credito')):
+            for name in list(self.fields):
+                if name.endswith('_analise'):
+                    self.fields.pop(name)
+
+        # 2) Inicializa as checkboxes (se elas existirem)
+        for analise_field in (
+            'documento_identificacao_frente_analise',
+            'documento_identificacao_verso_analise',
+            'comprovante_residencia_analise',
+            'consulta_serasa_analise',
+            'restricao',
+        ):
+            if analise_field in self.fields:
+                self.fields[analise_field].initial = False
+
+        # 3) Torna obrigatórios todos os outros campos (mesmo lógica que você já tinha)
+        exceptions = {
+            'consulta_serasa',
+            'consulta_serasa_analise',
+            'documento_identificacao_frente_analise',
+            'documento_identificacao_verso_analise',
+            'comprovante_residencia_analise',
+        }
+        for name, field in self.fields.items():
+            if name not in exceptions:
+                field.required = True
+        
+        if self.instance and self.instance.pk:
+            if user and not user.has_perm('vendas.change_status_analise'):
+                self.fields['documento_identificacao_frente'].disabled = True
+                self.fields['documento_identificacao_verso'].disabled = True
+                self.fields['comprovante_residencia'].disabled = True
+                self.fields['foto_cliente'].disabled = True
+            
+            if user and not user.has_perm('vendas.can_edit_finished_sale'):
+                if self.instance.cliente.analise_credito and self.instance.cliente.analise_credito.status == 'EA':
+                    self.fields['documento_identificacao_frente'].disabled = True
+                    self.fields['documento_identificacao_verso'].disabled = True
+                    self.fields['comprovante_residencia'].disabled = True
+                    self.fields['consulta_serasa'].disabled = True
+                    self.fields['foto_cliente'].disabled = True
+                    
+                    
 class EnderecoForm(forms.ModelForm):
     class Meta:
         model = Endereco

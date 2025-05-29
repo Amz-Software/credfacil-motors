@@ -12,7 +12,7 @@ from estoque.models import Estoque, EstoqueImei
 from financeiro.forms import RepasseForm
 from financeiro.models import Repasse
 from produtos.models import Produto
-from vendas.forms import AnaliseCreditoClienteForm, ClienteConsultaForm, ClienteForm, ComprovantesClienteForm, ContatoAdicionalForm, FormaPagamentoEditFormSet, InformacaoPessoalForm, LojaForm, ProdutoVendaEditFormSet, RelatorioSolicitacoesForm, RelatorioVendasForm, VendaForm, ProdutoVendaFormSet, FormaPagamentoFormSet, LancamentoForm, LancamentoCaixaTotalForm, ClienteTelefoneForm, AnaliseCreditoClienteImeiForm
+from vendas.forms import AnaliseCreditoClienteForm, ClienteConsultaForm, ClienteForm, ComprovantesClienteEditForm, ComprovantesClienteForm, ContatoAdicionalEditForm, ContatoAdicionalForm, FormaPagamentoEditFormSet, InformacaoPessoalEditForm, InformacaoPessoalForm, LojaForm, ProdutoVendaEditFormSet, RelatorioSolicitacoesForm, RelatorioVendasForm, VendaForm, ProdutoVendaFormSet, FormaPagamentoFormSet, LancamentoForm, LancamentoCaixaTotalForm, ClienteTelefoneForm, AnaliseCreditoClienteImeiForm
 from .models import AnaliseCreditoCliente, Caixa, Cliente, Loja, Pagamento, Parcela, ProdutoVenda, TipoPagamento, Venda, LancamentoCaixa, LancamentoCaixaTotal
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.utils import timezone
@@ -621,6 +621,9 @@ class ClienteUpdateImeiTelefoneView(PermissionRequiredMixin, UpdateView):
         cliente = self.get_object()
 
         context['form_cliente'] = kwargs.get('form_cliente', ClienteTelefoneForm(instance=cliente, user=self.request.user))
+        context['form_adicional'] = kwargs.get('form_adicional', ContatoAdicionalEditForm(instance=cliente.contato_adicional, user=self.request.user))
+        context['form_informacao'] = kwargs.get('form_informacao', InformacaoPessoalEditForm(instance=cliente.informacao_pessoal, user=self.request.user))
+        context['form_comprovantes'] = kwargs.get('form_comprovantes', ComprovantesClienteEditForm(instance=cliente.comprovantes, user=self.request.user))
         context['form_analise_credito'] = kwargs.get('form_analise_credito', AnaliseCreditoClienteImeiForm(instance=cliente.analise_credito, user=self.request.user))
         context['cliente_id'] = cliente.id
         context['analise_credito'] = cliente.analise_credito

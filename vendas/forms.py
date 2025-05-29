@@ -200,6 +200,30 @@ class ContatoAdicionalForm(forms.ModelForm):
                     self.fields['obteve_contato'].disabled = True
                     if self.instance.cliente.analise_credito.venda:
                         self.fields['contato'].disabled = True
+class ContatoAdicionalEditForm(forms.ModelForm):
+    obteve_contato = forms.ChoiceField(
+        label='Obteve Contato',
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        choices=[(True, 'Sim'), (False, 'Não')]
+    )
+    class Meta:
+        model = ContatoAdicional
+        fields = '__all__'
+        exclude = ['cliente', 'loja']
+        widgets = {
+            'nome_adicional': forms.TextInput(attrs={'class': 'form-control'}),
+            'contato': forms.TextInput(attrs={'class': 'form-control tel'}),
+            'endereco_adicional': forms.TextInput(attrs={'class': 'form-control'}),
+            'obteve_contato': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+        
+    
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+        for name, field in self.fields.items():
+            field.disabled = True
 
 class InformacaoPessoalForm(forms.ModelForm):
     nome_pessoal = forms.CharField(label='Nome', widget=forms.TextInput(attrs={'class': 'form-control'}))
@@ -245,6 +269,36 @@ class InformacaoPessoalForm(forms.ModelForm):
                     self.fields['obteve_contato_pessoal'].disabled = True
                     if self.instance.cliente.analise_credito.venda:
                         self.fields['contato_pessoal'].disabled = True
+        
+    def save(self, commit=True):
+        self.instance.nome = self.cleaned_data.get('nome_pessoal')
+        self.instance.contato = self.cleaned_data.get('contato_pessoal')
+        self.instance.endereco = self.cleaned_data.get('endereco_pessoal')
+        self.instance.obteve_contato = self.cleaned_data.get('obteve_contato_pessoal')
+        return super().save(commit=commit)
+    
+class InformacaoPessoalEditForm(forms.ModelForm):
+    nome_pessoal = forms.CharField(label='Nome', widget=forms.TextInput(attrs={'class': 'form-control'}))
+    contato_pessoal = forms.CharField(label='Contato', widget=forms.TextInput(attrs={'class': 'form-control tel'}))
+    endereco_pessoal = forms.CharField(label='Endereço', widget=forms.TextInput(attrs={'class': 'form-control'}))
+    obteve_contato_pessoal = forms.ChoiceField(
+        label='Obteve Contato',
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        choices=[(True, 'Sim'), (False, 'Não')]
+    )
+
+    class Meta:
+        model = InformacaoPessoal
+        fields = '__all__'
+        exclude = ['cliente', 'loja', 'nome', 'contato', 'endereco', 'obteve_contato']
+        
+    
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+        for name, field in self.fields.items():
+            field.disabled = True
         
     def save(self, commit=True):
         self.instance.nome = self.cleaned_data.get('nome_pessoal')
@@ -420,6 +474,47 @@ class ComprovantesClienteForm(forms.ModelForm):
                     self.fields['comprovante_residencia'].disabled = True
                     self.fields['consulta_serasa'].disabled = True
                     self.fields['foto_cliente'].disabled = True
+                    
+                    
+class ComprovantesClienteEditForm(forms.ModelForm):
+    restricao = forms.ChoiceField(
+        label='Restrição',
+        required=None,
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        choices=[(True, 'Com Restrição'), (False, 'Sem Restrição')]
+    )
+    class Meta:
+        model = ComprovantesCliente
+        exclude = ['cliente', 'loja']
+        widgets = {
+            'documento_identificacao_frente': forms.FileInput(attrs={'class': 'form-control'}),
+            'documento_identificacao_frente_analise': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'documento_identificacao_verso': forms.FileInput(attrs={'class': 'form-control'}),
+            'documento_identificacao_verso_analise': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'comprovante_residencia': forms.FileInput(attrs={'class': 'form-control'}),
+            'comprovante_residencia_analise': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'consulta_serasa': forms.FileInput(attrs={'class': 'form-control'}),
+            'consulta_serasa_analise': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'foto_cliente': forms.FileInput(attrs={'class': 'form-control'}),
+        }
+        labels = {
+            'documento_identificacao_frente': 'Documento de Identificação Frente*',
+            'documento_identificacao_frente_analise': 'Análise Documento de Identificação Frente',
+            'documento_identificacao_verso': 'Documento de Identificação Verso*',
+            'documento_identificacao_verso_analise': 'Análise Documento de Identificação Verso',
+            'comprovante_residencia': 'Comprovante de Residência*',
+            'comprovante_residencia_analise': 'Análise Comprovante de Residência',
+            'consulta_serasa': 'Consulta Serasa',
+            'consulta_serasa_analise': 'Análise Consulta Serasa',
+            'restricao': 'Restrição',
+            'foto_cliente': 'Foto do Cliente*',
+        }
+
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+        for name, field in self.fields.items():
+            field.disabled = True
                     
                     
             

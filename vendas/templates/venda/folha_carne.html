@@ -202,8 +202,7 @@
                 </div>
                 <div class="section">
                     <p>Ao <strong>{{ nome_cliente }}</strong> pagar <strong>R$ {{ info.valor_parcela }}</strong> por
-                        esta única via de {{ tipo_pagamento }} à <strong>{{ loja.nome|title }}</strong>, CPF/CNPJ {{
-                        loja.cnpj }}, ou à sua ordem a quantia de {{ info.valor_parcela|floatformat:2 }} reais, em moeda
+                        esta única via de {{ tipo_pagamento }} à <strong>{{ loja.nome|title }}</strong>, CPF/CNPJ {{ loja.cnpj }}, ou à sua ordem a quantia de {{ info.valor_parcela|floatformat:2 }} reais, em moeda
                         corrente desse país.</p>
                     <p>DATA DA EMISSÃO: <strong>{{ data_atual|date:"d/m/Y" }}</strong></p>
                 </div>

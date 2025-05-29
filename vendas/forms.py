@@ -468,7 +468,7 @@ class ComprovantesClienteForm(forms.ModelForm):
                 self.fields['foto_cliente'].disabled = True
             
             if user and not user.has_perm('vendas.can_edit_finished_sale'):
-                if self.instance.cliente.analise_credito and self.instance.cliente.analise_credito.status == 'EA':
+                if self.instance.cliente.analise_credito and  not self.instance.cliente.analise_credito.status == 'EA':
                     self.fields['documento_identificacao_frente'].disabled = True
                     self.fields['documento_identificacao_verso'].disabled = True
                     self.fields['comprovante_residencia'].disabled = True
@@ -556,7 +556,7 @@ class ComprovantesClienteEditForm(forms.ModelForm):
                 self.fields['foto_cliente'].disabled = True
             
             if user and not user.has_perm('vendas.can_edit_finished_sale'):
-                if self.instance.cliente.analise_credito and self.instance.cliente.analise_credito.status == 'EA':
+                if self.instance.cliente.analise_credito and not self.instance.cliente.analise_credito.status == 'EA':
                     self.fields['documento_identificacao_frente'].disabled = True
                     self.fields['documento_identificacao_verso'].disabled = True
                     self.fields['comprovante_residencia'].disabled = True

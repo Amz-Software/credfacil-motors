@@ -289,7 +289,7 @@ Clientes
           
                   {# 2) Código em destaque #}
                   <div class="fs-2 fw-bold mb-4">
-                    {{ loja.codigo_aplicativo }}
+                    {{ loja.codigo_aplicativo|default:"Código não disponível" }}
                   </div>
           
                   {# 3) Botão Operação Finalizada #}

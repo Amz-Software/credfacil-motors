@@ -346,7 +346,7 @@ class ClienteListView(BaseView, PermissionRequiredMixin, ListView):
         loja_id = self.request.session.get('loja_id')
         
         context['loja'] = Loja.objects.get(id=loja_id)
-        # monta os KPIs conforme permissão
+
         if self.request.user.has_perm('vendas.view_all_analise_credito'):
             analises = AnaliseCreditoCliente.objects.all()
         else:
@@ -923,7 +923,7 @@ def cancelar_analise_credito(request, id):
     user = request.user
     try:
         analise = AnaliseCreditoCliente.objects.get(id=id)
-        if not analise.status == 'EA' and user.has_perm('vendas.can_edit_finished_sale'):
+        if (not analise.status == 'EA' and not user.has_perm('vendas.change_status_analise')) and not user.has_perm('vendas.can_edit_finished_sale'):
             messages.error(request, 'Somente solicitações em análise podem ser canceladas')
             return redirect('vendas:cliente_list')
         analise.cancelar()

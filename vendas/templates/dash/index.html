@@ -156,6 +156,25 @@
             </div>
         </div>
     </div>
+    {% if loja_get %}
+    <!-- Dados Gerais Mes-->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <h4 class="card-title text-center mb-4">Balanço por Loja - Mês</h4>
+                    <div class="d-flex justify-content-center">
+                        <canvas id="graficoLojasMes" width="200"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info text-center">
+        <strong>Selecione uma loja para visualizar o balanço mensal.</strong>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}
 
@@ -220,6 +239,123 @@
 
                             return `${context.dataset.label}: ${percentual}% (R$ ${valor.toLocaleString('pt-BR')})\nTotal Loja: R$ ${total.toLocaleString('pt-BR')}`;
                         }
+                    }
+                }
+            }
+        }
+    });
+</script>
+<script data-lojas-mes="{{ dash_mensal_lojas }}" type="text/javascript">
+    const dadosLojasMes = JSON.parse(document.currentScript.getAttribute('data-lojas-mes'));
+    // Obter todos os meses únicos ordenados
+    const mesesSet = new Set();
+    Object.values(dadosLojasMes).forEach(arr => arr.forEach(obj => mesesSet.add(obj.mes)));
+    const meses = Array.from(mesesSet).sort();
+
+    // Montar datasets por loja em percentual
+    const lojas = Object.keys(dadosLojasMes);
+    const cores = [
+        'rgba(75, 192, 192, 0.7)',
+        'rgba(255, 99, 132, 0.7)',
+        'rgba(255, 205, 86, 0.7)',
+        'rgba(54, 162, 235, 0.7)',
+        'rgba(153, 102, 255, 0.7)',
+        'rgba(201, 203, 207, 0.7)'
+    ];
+
+    // Para cada loja, para cada mês, calcula os percentuais
+    function getPercentuais(loja, campo) {
+        // Para cada mês, retorna o percentual do campo ou 0 se não houver
+        const dados = {};
+        dadosLojasMes[loja].forEach(obj => { dados[obj.mes] = obj; });
+        return meses.map(mes => {
+            const obj = dados[mes];
+            if (!obj) return 0;
+            const total = (obj.pago || 0) + (obj.vencido || 0) + (obj.a_vencer || 0);
+            if (total === 0) return 0;
+            return Math.round(((obj[campo] || 0) / total) * 100);
+        });
+    }
+
+    // Para tooltip: valores absolutos por mês
+    function getValores(loja, campo) {
+        const dados = {};
+        dadosLojasMes[loja].forEach(obj => { dados[obj.mes] = obj; });
+        return meses.map(mes => {
+            const obj = dados[mes];
+            return obj ? (obj[campo] || 0) : 0;
+        });
+    }
+
+    // Para tooltip: total por mês
+    function getTotais(loja) {
+        const dados = {};
+        dadosLojasMes[loja].forEach(obj => { dados[obj.mes] = obj; });
+        return meses.map(mes => {
+            const obj = dados[mes];
+            return obj ? ((obj.pago || 0) + (obj.vencido || 0) + (obj.a_vencer || 0)) : 0;
+        });
+    }
+
+    const datasets = [];
+    lojas.forEach((loja, idx) => {
+        datasets.push({
+            label: loja + ' - Pago',
+            data: getPercentuais(loja, 'pago'),
+            valores: getValores(loja, 'pago'),
+            totais: getTotais(loja),
+            backgroundColor: cores[idx % cores.length],
+            stack: loja
+        });
+        datasets.push({
+            label: loja + ' - Vencido',
+            data: getPercentuais(loja, 'vencido'),
+            valores: getValores(loja, 'vencido'),
+            totais: getTotais(loja),
+            backgroundColor: 'rgba(255, 99, 132, 0.3)',
+            stack: loja
+        });
+        datasets.push({
+            label: loja + ' - A Vencer',
+            data: getPercentuais(loja, 'a_vencer'),
+            valores: getValores(loja, 'a_vencer'),
+            totais: getTotais(loja),
+            backgroundColor: 'rgba(255, 205, 86, 0.3)',
+            stack: loja
+        });
+    });
+
+    const ctxLojasMes = document.getElementById('graficoLojasMes').getContext('2d');
+    new Chart(ctxLojasMes, {
+        type: 'bar',
+        data: {
+            labels: meses,
+            datasets: datasets
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                    callbacks: {
+                        label: function(context) {
+                            const percentual = context.parsed.y;
+                            const valor = context.dataset.valores[context.dataIndex];
+                            const total = context.dataset.totais[context.dataIndex];
+                            return `${context.dataset.label}: ${percentual}% (R$ ${valor.toLocaleString('pt-BR')})\nTotal Loja: R$ ${total.toLocaleString('pt-BR')}`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: { stacked: true },
+                y: {
+                    stacked: true,
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: {
+                        callback: value => value + '%'
                     }
                 }
             }

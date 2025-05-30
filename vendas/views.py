@@ -2378,6 +2378,10 @@ class GraficoTemplateView(TemplateView):
             'total_pagas': 0, 'total_vencidas': 0, 'total_a_vencer': 0,
         })
 
+        # --- DASH POR MÊS ---
+        # Estrutura: {loja_nome: {YYYY-MM: {'pago': x, 'vencido': y, 'a_vencer': z}}}
+        dash_mensal_lojas = defaultdict(lambda: defaultdict(lambda: {'pago': 0, 'vencido': 0, 'a_vencer': 0}))
+
         for venda in vendas:
             loja_nome = venda.loja.nome if venda.loja else 'Desconhecida'
             parcelas = parcelas_por_venda.get(venda.id, [])
@@ -2405,10 +2409,32 @@ class GraficoTemplateView(TemplateView):
             valores_por_loja[loja_nome]['total_vencidas'] += valor_vencidas
             valores_por_loja[loja_nome]['total_pagas'] += valor_pagas
 
+            # DASH MENSAL: soma por mês/ano
+            for p in parcelas:
+                mes_ano = p.data_vencimento.strftime('%Y-%m')
+                if p.pago and not p.pagamento_efetuado:
+                    dash_mensal_lojas[loja_nome][mes_ano]['pago'] += float(p.valor)
+                elif p.data_vencimento < timezone.now().date() and not p.pago and not p.pagamento_efetuado:
+                    dash_mensal_lojas[loja_nome][mes_ano]['vencido'] += float(p.valor)
+                elif p.data_vencimento >= timezone.now().date() and not p.pago and not p.pagamento_efetuado:
+                    dash_mensal_lojas[loja_nome][mes_ano]['a_vencer'] += float(p.valor)
+
         for loja_nome, valores in valores_por_loja.items():
             total_geral = valores['total_pagas'] + valores['total_vencidas'] + valores['total_a_vencer']
             valores['pct_pagas'] = round((valores['total_pagas'] / total_geral) * 100, 2) if total_geral else 0
             valores['pct_vencidas'] = round((valores['total_vencidas'] / total_geral) * 100, 2) if total_geral else 0
+
+        # Prepara dash mensal para o template (serializável)
+        dash_mensal_json = {}
+        for loja_nome, meses in dash_mensal_lojas.items():
+            dash_mensal_json[loja_nome] = []
+            for mes_ano in sorted(meses.keys()):
+                dash_mensal_json[loja_nome].append({
+                    'mes': mes_ano,
+                    'pago': meses[mes_ano]['pago'],
+                    'vencido': meses[mes_ano]['vencido'],
+                    'a_vencer': meses[mes_ano]['a_vencer'],
+                })
 
         context.update({
             'loja_get': int(loja_get) if loja_get else None,
@@ -2423,6 +2449,7 @@ class GraficoTemplateView(TemplateView):
             'total_vencidas': total_vencidas,
             'total_a_vencer': total_a_vencer,
             'dados_lojas': json.dumps(valores_por_loja, default=str),
+            'dash_mensal_lojas': json.dumps(dash_mensal_json, default=str) if loja_get else None,
         })
 
         return context

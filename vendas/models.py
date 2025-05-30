@@ -566,7 +566,8 @@ class TipoPagamento(Base):
 
 class PagamentoQuerySet(models.QuerySet):
     def with_parcelas_info(self):
-        return self.annotate(
+        # Ignora pagamentos do tipo "entrada"
+        return self.exclude(tipo_pagamento__nome__iexact='ENTRADA').annotate(
             total_parcelas=Count('parcelas_pagamento'),
             parcelas_pagas=Count(
                 'parcelas_pagamento',
@@ -590,7 +591,6 @@ class PagamentoQuerySet(models.QuerySet):
                 'parcelas_pagamento__data_vencimento',
                 filter=Q(parcelas_pagamento__pago=False)
             )
-            
         )
 
     def with_status_flags(self):
@@ -610,7 +610,6 @@ class PagamentoQuerySet(models.QuerySet):
                 default=Value(False),
                 output_field=BooleanField()
             ),
-            # <— nova flag: pendente mas sem atraso
             com_pagamento_pendente=Case(
                 When(
                     Q(parcelas_pagas__lt=F('total_parcelas')) &

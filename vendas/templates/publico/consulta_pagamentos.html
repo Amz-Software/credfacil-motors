@@ -119,7 +119,7 @@
                       <td>{{ conta.venda }}</td>
                       <td>R$ {{ conta.valor|floatformat:2 }}</td>
                       <td>{{ conta.parcelas }}</td>
-                      <td>{{ conta.next_vencimento }}</td>
+                      <td>{{ conta.next_vencimento|default:"-" }}</td>
                       <td>
                         {% if conta.todas_parcelas_pagas %}Quitado
                         {% elif conta.com_parcela_atrasada %}Atrasado

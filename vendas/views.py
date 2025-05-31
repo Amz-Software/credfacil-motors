@@ -1841,6 +1841,7 @@ class RelatorioVendasView(PermissionRequiredMixin, FormView):
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs['loja'] = self.request.session.get('loja_id')
+        kwargs['user'] = self.request.user
         return kwargs
 
 class RelatorioSolicitacoesView(PermissionRequiredMixin, FormView):
@@ -1874,6 +1875,7 @@ class FolhaRelatorioSolicitacoesView(PermissionRequiredMixin, TemplateView):
         vr              = request.GET.get('venda_realizada', '').lower()
 
         filtros = {}
+        user = request.user
 
         # status_solicitacao
         if status_solicitacao:
@@ -1885,7 +1887,7 @@ class FolhaRelatorioSolicitacoesView(PermissionRequiredMixin, TemplateView):
 
         # serasa
         if analise_serasa:
-            filtros['comprovantes__consulta_serasa_analise__in'] = analise_serasa.split(',')
+            filtros['comprovantes__restricao__in'] = analise_serasa.split(',')
 
         # venda realizada?
         if vr in ('true', '1'):
@@ -1928,15 +1930,34 @@ class FolhaRelatorioSolicitacoesView(PermissionRequiredMixin, TemplateView):
         # pré-carrega vendas para calcular totais
         self.solicitacoes = qs.prefetch_related('vendas')
         self.total_vendas = self.solicitacoes.count()
+        
+        self.total_valor = None
 
         # soma totais
-        self.total_valor = sum(
-            venda.pagamentos_valor_total
+        if user and not user.has_perm('vendas.can_view_all_stores'):
+            self.total_valor = sum(
+                venda.pagamentos_valor_total
+                for cliente in self.solicitacoes
+                for venda in cliente.vendas.all()
+            )
+            
+        self.total_lucro = sum(
+            venda.lucro_venda
             for cliente in self.solicitacoes
             for venda in cliente.vendas.all()
         )
-        self.total_lucro = sum(
-            venda.lucro_total()
+        self.total_repasse = sum(
+            venda.valor_repasse
+            for cliente in self.solicitacoes
+            for venda in cliente.vendas.all()
+        )
+        self.total_entrada = sum(
+            venda.valor_entrada_cliente
+            for cliente in self.solicitacoes
+            for venda in cliente.vendas.all()
+        )
+        self.total_custo = sum(
+            venda.custo_total
             for cliente in self.solicitacoes
             for venda in cliente.vendas.all()
         )
@@ -1960,6 +1981,9 @@ class FolhaRelatorioSolicitacoesView(PermissionRequiredMixin, TemplateView):
             'solicitacoes': self.solicitacoes,
             'total_vendas': self.total_vendas,
             'total_valor':   self.total_valor,
+            'total_entrada': self.total_entrada,
+            'total_repasse': self.total_repasse,
+            'total_custo':   self.total_custo,
             'lucro':         self.total_lucro,
             'data_inicial':  self.data_inicial_str,
             'data_final':    self.data_final_str,
@@ -1980,7 +2004,6 @@ class FolhaRelatorioVendasView(PermissionRequiredMixin, TemplateView):
         produtos = request.GET.getlist('produtos')
         vendedores = request.GET.getlist('vendedores')
         loja_id   = request.GET.get('lojas')
-        tipos_venda = request.GET.getlist('tipos_venda')
 
         filtros = {}
 
@@ -2021,19 +2044,10 @@ class FolhaRelatorioVendasView(PermissionRequiredMixin, TemplateView):
 
         # pré-calcula totais para usar no contexto
         self.total_vendas = self.vendas.count()
-        if tipos_venda:
-            total_valor = 0
-            total_lucro = 0
-            for venda in self.vendas:
-                for pagamento in venda.pagamentos.filter(tipo_pagamento__in=tipos_venda):
-                    if not pagamento.tipo_pagamento.nao_contabilizar:
-                        total_valor += pagamento.valor
-                        total_lucro += venda.lucro_total()
-            self.total_valor = total_valor
-            self.total_lucro = total_lucro
-        else:
-            self.total_valor = sum(v.pagamentos_valor_total for v in self.vendas)
-            self.total_lucro = sum(v.lucro_total() for v in self.vendas)
+        self.total_custo = sum(v.custo_total for v in self.vendas)
+        self.total_lucro = sum(v.lucro_venda for v in self.vendas)
+        self.total_entrada = sum(v.valor_entrada_cliente for v in self.vendas)
+        self.total_repasse = sum(v.valor_repasse for v in self.vendas)
 
         # guarda strings formatadas
         self.data_inicial_str = datetime.strptime(data_inicial, '%Y-%m-%d').strftime("%d/%m/%Y") if data_inicial else None
@@ -2053,13 +2067,17 @@ class FolhaRelatorioVendasView(PermissionRequiredMixin, TemplateView):
         context.update({
             'vendas': self.vendas,
             'total_vendas': self.total_vendas,
-            'total_valor': self.total_valor,
+            'total_custo': self.total_custo,
+            'total_entrada': self.total_entrada,
+            'total_repasse': self.total_repasse,
             'lucro': self.total_lucro,
             'data_inicial': self.data_inicial_str,
             'data_final': self.data_final_str,
             'lojas': self.loja,
         })
         return context
+   
+   
     
 class ProdutoVendidoListView(PermissionRequiredMixin, ListView):
     model = ProdutoVenda

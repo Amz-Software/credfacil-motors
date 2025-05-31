@@ -946,13 +946,17 @@ class RelatorioVendasForm(forms.Form):
     )
     def __init__(self, *args, **kwargs):
         loja = kwargs.pop('loja', None)
+        user = kwargs.pop('user', None)
         print(f'Loja no form: {loja}')
         super().__init__(*args, **kwargs)
         if loja:
             self.fields['produtos'].queryset = Produto.objects.all()
             self.fields['cliente'].queryset = Cliente.objects.filter(loja=loja)
             self.fields['vendedores'].queryset = User.objects.filter(loja=loja)
-            self.fields['lojas'].queryset = Loja.objects.filter(id=loja)
+            if user and not user.has_perm('vendas.can_view_all_stores'):
+                self.fields['lojas'].queryset = Loja.objects.filter(pk=loja)
+            else:
+                self.fields['lojas'].queryset = Loja.objects.all()
             self.fields['lojas'].initial = loja
 
 

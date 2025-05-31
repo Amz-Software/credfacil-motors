@@ -364,15 +364,41 @@ class Venda(Base):
     def calcular_valor_total(self):
         return sum(produto.calcular_valor_total() for produto in self.itens_venda.all())
     
-    def custo_total(self):
-        return sum(produto.custo() for produto in self.itens_venda.all())
-    
-    def lucro_total(self):
-        return sum(produto.lucro() for produto in self.itens_venda.all())
-    
     @cached_property
     def valor_repasse(self):
         return sum(produto.produto.valor_repasse_logista * produto.quantidade for produto in self.itens_venda.all())
+    
+    @cached_property
+    def valor_entrada_cliente(self):
+        return sum(produto.produto.entrada_cliente * produto.quantidade for produto in self.itens_venda.all())
+
+    @cached_property
+    def lucro_venda(self):
+        # print("Calculando lucro da venda...")
+        from estoque.models import ProdutoEntrada
+        total_lucro = 0
+        for produto in self.itens_venda.all():
+            # print(f"Produto: {produto.produto.nome}, Quantidade: {produto.quantidade}")
+            custo_unitario = ProdutoEntrada.objects.filter(produto=produto.produto).last().custo_unitario
+            # print(f"Custo unitário: {custo_unitario}")
+            total_lucro += (produto.produto.valor_repasse_logista + produto.produto.entrada_cliente - custo_unitario) * produto.quantidade
+            # print(f'Calculo: {produto.produto.valor_repasse_logista} + {produto.produto.entrada_cliente} - {custo_unitario} * {produto.quantidade}')
+            # print(f"Lucro parcial: {total_lucro}")
+        # print(f"Total lucro: {total_lucro}")
+        return total_lucro
+    
+    @cached_property
+    def valor_total_venda(self):
+        return sum(pagamento.valor for pagamento in self.pagamentos.all())
+
+    @cached_property
+    def custo_total(self):
+        from estoque.models import ProdutoEntrada
+        total_custo = Decimal('0.00')
+        for produto in self.itens_venda.all():
+            custo_unitario = ProdutoEntrada.objects.filter(produto=produto.produto).last().custo_unitario
+            total_custo += custo_unitario * produto.quantidade
+        return total_custo
     
     def __str__(self):
         return f"{self.cliente} - {self.data_venda.strftime('%d/%m/%Y')}"

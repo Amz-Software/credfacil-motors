@@ -150,87 +150,112 @@
           <thead class="table-light">
             <tr>
               {% if user|has_perm:"vendas.can_view_all_stores" %}
-                <th>Loja</th>
+          <th>Loja</th>
               {% endif %}
-              <th>Venda</th>
-              <th>Modelo</th>
-              <th class="text-end">Valor total</th>
-              <th class="text-end">Valor pendente</th>
-              <th class="text-center">Parcelas totais</th>
-              <th class="text-center">Parcelas pendentes</th>
+              <th>Cliente</th>
+              <th>Produto</th>
               <th class="text-center">IMEI</th>
-              <th class="text-center">Contato do cliente</th>
-              <th class="text-end">Total a vencer</th>
-              <th class="text-end">Total em atraso</th>
-              <th class="text-end">Total quitado</th>              
+              <th class="text-center">Contato do Cliente</th>
+              <th class="text-end">Valor Atrasado</th>
+              <th class="text-end">Último Vencimento</th>
+              <th class="text-end">Valor Pago</th>
+              <th class="text-end">Último Pagamento</th>
+              <th class="text-end">Valor a Vencer</th>
+              <th class="text-end">Próximo Vencimento</th>
+              <th class="text-end">Valor Total</th>
+              <th class="text-center">Parcelas Totais</th>
+              <th class="text-center">Parcelas Pagas</th>
+              <th class="text-end">Valor Quitado</th>
               <th>Ações</th>
             </tr>
           </thead>
           <tbody>
             {% for conta in contas_a_receber %}
               <tr class="
-                {% if conta.bloqueado %}table-purple
-                {% elif conta.com_parcela_atrasada %}table-danger
-                {% elif conta.com_pagamento_pendente %}table-warning
-                {% elif conta.pago_dentro_prazo %}table-success
-                {% elif conta.todas_parcelas_pagas %}table-info
-                {% endif %}
+          {% if conta.bloqueado %}table-purple
+          {% elif conta.com_parcela_atrasada %}table-danger
+          {% elif conta.com_pagamento_pendente %}table-warning
+          {% elif conta.pago_dentro_prazo %}table-success
+          {% elif conta.todas_parcelas_pagas %}table-info
+          {% endif %}
               ">
-                {% if user|has_perm:"vendas.can_view_all_stores" %}
-                  <td>
-                    <a href="{% url 'vendas:loja_detail' conta.venda.loja.id %}">
-                      {{ conta.venda.loja.nome|title }}
-                    </a>
-                  </td>
-                {% endif %}
-                <td>
-                  <a href="{% url 'vendas:cliente_update' conta.venda.cliente.id %}">
-                    {{ conta.venda.cliente.nome|title }}
-                  </a>
-                </td>
-                <td>
-                  <a href="{% url 'produtos:produto_detail' conta.venda.itens_venda.first.produto.id %}">
-                    {{ conta.venda.itens_venda.first.produto.nome|title }}
-                  </a>
-                </td>
-                <td class="text-end">{{ conta.valor|floatformat:2 }}</td>
-                <td class="text-end">{{ conta.valor_pendente|floatformat:2 }}</td>
-                <td class="text-center">{{ conta.parcelas }}</td>
-                <td class="text-center">{{ conta.parcelas_pendentes }}</td>
-                <td>
-                  {% if conta.venda.itens_venda.first.imei %}
-                      {{ conta.venda.itens_venda.first.imei }}
-                  {% else %}
-                    -
-                  {% endif %}
-                </td>
-                <td>
-                  {% if conta.venda.cliente.telefone %}
-                      {{ conta.venda.cliente.telefone }}
-
-                  {% else %}
-                    -
-                  {% endif %}
-                </td>
-                <td class="text-center">{{ conta.total_a_vencer }}</td>
-                <td class="text-center">{{ conta.total_atrasos }}</td>
-                <td class="text-center">{{ conta.total_pago }}</td>
-                <td>
-                  {% if user|has_perm:"vendas.view_pagamento" %}
-                    <a
-                      href="{% url 'financeiro:contas_a_receber_update' conta.id %}"
-                      class="btn btn-outline-primary btn-sm"
-                    >
-                      <i class="bi bi-eye-fill"></i>
-                    </a>
-                  {% endif %}
-                </td>
+          {% if user|has_perm:"vendas.can_view_all_stores" %}
+            <td>
+              <a href="{% url 'vendas:loja_detail' conta.venda.loja.id %}">
+                {{ conta.venda.loja.nome|title }}
+              </a>
+            </td>
+          {% endif %}
+          <td>
+            <a href="{% url 'vendas:cliente_update' conta.venda.cliente.id %}">
+              {{ conta.venda.cliente.nome|title }}
+            </a>
+          </td>
+          <td>
+            <a href="{% url 'produtos:produto_detail' conta.venda.itens_venda.first.produto.id %}">
+              {{ conta.venda.itens_venda.first.produto.nome|title }}
+            </a>
+          </td>
+          <td class="text-center">
+            {% if conta.venda.itens_venda.first.imei %}
+              {{ conta.venda.itens_venda.first.imei }}
+            {% else %}
+              -
+            {% endif %}
+          </td>
+          <td class="text-center">
+            {% if conta.venda.cliente.telefone %}
+              {{ conta.venda.cliente.telefone }}
+            {% else %}
+              -
+            {% endif %}
+          </td>
+          <td class="text-end">
+            {{ conta.valor_atrasado|default:"0.00"|floatformat:2 }}
+          </td>
+          <td class="text-end">
+            {{ conta.ultimo_vencimento|default:"-" }}
+          </td>
+          <td class="text-end">
+            {{ conta.valor_pago_ultimo|default:"0.00"|floatformat:2 }}
+          </td>
+          <td class="text-end">
+            {{ conta.ultimo_pagamento|default:"-" }}
+          </td>
+          <td class="text-end">
+            {{ conta.valor_a_vencer|default:"0.00"|floatformat:2 }}
+          </td>
+          <td class="text-end">
+            {{ conta.proximo_vencimento|default:"-" }}
+          </td>
+          <td class="text-end">
+            {{ conta.valor_total_parcelas|floatformat:2 }}
+          </td>
+          <td class="text-center">
+            {{ conta.parcelas_totais }}
+          </td>
+          <td class="text-center">
+            {{ conta.parcelas_pagas }}
+          </td>
+          <td class="text-end">
+            {{ conta.valor_quitado|default:"0.00"|floatformat:2 }}
+          </td>
+          <td>
+            {% if user|has_perm:"vendas.view_pagamento" %}
+              <a
+                href="{% url 'financeiro:contas_a_receber_update' conta.id %}"
+                class="btn btn-outline-primary btn-sm"
+              >
+                <i class="bi bi-eye-fill"></i>
+              </a>
+            {% endif %}
+          </td>
               </tr>
             {% empty %}
               <tr>
-                <td colspan="9" class="text-center py-4">
-                  Nenhum registro encontrado
-                </td>
+          <td colspan="16" class="text-center py-4">
+            Nenhum registro encontrado
+          </td>
               </tr>
             {% endfor %}
           </tbody>

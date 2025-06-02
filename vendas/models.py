@@ -662,6 +662,40 @@ class Pagamento(Base):
     def valor_parcela(self):
         return self.valor / self.parcelas
     
+    def valor_atrasado(self):
+        return sum(parcela.valor_restante for parcela in self.parcelas_pagamento.filter(pago=False, data_vencimento__lt=timezone.now()))
+    
+    def ultimo_vencimento(self):
+        ultimo = self.parcelas_pagamento.filter(pago=False).order_by('data_vencimento').last()
+        return ultimo.data_vencimento if ultimo else None
+    
+    def valor_pago_ultimo(self):
+        ultimo = self.parcelas_pagamento.filter(pago=True).order_by('data_pagamento').last()
+        return ultimo.valor_pago if ultimo else 0
+    
+    def ultimo_pagamento(self):
+        ultimo = self.parcelas_pagamento.filter(pago=True).order_by('data_pagamento').last()
+        return ultimo.data_pagamento if ultimo else None
+    
+    def valor_a_vencer(self):
+        return sum(parcela.valor_restante for parcela in self.parcelas_pagamento.filter(pago=False, data_vencimento__gte=timezone.now()))
+
+    def proximo_vencimento(self):
+        proximo = self.parcelas_pagamento.filter(pago=False).order_by('data_vencimento').first()
+        return proximo.data_vencimento if proximo else None
+    
+    def valor_total_parcelas(self):
+        return sum(parcela.valor for parcela in self.parcelas_pagamento.all())
+    
+    def parcelas_totais(self):
+        return self.parcelas_pagamento.count()
+
+    def parcelas_pagas(self):
+        return self.parcelas_pagamento.filter(pago=True).count()
+    
+    def valor_quitado(self):
+        return sum(parcela.valor_pago for parcela in self.parcelas_pagamento.filter(pago=True))
+    
     def valor_pendente(self):
         return self.valor - sum(parcela.valor for parcela in self.parcelas_pagamento.filter(pago=True))
     

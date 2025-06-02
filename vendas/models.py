@@ -666,8 +666,11 @@ class Pagamento(Base):
         return sum(parcela.valor_restante for parcela in self.parcelas_pagamento.filter(pago=False, data_vencimento__lt=timezone.now()))
     
     def ultimo_vencimento(self):
+        # primeiro pagamento em atraso
+        # pega a última parcela que não foi paga e ordena por data de vencimento
         ultimo = self.parcelas_pagamento.filter(pago=False).order_by('data_vencimento').last()
         return ultimo.data_vencimento if ultimo else None
+    
     
     def valor_pago_ultimo(self):
         ultimo = self.parcelas_pagamento.filter(pago=True).order_by('data_pagamento').last()

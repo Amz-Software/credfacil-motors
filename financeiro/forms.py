@@ -134,6 +134,24 @@ ParcelaInlineFormSet = forms.inlineformset_factory(
     can_delete=True
 )
 
+class RelatorioContasAReceberForm(forms.Form):
+    data_inicial = forms.DateField(
+        label='Data Inicial',
+        required=True,
+        widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date'})
+    )
+    data_final = forms.DateField(
+        label='Data Final',
+        required=True,
+        widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date'})
+    )
+    lojas = forms.ModelMultipleChoiceField(
+        queryset=Loja.objects.all(),
+        label='Lojas',
+        required=True,
+        widget=Select2MultipleWidget(attrs={'class': 'form-control'})
+    )    
+
 class RelatorioSaidaForm(forms.Form):
     data_inicial = forms.DateField(
         label='Data Inicial',

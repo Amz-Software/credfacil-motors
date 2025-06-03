@@ -491,6 +491,42 @@ class ContasAReceberDetailView(PermissionRequiredMixin, DetailView):
             return self.render_to_response(self.get_context_data(parcela_form=parcela_form))
 
     
+class RelatorioContasAReceberView(BaseView, PermissionRequiredMixin, TemplateView):
+    template_name = 'contas_a_receber/relatorio.html'
+    permission_required = 'vendas.can_genarate_report_payments'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['form'] = RelatorioContasAReceberForm()
+
+        return context
+
+class FolhaRelatorioContasAReceberView(BaseView, PermissionRequiredMixin, TemplateView):
+    template_name = 'contas_a_receber/folha.html'
+    permission_required = 'vendas.can_genarate_report_payments'
+
+    def get_context_data(self, **kwargs):
+        data_inicio = self.request.GET.get('data_inicial')
+        data_fim = self.request.GET.get('data_final')
+        lojas = self.request.GET.getlist('lojas')
+        contas_a_receber = []
+
+        if data_inicio and data_fim:
+            lojas = Loja.objects.filter(id__in=lojas)
+            data_final = datetime.strptime(data_fim, "%Y-%m-%d").date() + timedelta(days=1)
+
+            for loja in lojas:
+                pagamentos = Pagamento.objects.with_status_flags().filter(loja=loja).filter(criado_em__range=[data_inicio, data_final])
+                contas_a_receber += pagamentos
+
+        context = super().get_context_data(**kwargs)
+        context['contas_a_receber'] = contas_a_receber
+        context['lojas'] = lojas.values_list('nome', flat=True)
+        context['data_inicio'] = datetime.strptime(data_inicio, "%Y-%m-%d").date() if data_inicio else None
+        context['data_fim'] = datetime.strptime(data_fim, "%Y-%m-%d").date() if data_fim else None
+
+        return context
+
 class RelatorioSaidaView(BaseView, PermissionRequiredMixin, TemplateView):
     template_name = 'relatorio/relatorio_saida.html'
     permission_required = 'vendas.can_generate_report_sale'

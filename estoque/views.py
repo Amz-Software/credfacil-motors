@@ -129,7 +129,6 @@ class EntradaUpdateView(PermissionRequiredMixin, UpdateView):
         loja = get_object_or_404(Loja, pk=loja_id)
         if form.is_valid() and formset.is_valid():
             entrada_estoque = form.save(commit=False)
-            entrada_estoque.loja = loja
             produtos = formset.save(commit=False)
             # verificar se excluiu algum produto
             for produto in formset.deleted_objects:

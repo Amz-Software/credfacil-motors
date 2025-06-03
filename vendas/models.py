@@ -671,10 +671,9 @@ class Pagamento(Base):
         ultimo = self.parcelas_pagamento.filter(pago=False).order_by('data_vencimento').last()
         return ultimo.data_vencimento if ultimo else None
     
-    
     def valor_pago_ultimo(self):
         ultimo = self.parcelas_pagamento.filter(pago=True).order_by('data_pagamento').last()
-        return ultimo.valor_pago if ultimo else 0
+        return ultimo.valor if ultimo else 0
     
     def ultimo_pagamento(self):
         ultimo = self.parcelas_pagamento.filter(pago=True).order_by('data_pagamento').last()
@@ -697,7 +696,7 @@ class Pagamento(Base):
         return self.parcelas_pagamento.filter(pago=True).count()
     
     def valor_quitado(self):
-        return sum(parcela.valor_pago for parcela in self.parcelas_pagamento.filter(pago=True))
+        return sum(parcela.valor for parcela in self.parcelas_pagamento.filter(pago=True))
     
     def valor_pendente(self):
         return self.valor - sum(parcela.valor for parcela in self.parcelas_pagamento.filter(pago=True))
@@ -724,6 +723,7 @@ class Pagamento(Base):
         verbose_name_plural = 'Pagamentos'
         permissions = (
             ('can_view_all_payments', 'Pode ver todos os pagamentos'),
+            ('can_genarate_report_payments', 'Pode gerar relatório de pagamentos'),
         )
     
 

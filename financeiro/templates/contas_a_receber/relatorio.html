@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% load static iam_tags %}
+{% load crispy_forms_tags %}
+
+{% block title %}
+Relatório Contas a Receber
+{% endblock title %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-sm">
+      <div class="card-header">
+        <h3 class="card-title mb-0 text-secondary">Gerar Relatório Contas a Receber</h3>
+      </div>
+      <div class="card-body">
+        <form method="get" action="{% url 'financeiro:relatorio_folha_contas_a_receber' %}" target="_blank">
+          {{ form|crispy }}
+          <input type="submit" value="Gerar Relatório" class="btn btn-primary">
+        </form>
+      </div>
+    </div>
+</div>
+{% endblock %}
+

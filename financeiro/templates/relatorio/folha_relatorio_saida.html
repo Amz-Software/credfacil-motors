@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Relatório Saída</title>
+    <title>Relatório Contas a Receber</title>
     <style>
         @media print {
             * {
@@ -72,38 +72,97 @@
 </head>
 <body>
     <div class="container">
-        <h2>Relatório de Saídas</h2>
+        <h2>Relatório de Contas a Receber</h2>
         <h3>Período: {{ data_inicio }} a {{ data_fim }}</h3>
         <h3>Lojas: {{ lojas|join:", " }}</h3>
         <table>
             <thead>
                 <tr>
                     <th>Loja</th>
-                    <th>Data</th>
-                    <th>Criada por</th>
-                    <th>Motivo</th>
-                    <th>Valor</th>
+                    <th>Cliente</th>
+                    <th>Produto</th>
+                    <th class="center">IMEI</th>
+                    <th class="center">Contato do Cliente</th>
+                    <th class="right">Valor Atrasado</th>
+                    <th class="right">Primeiro Vencimento</th>
+                    <th class="right">Valor Pago</th>
+                    <th class="right">Último Pagamento</th>
+                    <th class="right">Valor a Vencer</th>
+                    <th class="right">Próximo Vencimento</th>
+                    <th class="right">Valor Total</th>
+                    <th class="center">Parcelas Totais</th>
+                    <th class="center">Parcelas Pagas</th>
+                    <th class="right">Valor Quitado</th>
                 </tr>
             </thead>
             <tbody>
-                {% for saida in saidas %}
-                    <tr>
-                        <td>{{ saida.caixa.loja }}</td>
-                        <td>{{ saida.caixa.data_abertura }}</td>
-                        <td>{{ saida.criado_por }}</td>
-                        <td>{{ saida.motivo }}</td>
-                        <td>R$ {{ saida.valor }}</td>
-                    </tr>
+                {% for conta in contas_a_receber %}
+                <tr
+                    {% if conta.bloqueado %}style="background-color:#e1bee7;"
+                    {% elif conta.com_parcela_atrasada %}style="background-color:#f8d7da;"
+                    {% elif conta.com_pagamento_pendente %}style="background-color:#fff3cd;"
+                    {% elif conta.pago_dentro_prazo %}style="background-color:#d4edda;"
+                    {% elif conta.todas_parcelas_pagas %}style="background-color:#d1ecf1;"
+                    {% endif %}
+                >
+                    {% if user|has_perm:"vendas.can_view_all_stores" %}
+                        <td>{{ conta.venda.loja.nome|title }}</td>
+                    {% endif %}
+                    <td>{{ conta.venda.cliente.nome|title }}</td>
+                    <td>{{ conta.venda.itens_venda.first.produto.nome|title }}</td>
+                    <td class="center">
+                        {% if conta.venda.itens_venda.first.imei %}
+                            {{ conta.venda.itens_venda.first.imei }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td class="center">
+                        {% if conta.venda.cliente.telefone %}
+                            {{ conta.venda.cliente.telefone }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td class="right">
+                        {{ conta.valor_atrasado|default:"0.00"|floatformat:2 }}
+                    </td>
+                    <td class="right">
+                        {{ conta.ultimo_vencimento|default:"-" }}
+                    </td>
+                    <td class="right">
+                        {{ conta.valor_pago_ultimo|default:"0.00"|floatformat:2 }}
+                    </td>
+                    <td class="right">
+                        {{ conta.ultimo_pagamento|default:"-" }}
+                    </td>
+                    <td class="right">
+                        {{ conta.valor_a_vencer|default:"0.00"|floatformat:2 }}
+                    </td>
+                    <td class="right">
+                        {{ conta.proximo_vencimento|default:"-" }}
+                    </td>
+                    <td class="right">
+                        {{ conta.valor_total_parcelas|floatformat:2 }}
+                    </td>
+                    <td class="center">
+                        {{ conta.parcelas_totais }}
+                    </td>
+                    <td class="center">
+                        {{ conta.parcelas_pagas }}
+                    </td>
+                    <td class="right">
+                        {{ conta.valor_quitado|default:"0.00"|floatformat:2 }}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="15" class="center" style="padding: 16px;">
+                        Nenhum registro encontrado
+                    </td>
+                </tr>
                 {% endfor %}
             </tbody>
-            <tfoot>
-                <tr class="footer">
-                    <td colspan="2">Quantidade</td>
-                    <td>{{ quantidade_saida }}</td>
-                    <td>Total</td>
-                    <td>R$ {{ total_saida }}</td>
-                </tr>
-            </tfoot>
         </table>
     </div>
 

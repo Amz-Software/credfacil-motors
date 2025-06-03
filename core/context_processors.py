@@ -148,6 +148,11 @@ def menu_items(request):
                     "permission": "vendas.view_pagamento"
                 },
                 {
+                    "label": "Relatório Contas a Receber",
+                    "url_name": "financeiro:relatorio_contas_a_receber",
+                    "permission": "vendas.view_pagamento"
+                },
+                {
                     "label": "Fechamentos Mensais",
                     "url_name": "financeiro:caixa_mensal_list",
                     "permission": "financeiro.view_caixamensal"

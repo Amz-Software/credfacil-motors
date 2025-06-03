@@ -19,8 +19,14 @@ def criar_ou_atualizar_parcelas(sender, instance, created, **kwargs):
                 data_vencimento=calcular_data_vencimento(instance.data_primeira_parcela, numero),
                 criado_por=instance.criado_por,
                 modificado_por=instance.modificado_por
-                )
-    else:  
+            )
+    else:
+        # Só recria as parcelas se algum campo relevante mudou (exceto 'bloqueado')
+        update_fields = kwargs.get('update_fields', None)
+        
+        if update_fields is not None and update_fields == {'bloqueado'}:
+            return
+
         Parcela.objects.filter(pagamento=instance).delete()
 
         for numero in range(1, instance.parcelas + 1):

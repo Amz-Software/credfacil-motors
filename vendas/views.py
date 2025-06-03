@@ -2222,7 +2222,7 @@ def contrato_view(request, pk):
 def toggle_bloqueio_pagamento(request, pk):
     pagamento = get_object_or_404(Pagamento, pk=pk)
     pagamento.bloqueado = not pagamento.bloqueado
-    pagamento.save()
+    pagamento.save(update_fields=['bloqueado'])
     return redirect(reverse('financeiro:contas_a_receber_update', args=[pagamento.pk]))
 
 

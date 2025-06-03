@@ -64,7 +64,11 @@
     <div class="container">
         <h2>Relatório de Contas a Receber</h2>
         <h3>Período: {{ data_inicio }} a {{ data_fim }}</h3>
+        {% if lojas %}
         <h3>Lojas: {{ lojas|join:", " }}</h3>
+        {% else %}
+        <h3>Lojas: Todas</h3>
+        {% endif %}
         <table>
             <thead>
             <tr>

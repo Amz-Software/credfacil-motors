@@ -515,9 +515,14 @@ class FolhaRelatorioContasAReceberView(BaseView, PermissionRequiredMixin, Templa
             lojas = Loja.objects.filter(id__in=lojas)
             data_final = datetime.strptime(data_fim, "%Y-%m-%d").date() + timedelta(days=1)
 
-            for loja in lojas:
-                pagamentos = Pagamento.objects.with_status_flags().filter(loja=loja).filter(criado_em__range=[data_inicio, data_final])
+            if lojas:
+                for loja in lojas:
+                    pagamentos = Pagamento.objects.with_status_flags().filter(loja=loja).filter(criado_em__range=[data_inicio, data_final])
+                    contas_a_receber += pagamentos
+            else:
+                pagamentos = Pagamento.objects.with_status_flags().filter(criado_em__range=[data_inicio, data_final])
                 contas_a_receber += pagamentos
+
 
         context = super().get_context_data(**kwargs)
         context['contas_a_receber'] = contas_a_receber

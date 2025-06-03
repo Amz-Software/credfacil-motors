@@ -148,7 +148,7 @@ class RelatorioContasAReceberForm(forms.Form):
     lojas = forms.ModelMultipleChoiceField(
         queryset=Loja.objects.all(),
         label='Lojas',
-        required=True,
+        required=False,
         widget=Select2MultipleWidget(attrs={'class': 'form-control'})
     )    
 

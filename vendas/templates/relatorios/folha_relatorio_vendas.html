@@ -86,8 +86,8 @@
                     <th>Produtos</th>
                     <th>Valor de Entrada</th>
                     <th>Valor de Repasse</th>
-                    <th>Valor de Custo</th>
-                    <th>Valor Total Lucro</th>
+                    <th>Valor Total</th>
+                    <th>Juros</th>
                 </tr>
             </thead>
             <tbody>
@@ -107,8 +107,8 @@
                     </td>
                     <td>R$ {{ venda.valor_entrada_cliente|floatformat:2 }}</td>
                     <td>R$ {{ venda.valor_repasse|floatformat:2 }}</td>
-                    <td>R$ {{ venda.custo_total|floatformat:2 }}</td>
-                    <td>{{ venda.lucro_venda|floatformat:2 }}</td>
+                    <td>R$ {{ venda.pagamentos_valor_total|floatformat:2 }}</td>
+                    <td>R$ {{ venda.juros|floatformat:2 }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -117,8 +117,8 @@
                   <td colspan="3"><strong>Total de Vendas: {{ total_vendas }}</strong></td>
                   <td colspan="2"><strong>Total Entrada: R$ {{ total_entrada|floatformat:2 }}</strong></td>
                   <td colspan="2"><strong>Total Repasse: R$ {{ total_repasse|floatformat:2 }}</strong></td>
-                  <td colspan="2"><strong>Total Custo: R$ {{ total_custo|floatformat:2 }}</strong></td>
-                  <td colspan="2"><strong>Total Lucro: R$ {{ lucro|floatformat:2 }}</strong></td>
+                  <td colspan="2"><strong>Total Valor: R$ {{ total_valor|floatformat:2 }}</strong></td>
+                    <td colspan="2"><strong>Total Juros: R$ {{ total_juros|floatformat:2 }}</strong></td>
                 </tr>
             </tfoot>
         </table>

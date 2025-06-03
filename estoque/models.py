@@ -51,7 +51,7 @@ class ProdutoEntrada(Base):
     entrada = models.ForeignKey(EntradaEstoque, on_delete=models.CASCADE, related_name='produtos', verbose_name='Entrada de Estoque')
     produto = models.ForeignKey('produtos.Produto', on_delete=models.PROTECT, related_name='entradas_estoque', verbose_name='Produto')
     imei = models.CharField(max_length=20, blank=True, null=True, verbose_name='IMEI')
-    custo_unitario = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Custo Unitário')
+    custo_unitario = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Custo Unitário', blank=True, null=True)
     venda_unitaria = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Venda Unitária', blank=True, null=True)
     quantidade = models.PositiveIntegerField(verbose_name='Quantidade', default=1)
 

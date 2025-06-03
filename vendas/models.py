@@ -400,6 +400,10 @@ class Venda(Base):
             total_custo += custo_unitario * produto.quantidade
         return total_custo
     
+    @cached_property
+    def juros(self):
+        return sum((self.valor_total_venda - (self.valor_entrada_cliente + self.valor_repasse)) * produto.quantidade for produto in self.itens_venda.all())
+
     def __str__(self):
         return f"{self.cliente} - {self.data_venda.strftime('%d/%m/%Y')}"
     

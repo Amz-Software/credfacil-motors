@@ -48,13 +48,13 @@ class FornecedorForm(forms.ModelForm):
 class ProdutoEntradaForm(forms.ModelForm):
     class Meta:
         model = ProdutoEntrada
-        exclude = ['loja', 'entrada', 'venda_unitaria', 'quantidade']
+        exclude = ['loja', 'entrada', 'venda_unitaria', 'quantidade', 'custo_unitario']
 
         widgets = {
             'produto': forms.Select(attrs={'class': 'form-control'}),
             'imei': forms.TextInput(attrs={'class': 'form-control'}),
             # 'quantidade': forms.NumberInput(attrs={'class': 'form-control'}),
-            'custo_unitario': forms.TextInput(attrs={'class': 'form-control money'}),
+            # 'custo_unitario': forms.TextInput(attrs={'class': 'form-control money'}),
         }
 
     def __init__(self, *args, **kwargs):

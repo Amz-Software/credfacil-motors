@@ -68,7 +68,7 @@ Entrada {{ entrada.data_entrada|date:"d/m/Y" }}
             <thead>
               <tr>
                 <th>Produto</th>
-                <th>Custo</th>
+                <!-- <th>Custo</th> -->
                 <th>Quantidade</th>
                 <th>IMEI</th>
                 <th>Ações</th>
@@ -78,7 +78,7 @@ Entrada {{ entrada.data_entrada|date:"d/m/Y" }}
               {% for produto in entrada.produtos.all %}
               <tr>
                 <td>{{ produto.produto }}</td>
-                <td>{{ produto.custo_unitario }}</td>
+                <!-- <td>{{ produto.custo_unitario }}</td> -->
                 <td>{{ produto.quantidade }}</td>
                 <td>{{ produto.imei }}</td>
                 <td>

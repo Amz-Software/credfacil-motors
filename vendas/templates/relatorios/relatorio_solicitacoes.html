@@ -69,11 +69,8 @@
                     <th>Venda Gerada?</th>
                     <th>Valor Entrada</th>
                     <th>Valor Repasse</th>
-                    <th>Valor Custo</th>
-                    {% if total_valor %}
                     <th>Valor Total</th>
-                    {% endif %}
-                    <th>Lucro Total</th>
+                    <th>Valor Juros</th>
                 </tr>
             </thead>
             <tbody>
@@ -81,7 +78,7 @@
                 {% with ac=cliente.analise_credito %}
                 <tr>
                     <!-- Loja da solicitação -->
-                    <td>{{ lojas.nome|default:"-" }}</td>
+                    <td>{{ cliente.loja.nome|default:"-"|title }}</td>
 
                     <!-- Data de criação da solicitação -->
                     <td>{{ cliente.criado_em|date:"d/m/Y" }}</td>
@@ -136,22 +133,15 @@
                     <td class="right">
                         R$ {{ ac.venda.valor_repasse|default:"0.00"|floatformat:2 }}
                     </td>
-                    <!-- Valor de custo da venda -->
-                    <td class="right">
-                        R$ {{ ac.venda.custo_total|default:"0.00"|floatformat:2 }}
-                    </td>
 
-                    <!-- Se houve venda, mostra o total de pagamentos; senão 0 -->
-                    {% if total_valor %}
                     <td class="right">
                         R$ {{ ac.venda.pagamentos_valor_total|default:"0.00"|floatformat:2 }}
                     </td>
-                    {% endif %}
 
-                    <!-- Se houve venda, mostra o lucro; senão 0 -->
                     <td class="right">
-                        R$ {{ ac.venda.lucro_venda|default:"0.00"|floatformat:2 }}
+                        R$ {{ ac.venda.juros|default:"0.00"|floatformat:2 }}
                     </td>
+
                 </tr>
                 {% endwith %}
                 {% empty %}
@@ -167,11 +157,8 @@
                     <td colspan="4"><strong>Total de Solicitações: {{ total_vendas }}</strong></td>
                     <td colspan="2"><strong>Total Entrada: R$ {{ total_entrada|floatformat:2 }}</strong></td>
                     <td colspan="2"><strong>Total Repasse: R$ {{ total_repasse|floatformat:2 }}</strong></td>
-                    <td colspan="2"><strong>Total Custo: R$ {{ total_custo|floatformat:2 }}</strong></td>
-                    {% if total_valor %}
                     <td colspan="2"><strong>Total Valor: R$ {{ total_valor|floatformat:2 }}</strong></td>
-                    {% endif %}
-                    <td colspan="2"><strong>Total Lucro: R$ {{ lucro|floatformat:2 }}</strong></td>
+                    <td colspan="2"><strong>Total Juros: R$ {{ total_juros|floatformat:2 }}</strong></td>
                 </tr>
             </tfoot>
         </table>

@@ -18,7 +18,7 @@ class ProdutoListView(PermissionRequiredMixin, ListView):
         search = self.request.GET.get('search')
         if search:
             return queryset.filter(nome__icontains=search)
-        return queryset
+        return queryset.order_by('nome')
 
 def generate_views(modelo, form=None, paginacao=10, template_dir=''):
     """

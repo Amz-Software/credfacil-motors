@@ -225,10 +225,7 @@ class Loja(Base):
                 # Soma de valor_repasse_logista de cada venda
                 valor = Decimal('0.00')
                 for venda in vendas_periodo:
-                    valor_repasse = venda.repasse_logista or sum(
-                        produto.produto.valor_repasse_logista * produto.quantidade
-                        for produto in ProdutoVenda.objects.filter(venda=venda)
-                    )
+                    valor_repasse = venda.repasse_logista
                     valor += valor_repasse
 
                 feito = self.repasse.filter(data__date=dt_atual).exists()
@@ -343,7 +340,7 @@ class Venda(Base):
     produtos = models.ManyToManyField('produtos.Produto', through='ProdutoVenda', related_name='vendas')
     caixa = models.ForeignKey('vendas.Caixa', on_delete=models.CASCADE, related_name='vendas')
     observacao = models.TextField(null=True, blank=True)
-    repasse_logista = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    repasse_logista = models.DecimalField(max_digits=10, decimal_places=2)
     is_deleted = models.BooleanField(default=False)
     
     def qtd_total_parcelas(self):

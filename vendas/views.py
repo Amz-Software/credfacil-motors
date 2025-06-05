@@ -1868,7 +1868,7 @@ class FolhaRelatorioSolicitacoesView(PermissionRequiredMixin, TemplateView):
         data_final      = request.GET.get('data_final')
         produtos        = request.GET.getlist('produtos')
         vendedores      = request.GET.getlist('vendedores')
-        loja_id         = request.GET.get('lojas')
+        loja_ids         = request.GET.getlist('lojas')
         status_solicitacao = request.GET.get('status_solicitacao')
         parcelas        = request.GET.get('parcelas')
         analise_serasa  = request.GET.get('analise_serasa')
@@ -1915,9 +1915,9 @@ class FolhaRelatorioSolicitacoesView(PermissionRequiredMixin, TemplateView):
             filtros['analise_credito__criado_por__in'] = vendedores
         if produtos:
             filtros['analise_credito__produto__in'] = produtos
-        if loja_id:
-            filtros['loja__id'] = loja_id
-            self.loja = Loja.objects.filter(pk=loja_id).first()
+        if loja_ids:
+            filtros['loja__id__in'] = loja_ids
+            self.loja = Loja.objects.filter(pk__in=loja_ids).first()
         else:
             self.loja = None
 
@@ -1993,7 +1993,7 @@ class FolhaRelatorioVendasView(PermissionRequiredMixin, TemplateView):
         data_final = request.GET.get('data_final')
         produtos = request.GET.getlist('produtos')
         vendedores = request.GET.getlist('vendedores')
-        loja_id   = request.GET.get('lojas')
+        loja_ids   = request.GET.getlist('lojas')
 
         filtros = {}
 
@@ -2018,9 +2018,9 @@ class FolhaRelatorioVendasView(PermissionRequiredMixin, TemplateView):
             filtros['vendedor__in'] = vendedores
         if produtos:
             filtros['produtos__in'] = produtos
-        if loja_id:
-            filtros['loja__id'] = loja_id
-            self.loja = Loja.objects.filter(pk=loja_id).first()
+        if loja_ids:
+            filtros['loja__id__in'] = loja_ids
+            self.loja = Loja.objects.filter(pk__in=loja_ids).first()
         else:
             self.loja = None
 
@@ -2063,7 +2063,7 @@ class FolhaRelatorioVendasView(PermissionRequiredMixin, TemplateView):
             'total_repasse': self.total_repasse,
             'data_inicial': self.data_inicial_str,
             'data_final': self.data_final_str,
-            'lojas': self.loja,
+            'lojas': Loja.objects.filter(id__in=self.request.GET.getlist('lojas')) if self.loja else Loja.objects.all(),
         })
         return context
    

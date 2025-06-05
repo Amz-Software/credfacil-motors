@@ -1977,7 +1977,7 @@ class FolhaRelatorioSolicitacoesView(PermissionRequiredMixin, TemplateView):
             'total_juros':   self.total_juros,
             'data_inicial':  self.data_inicial_str,
             'data_final':    self.data_final_str,
-            'lojas':         self.loja,
+            'lojas':         Loja.objects.filter(id__in=self.request.GET.getlist('lojas')) if self.loja else Loja.objects.all(),
         })
         return ctx
 

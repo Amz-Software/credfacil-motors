@@ -817,8 +817,20 @@ def gerar_venda(request, cliente_id):
         messages.error(request, "❌ IMEI já vendido. Altere o IMEI para continuar.")
         return redirect('vendas:cliente_list')
 
-    estoque = Estoque.objects.filter(produto=produto, loja=loja).first()
-    if not estoque or estoque.quantidade_disponivel <= 0:
+    estoque = Estoque.objects.filter(produto__nome=produto.nome, loja=loja)
+
+    if not estoque.exists():
+        messages.error(request, f"❌ Estoque não encontrado para o produto {produto.nome}.")
+        return redirect('vendas:cliente_list')
+    
+    # verificar se em algum produto com o mesmo nome possui estoque
+    estoque_produto = None
+    for est in estoque:
+        if est.quantidade_disponivel > 0:
+            estoque_produto = est
+            break
+        
+    if not estoque_produto:
         messages.error(request, f"❌ Estoque insuficiente para o produto {produto.nome}.")
         return redirect('vendas:cliente_list')
 

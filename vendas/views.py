@@ -881,7 +881,7 @@ def gerar_venda(request, cliente_id):
     imei.vendido = True
     imei.data_venda = timezone.now()
     imei.save()
-    estoque.remover_estoque(1)
+    estoque_produto.remover_estoque(1)
 
     # Pagamentos
     tipo_entrada = TipoPagamento.objects.get(nome__iexact='ENTRADA')

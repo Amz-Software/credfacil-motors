@@ -46,7 +46,10 @@ def atualizar_estoque_deletar_entrada(sender, instance, **kwargs):
 
 @receiver(post_delete, sender=ProdutoVenda)
 def atualizar_estoque_deletar_venda(sender, instance, **kwargs):
-    estoque = Estoque.objects.filter(produto=instance.produto, loja=instance.loja).first()
+    estoque = Estoque.objects.filter(produto=instance.produto.nome, loja=instance.loja)
+    if not estoque.exists():
+        raise ValidationError(f"Estoque não encontrado para o produto {instance.produto.nome} na loja {instance.loja}.")
+    estoque = estoque.first()
     estoque.adicionar_estoque(instance.quantidade)
 
 @receiver(post_save, sender=Venda)

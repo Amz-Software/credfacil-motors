@@ -377,7 +377,7 @@ Detalhes da Loja
                     <td>{{ venda.data_venda|date:"d/m/Y" }}</td>
                     <td>{{ venda.cliente.nome }}</td>
                     <td>
-                        {{ venda.valor_repasse|floatformat:2 }}
+                        {{ venda.repasse_logista|floatformat:2 }}
                     <td>R$ {{ venda.pagamentos_valor_total|floatformat:2 }}</td>
                     <td>
                         <a href="{% url 'vendas:venda_detail' venda.pk %}"

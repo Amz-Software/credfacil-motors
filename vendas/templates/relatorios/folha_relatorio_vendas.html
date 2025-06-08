@@ -106,7 +106,7 @@
                         {% endfor %}
                     </td>
                     <td>R$ {{ venda.valor_entrada_cliente|floatformat:2 }}</td>
-                    <td>R$ {{ venda.valor_repasse|floatformat:2 }}</td>
+                    <td>R$ {{ venda.repasse_logista|floatformat:2 }}</td>
                     <td>R$ {{ venda.pagamentos_valor_total|floatformat:2 }}</td>
                     <td>R$ {{ venda.juros|floatformat:2 }}</td>
                 </tr>

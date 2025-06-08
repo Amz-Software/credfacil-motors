@@ -367,7 +367,9 @@ class Venda(Base):
     
     @cached_property
     def valor_entrada_cliente(self):
-        return sum(produto.produto.entrada_cliente * produto.quantidade for produto in self.itens_venda.all())
+        # Busca o valor de pagamentos do tipo ENTRADA
+        entrada_pagamento = self.pagamentos.filter(tipo_pagamento__nome__iexact='ENTRADA').aggregate(total=models.Sum('valor'))['total']
+        return entrada_pagamento or 0
 
     @cached_property
     def lucro_venda(self):
@@ -399,7 +401,8 @@ class Venda(Base):
     
     @cached_property
     def juros(self):
-        return sum((self.valor_total_venda - (self.valor_entrada_cliente + self.valor_repasse)) * produto.quantidade for produto in self.itens_venda.all())
+        entrada_pagamento = self.pagamentos.filter(tipo_pagamento__nome__iexact='ENTRADA').aggregate(total=models.Sum('valor'))['total'] or 0
+        return sum((self.valor_total_venda - (entrada_pagamento + self.repasse_logista)) * produto.quantidade for produto in self.itens_venda.all())
 
     def __str__(self):
         return f"{self.cliente} - {self.data_venda.strftime('%d/%m/%Y')}"

@@ -6,6 +6,7 @@ from notifications.signals import notify
 from .models import Parcela
 from notificacao.utils import enviar_ws_para_usuario
 from django.contrib.auth import get_user_model
+from dateutil.relativedelta import relativedelta
 User = get_user_model()
 
 @receiver(post_save, sender=Pagamento)
@@ -40,7 +41,8 @@ def criar_ou_atualizar_parcelas(sender, instance, created, **kwargs):
             )
 
 def calcular_data_vencimento(data_primeira_parcela, numero_parcela):
-    return data_primeira_parcela + timedelta(days=30 * (numero_parcela - 1))
+    # Cada parcela é no mesmo dia do mês, nos meses seguintes
+    return data_primeira_parcela + relativedelta(months=numero_parcela - 1)
 
 
 

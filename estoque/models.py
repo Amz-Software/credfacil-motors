@@ -57,10 +57,14 @@ class ProdutoEntrada(Base):
 
     @property
     def custo_total(self):
+        if self.custo_unitario is None:
+            return 0
         return self.custo_unitario * self.quantidade
     
     @property
     def venda_total(self):
+        if self.venda_unitaria is None:
+            return 0
         return self.venda_unitaria * self.quantidade
 
     def __str__(self):

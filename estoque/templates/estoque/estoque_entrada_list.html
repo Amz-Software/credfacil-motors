@@ -43,6 +43,7 @@ Estoque
                   <th scope="col" class="text-center">Liberada p/ Venda</th>
                   <th scope="col" class="text-center">Emitida por</th>
                   <th scope="col" class="text-center">Modificada por</th>
+                  <th scope="col" class="text-center">Data Última Modificação</th>
                   <th scope="col" class="text-center">Ações</th>
                 </tr>
               </thead>
@@ -66,6 +67,7 @@ Estoque
                         </td>
                         <td class="text-center">{{ entrada.criado_por|title }}</td>
                         <td class="text-center">{{ entrada.modificado_por|title }}</td>
+                        <td class="text-center">{{ entrada.modificado_em }}</td>
                       {% comment %} <td class="text-end">{{ produto.preco|floatformat:2 }}</td> {% endcomment %}
                         <td class="text-center">
                             <div class="dropdown">

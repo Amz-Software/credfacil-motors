@@ -2049,7 +2049,7 @@ class FolhaRelatorioVendasView(PermissionRequiredMixin, TemplateView):
         self.total_juros = sum(v.juros for v in self.vendas)
         self.total_valor = sum(v.valor_total_venda for v in self.vendas)
         self.total_entrada = sum(v.valor_entrada_cliente for v in self.vendas)
-        self.total_repasse = sum(v.valor_repasse for v in self.vendas)
+        self.total_repasse = sum(v.repasse_logista for v in self.vendas)
 
         # guarda strings formatadas
         self.data_inicial_str = datetime.strptime(data_inicial, '%Y-%m-%d').strftime("%d/%m/%Y") if data_inicial else None

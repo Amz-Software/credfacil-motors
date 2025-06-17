@@ -1950,7 +1950,7 @@ class FolhaRelatorioSolicitacoesView(PermissionRequiredMixin, TemplateView):
             for venda in cliente.vendas.all()
         )
         self.total_repasse = sum(
-            venda.valor_repasse
+            venda.repasse_logista
             for cliente in self.solicitacoes
             for venda in cliente.vendas.all()
         )

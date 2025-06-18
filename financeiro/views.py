@@ -17,6 +17,7 @@ from financeiro.forms import *
 from vendas.models import Pagamento
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.auth.decorators import permission_required
+from django.db.models import OuterRef, Subquery, DateField
 
 
 class CaixaMensalListView(BaseView, PermissionRequiredMixin, ListView):
@@ -518,10 +519,23 @@ class FolhaRelatorioContasAReceberView(BaseView, PermissionRequiredMixin, Templa
             data_final_dt = datetime.strptime(data_fim, "%Y-%m-%d").date()
             data_final_dt_plus = data_final_dt + timedelta(days=1)
 
-            pagamentos_qs = Pagamento.objects.with_status_flags().filter(
-                parcelas_pagamento__data_vencimento__gte=data_inicio_dt,
-                parcelas_pagamento__data_vencimento__lt=data_final_dt_plus
-            ).distinct()
+            # Subquery para o próximo vencimento
+            proximo_vencimento_subquery = Subquery(
+                Parcela.objects.filter(
+                    pagamento=OuterRef('pk'),
+                    pago=False,
+                    data_vencimento__gte=timezone.now()
+                ).order_by('data_vencimento').values('data_vencimento')[:1],
+                output_field=DateField()
+            )
+
+            pagamentos_qs = Pagamento.objects.with_status_flags().distinct()
+            pagamentos_qs = pagamentos_qs.annotate(proximo_vencimento=proximo_vencimento_subquery)
+            pagamentos_qs = pagamentos_qs.filter(
+                proximo_vencimento__isnull=False,
+                proximo_vencimento__gte=data_inicio_dt,
+                proximo_vencimento__lt=data_final_dt_plus
+            )
 
             if lojas_qs:
                 pagamentos_qs = pagamentos_qs.filter(loja__in=lojas_qs)

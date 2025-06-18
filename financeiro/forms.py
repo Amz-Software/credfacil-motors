@@ -147,7 +147,7 @@ class RelatorioContasAReceberForm(forms.Form):
     )
     status = forms.ChoiceField(
         choices=[
-            ('pendente', 'Pendente'),
+            ('pendente', 'A Vencer'),
             ('pago', 'Pago'),
             ('atrasado', 'Atrasado'),
             ('todos', 'Todos')

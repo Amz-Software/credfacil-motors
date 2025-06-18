@@ -972,6 +972,16 @@ class RelatorioVendasForm(forms.Form):
             else:
                 self.fields['lojas'].queryset = Loja.objects.all()
             self.fields['lojas'].initial = loja
+            
+        parcelas_qs = (
+            AnaliseCreditoCliente.objects
+            .order_by('numero_parcelas')
+            .values_list('numero_parcelas', flat=True)
+            .distinct()
+        )
+        self.fields['parcelas'].choices = [
+            (num, str(num)) for num in parcelas_qs
+        ]
 
 
 class RelatorioSolicitacoesForm(forms.Form):

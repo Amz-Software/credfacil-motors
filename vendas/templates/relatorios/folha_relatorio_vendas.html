@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -19,7 +20,8 @@
             font-size: 12px;
         }
 
-        h2, h3 {
+        h2,
+        h3 {
             text-align: center;
             margin: 10px 0;
         }
@@ -30,7 +32,8 @@
             margin: 20px 0;
         }
 
-        th, td {
+        th,
+        td {
             border: 1px solid #ddd;
             padding: 8px;
             text-align: left;
@@ -70,6 +73,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <h2>Relatório de Vendas</h2>
@@ -94,6 +98,7 @@
             </thead>
             <tbody>
                 {% for venda in vendas %}
+                {% with ac=venda.cliente.analise_credito %}
                 <tr>
                     <td>{{ venda.loja|title }}</td>
                     <td>{{ venda.cliente.nome|title }}</td>
@@ -108,13 +113,13 @@
                         {% endfor %}
                     </td>
                     <td>
-                        {% if venda.cliente.analise_credito.status == "A" %}
+                        {% if ac.status == "A" %}
                             Aprovada
-                        {% elif venda.cliente.analise_credito.status == "R" %}
+                        {% elif ac.status == "R" %}
                             Reprovada
-                        {% elif venda.cliente.analise_credito.status == "EA" %}
+                        {% elif ac.status == "EA" %}
                             Em Análise
-                        {% elif venda.cliente.analise_credito.status == "C" %}
+                        {% elif ac.status == "C" %}
                             Cancelada
                         {% else %}
                             Desconhecido
@@ -128,14 +133,16 @@
                     <td>R$ {{ venda.pagamentos_valor_total|floatformat:2 }}</td>
                     <td>R$ {{ venda.juros|floatformat:2 }}</td>
                 </tr>
+                {% endwith %}
+                {% empty %}
                 {% endfor %}
             </tbody>
             <tfoot>
                 <tr>
-                  <td colspan="3"><strong>Total de Vendas: {{ total_vendas }}</strong></td>
-                  <td colspan="2"><strong>Total Entrada: R$ {{ total_entrada|floatformat:2 }}</strong></td>
-                  <td colspan="3"><strong>Total Repasse: R$ {{ total_repasse|floatformat:2 }}</strong></td>
-                  <td colspan="2"><strong>Total Valor: R$ {{ total_valor|floatformat:2 }}</strong></td>
+                    <td colspan="3"><strong>Total de Vendas: {{ total_vendas }}</strong></td>
+                    <td colspan="2"><strong>Total Entrada: R$ {{ total_entrada|floatformat:2 }}</strong></td>
+                    <td colspan="3"><strong>Total Repasse: R$ {{ total_repasse|floatformat:2 }}</strong></td>
+                    <td colspan="2"><strong>Total Valor: R$ {{ total_valor|floatformat:2 }}</strong></td>
                     <td colspan="2"><strong>Total Juros: R$ {{ total_juros|floatformat:2 }}</strong></td>
                 </tr>
             </tfoot>
@@ -155,4 +162,5 @@
         print();
     </script>
 </body>
+
 </html>

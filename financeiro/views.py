@@ -519,7 +519,7 @@ class FolhaRelatorioContasAReceberView(BaseView, PermissionRequiredMixin, Templa
             data_final_dt = datetime.strptime(data_fim, "%Y-%m-%d").date()
             data_final_dt_plus = data_final_dt + timedelta(days=1)
 
-            # Subquery para o próximo vencimento
+            # Subqueries para datas relevantes
             proximo_vencimento_subquery = Subquery(
                 Parcela.objects.filter(
                     pagamento=OuterRef('pk'),
@@ -528,32 +528,60 @@ class FolhaRelatorioContasAReceberView(BaseView, PermissionRequiredMixin, Templa
                 ).order_by('data_vencimento').values('data_vencimento')[:1],
                 output_field=DateField()
             )
+            ultimo_vencimento_subquery = Subquery(
+                Parcela.objects.filter(
+                    pagamento=OuterRef('pk'),
+                    pago=False
+                ).order_by('-data_vencimento').values('data_vencimento')[:1],
+                output_field=DateField()
+            )
+            ultimo_pagamento_subquery = Subquery(
+                Parcela.objects.filter(
+                    pagamento=OuterRef('pk'),
+                    pago=True
+                ).order_by('-data_pagamento').values('data_pagamento')[:1],
+                output_field=DateField()
+            )
 
             pagamentos_qs = Pagamento.objects.with_status_flags().distinct()
-            pagamentos_qs = pagamentos_qs.annotate(proximo_vencimento=proximo_vencimento_subquery)
-            pagamentos_qs = pagamentos_qs.filter(
-                proximo_vencimento__isnull=False,
-                proximo_vencimento__gte=data_inicio_dt,
-                proximo_vencimento__lt=data_final_dt_plus
+            pagamentos_qs = pagamentos_qs.annotate(
+                proximo_vencimento=proximo_vencimento_subquery,
+                ultimo_vencimento=ultimo_vencimento_subquery,
+                ultimo_pagamento=ultimo_pagamento_subquery
             )
 
             if lojas_qs:
                 pagamentos_qs = pagamentos_qs.filter(loja__in=lojas_qs)
 
-            # Filtro de status
+            # Filtro de status e datas
             if status_list and 'todos' not in status_list:
                 q_status = None
-                if 'pendente' in status_list:
-                    q = Q(com_pagamento_pendente=True)
+                date_filter = Q()
+                for status in status_list:
+                    if status == 'pendente':
+                        q = Q(com_pagamento_pendente=True)
+                        date_q = Q(proximo_vencimento__isnull=False, proximo_vencimento__gte=data_inicio_dt, proximo_vencimento__lt=data_final_dt_plus)
+                    elif status == 'pago':
+                        q = Q(todas_parcelas_pagas=True)
+                        date_q = Q(ultimo_pagamento__isnull=False, ultimo_pagamento__gte=data_inicio_dt, ultimo_pagamento__lt=data_final_dt_plus)
+                    elif status == 'atrasado':
+                        q = Q(com_parcela_atrasada=True)
+                        date_q = Q(ultimo_vencimento__isnull=False, ultimo_vencimento__gte=data_inicio_dt, ultimo_vencimento__lt=data_final_dt_plus)
+                    else:
+                        continue
                     q_status = q if q_status is None else q_status | q
-                if 'pago' in status_list:
-                    q = Q(todas_parcelas_pagas=True)
-                    q_status = q if q_status is None else q_status | q
-                if 'atrasado' in status_list:
-                    q = Q(com_parcela_atrasada=True)
-                    q_status = q if q_status is None else q_status | q
+                    date_filter = date_filter | date_q
                 if q_status is not None:
                     pagamentos_qs = pagamentos_qs.filter(q_status)
+                if date_filter:
+                    pagamentos_qs = pagamentos_qs.filter(date_filter)
+            else:
+                # Se não filtrar por status, usar proximo_vencimento por padrão
+                pagamentos_qs = pagamentos_qs.filter(
+                    proximo_vencimento__isnull=False,
+                    proximo_vencimento__gte=data_inicio_dt,
+                    proximo_vencimento__lt=data_final_dt_plus
+                )
 
             contas_a_receber = list(pagamentos_qs)
 

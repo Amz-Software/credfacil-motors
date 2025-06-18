@@ -2005,8 +2005,8 @@ class FolhaRelatorioVendasView(PermissionRequiredMixin, TemplateView):
         data_final = request.GET.get('data_final')
         produtos = request.GET.getlist('produtos')
         vendedores = request.GET.getlist('vendedores')
-        analise_serasa = request.GET.get('analise_serasa')
-        parcelas = request.GET.get('parcelas')
+        analise_serasa = request.GET.getlist('analise_serasa')
+        parcelas = request.GET.getlist('parcelas')
         loja_ids = request.GET.getlist('lojas')
 
         filtros = {}

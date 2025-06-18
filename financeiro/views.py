@@ -531,15 +531,16 @@ class FolhaRelatorioContasAReceberView(BaseView, PermissionRequiredMixin, Templa
             ultimo_vencimento_subquery = Subquery(
                 Parcela.objects.filter(
                     pagamento=OuterRef('pk'),
-                    pago=False
-                ).order_by('-data_vencimento').values('data_vencimento')[:1],
+                    pago=False,
+                    data_vencimento__lt=timezone.now()
+                ).order_by('data_vencimento').values('data_vencimento')[:1],
                 output_field=DateField()
             )
             ultimo_pagamento_subquery = Subquery(
                 Parcela.objects.filter(
                     pagamento=OuterRef('pk'),
                     pago=True
-                ).order_by('-data_pagamento').values('data_pagamento')[:1],
+                ).order_by('data_pagamento').values('data_pagamento')[:1],
                 output_field=DateField()
             )
 

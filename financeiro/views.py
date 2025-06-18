@@ -514,10 +514,13 @@ class FolhaRelatorioContasAReceberView(BaseView, PermissionRequiredMixin, Templa
 
         if data_inicio and data_fim:
             lojas_qs = Loja.objects.filter(id__in=lojas)
-            data_final = datetime.strptime(data_fim, "%Y-%m-%d").date() + timedelta(days=1)
+            data_inicio_dt = datetime.strptime(data_inicio, "%Y-%m-%d").date()
+            data_final_dt = datetime.strptime(data_fim, "%Y-%m-%d").date()
+            data_final_dt_plus = data_final_dt + timedelta(days=1)
 
             pagamentos_qs = Pagamento.objects.with_status_flags().filter(
-                parcelas_pagamento__data_vencimento__range=[data_inicio, data_final]
+                parcelas_pagamento__data_vencimento__gte=data_inicio_dt,
+                parcelas_pagamento__data_vencimento__lt=data_final_dt_plus
             ).distinct()
 
             if lojas_qs:

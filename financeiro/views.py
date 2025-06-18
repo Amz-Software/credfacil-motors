@@ -509,24 +509,40 @@ class FolhaRelatorioContasAReceberView(BaseView, PermissionRequiredMixin, Templa
         data_inicio = self.request.GET.get('data_inicial')
         data_fim = self.request.GET.get('data_final')
         lojas = self.request.GET.getlist('lojas')
+        status_list = self.request.GET.getlist('status')
         contas_a_receber = []
 
         if data_inicio and data_fim:
-            lojas = Loja.objects.filter(id__in=lojas)
+            lojas_qs = Loja.objects.filter(id__in=lojas)
             data_final = datetime.strptime(data_fim, "%Y-%m-%d").date() + timedelta(days=1)
 
-            if lojas:
-                for loja in lojas:
-                    pagamentos = Pagamento.objects.with_status_flags().filter(loja=loja).filter(criado_em__range=[data_inicio, data_final])
-                    contas_a_receber += pagamentos
-            else:
-                pagamentos = Pagamento.objects.with_status_flags().filter(criado_em__range=[data_inicio, data_final])
-                contas_a_receber += pagamentos
+            pagamentos_qs = Pagamento.objects.with_status_flags().filter(
+                parcelas_pagamento__data_vencimento__range=[data_inicio, data_final]
+            ).distinct()
 
+            if lojas_qs:
+                pagamentos_qs = pagamentos_qs.filter(loja__in=lojas_qs)
+
+            # Filtro de status
+            if status_list and 'todos' not in status_list:
+                q_status = None
+                if 'pendente' in status_list:
+                    q = Q(com_pagamento_pendente=True)
+                    q_status = q if q_status is None else q_status | q
+                if 'pago' in status_list:
+                    q = Q(todas_parcelas_pagas=True)
+                    q_status = q if q_status is None else q_status | q
+                if 'atrasado' in status_list:
+                    q = Q(com_parcela_atrasada=True)
+                    q_status = q if q_status is None else q_status | q
+                if q_status is not None:
+                    pagamentos_qs = pagamentos_qs.filter(q_status)
+
+            contas_a_receber = list(pagamentos_qs)
 
         context = super().get_context_data(**kwargs)
         context['contas_a_receber'] = contas_a_receber
-        context['lojas'] = lojas.values_list('nome', flat=True)
+        context['lojas'] = Loja.objects.filter(id__in=lojas).values_list('nome', flat=True)
         context['data_inicio'] = datetime.strptime(data_inicio, "%Y-%m-%d").date() if data_inicio else None
         context['data_fim'] = datetime.strptime(data_fim, "%Y-%m-%d").date() if data_fim else None
 

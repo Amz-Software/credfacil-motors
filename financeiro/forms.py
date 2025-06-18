@@ -145,6 +145,17 @@ class RelatorioContasAReceberForm(forms.Form):
         required=True,
         widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date'})
     )
+    status = forms.ChoiceField(
+        choices=[
+            ('pendente', 'Pendente'),
+            ('pago', 'Pago'),
+            ('atrasado', 'Atrasado'),
+            ('todos', 'Todos')
+        ],
+        label='Status',
+        required=True,
+        widget=Select2MultipleWidget(attrs={'class': 'form-control'})
+    )
     lojas = forms.ModelMultipleChoiceField(
         queryset=Loja.objects.all(),
         label='Lojas',

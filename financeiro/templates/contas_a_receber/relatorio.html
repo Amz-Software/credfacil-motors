@@ -6,6 +6,10 @@
 Relatório Contas a Receber
 {% endblock title %}
 
+{% block extra_head %}
+{{ form.media.css }}
+{% endblock extra_head %}
+
 {% block content %}
 <div class="container mt-4">
     <div class="card shadow-sm">
@@ -22,3 +26,6 @@ Relatório Contas a Receber
 </div>
 {% endblock %}
 
+{% block extra_scripts %}
+{{ form.media.js }}
+{% endblock extra_scripts %}

@@ -563,7 +563,7 @@ class FolhaRelatorioContasAReceberView(BaseView, PermissionRequiredMixin, Templa
                         q = Q(com_pagamento_pendente=True)
                         date_q = Q(proximo_vencimento__isnull=False, proximo_vencimento__gte=data_inicio_dt, proximo_vencimento__lt=data_final_dt_plus)
                     elif status == 'pago':
-                        q = Q(todas_parcelas_pagas=True)
+                        q = Q()  # Não filtra por flag, só pela data do último pagamento
                         date_q = Q(ultimo_pagamento__isnull=False, ultimo_pagamento__gte=data_inicio_dt, ultimo_pagamento__lt=data_final_dt_plus)
                     elif status == 'atrasado':
                         q = Q(com_parcela_atrasada=True)

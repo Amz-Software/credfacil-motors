@@ -2005,7 +2005,9 @@ class FolhaRelatorioVendasView(PermissionRequiredMixin, TemplateView):
         data_final = request.GET.get('data_final')
         produtos = request.GET.getlist('produtos')
         vendedores = request.GET.getlist('vendedores')
-        loja_ids   = request.GET.getlist('lojas')
+        analise_serasa = request.GET.get('analise_serasa')
+        parcelas = request.GET.get('parcelas')
+        loja_ids = request.GET.getlist('lojas')
 
         filtros = {}
 
@@ -2028,6 +2030,10 @@ class FolhaRelatorioVendasView(PermissionRequiredMixin, TemplateView):
         # outros filtros simples
         if vendedores:
             filtros['vendedor__in'] = vendedores
+        if analise_serasa:
+            filtros['analise_credito__comprovantes__restricao__in'] = analise_serasa.split(',')
+        if parcelas:
+            filtros['analise_credito__numero_parcelas__in'] = parcelas.split(',')
         if produtos:
             filtros['produtos__in'] = produtos
         if loja_ids:

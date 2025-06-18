@@ -938,6 +938,20 @@ class RelatorioVendasForm(forms.Form):
         required=False,
         widget=Select2MultipleWidget(attrs={'class': 'form-control'})
     )
+    analise_serasa = forms.MultipleChoiceField(
+        label='Resultado Serasa',
+        required=False,
+        choices=[
+            ('True', 'Positiva'),
+            ('False', 'Negativa'),
+        ],
+    )
+    parcelas = forms.MultipleChoiceField(
+        label='Número de Parcelas',
+        required=False,
+        choices=[],  # serão preenchidas em __init__
+        widget=Select2MultipleWidget(attrs={'class': 'form-control'})
+    )
     lojas = forms.ModelMultipleChoiceField(
         queryset=Loja.objects.all(),
         label='Lojas',

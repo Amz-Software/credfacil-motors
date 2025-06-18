@@ -84,10 +84,12 @@
                     <th>Vendedor</th>
                     <th>Parcelas</th>
                     <th>Produtos</th>
+                    <th>Status Solicitação</th>
+                    <th>Consulta Serasa</th>
                     <th>Valor de Entrada</th>
                     <th>Valor de Repasse</th>
                     <th>Valor Total</th>
-                    <th>Juros</th>
+                    <th>Valor Juros</th>
                 </tr>
             </thead>
             <tbody>
@@ -105,6 +107,22 @@
                         N/A
                         {% endfor %}
                     </td>
+                    <td>
+                        {% if venda.cliente.analise_credito.status == "A" %}
+                            Aprovada
+                        {% elif venda.cliente.analise_credito.status == "R" %}
+                            Reprovada
+                        {% elif venda.cliente.analise_credito.status == "EA" %}
+                            Em Análise
+                        {% elif venda.cliente.analise_credito.status == "C" %}
+                            Cancelada
+                        {% else %}
+                            Desconhecido
+                        {% endif %}
+                    </td>
+                    <td>
+                        {{ venda.cliente.comprovantes.restricao|yesno:"Positiva,Negativa"}}
+                    </td>
                     <td>R$ {{ venda.valor_entrada_cliente|floatformat:2 }}</td>
                     <td>R$ {{ venda.repasse_logista|floatformat:2 }}</td>
                     <td>R$ {{ venda.pagamentos_valor_total|floatformat:2 }}</td>
@@ -116,7 +134,7 @@
                 <tr>
                   <td colspan="3"><strong>Total de Vendas: {{ total_vendas }}</strong></td>
                   <td colspan="2"><strong>Total Entrada: R$ {{ total_entrada|floatformat:2 }}</strong></td>
-                  <td colspan="2"><strong>Total Repasse: R$ {{ total_repasse|floatformat:2 }}</strong></td>
+                  <td colspan="3"><strong>Total Repasse: R$ {{ total_repasse|floatformat:2 }}</strong></td>
                   <td colspan="2"><strong>Total Valor: R$ {{ total_valor|floatformat:2 }}</strong></td>
                     <td colspan="2"><strong>Total Juros: R$ {{ total_juros|floatformat:2 }}</strong></td>
                 </tr>

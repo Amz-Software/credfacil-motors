@@ -2031,9 +2031,9 @@ class FolhaRelatorioVendasView(PermissionRequiredMixin, TemplateView):
         if vendedores:
             filtros['vendedor__in'] = vendedores
         if analise_serasa:
-            filtros['cliente__comprovantes__restricao__in'] = analise_serasa.split(',')
+            filtros['cliente__comprovantes__restricao__in'] = analise_serasa
         if parcelas:
-            filtros['analises_credito_venda__numero_parcelas__in'] = parcelas.split(',')
+            filtros['analises_credito_venda__numero_parcelas__in'] = parcelas
         if produtos:
             filtros['produtos__in'] = produtos
         if loja_ids:

@@ -46,6 +46,7 @@ Vendas
           <th scope="col">Cancelada</th>
           <th scope="col">Criada por</th>
           <th scope="col">Última Modificação</th>
+          <th scope="col">Data Última Modificação</th>
           <th scope="col">Ações</th>
           </tr>
         </thead>
@@ -68,6 +69,7 @@ Vendas
             </td>
           <td>{{ item.criado_por|title }}</td>
           <td>{{ item.modificado_por|title }}</td>
+          <td>{{ item.modificado_em|date:"d/m/Y H:i" }}</td>
           <td>
             <div class="dropdown">
               <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
@@ -79,23 +81,22 @@ Vendas
                   <i class="bx bx-show me-1"></i> Detalhes
                   </a>
                 {% endif %}
-                {% if user|has_perm:"vendas.change_venda" %}
+                {% if not item.is_deleted %}
+                  {% if user|has_perm:"vendas.change_venda" %}
                   <a class="dropdown-item" href="{% url 'vendas:venda_update' item.pk %}">
-                  <i class="bx bx-edit-alt me-1"></i> Editar
+                    <i class="bx bx-edit-alt me-1"></i> Editar
                   </a>
-                {% endif %}
+                  {% endif %}
                   <a class="dropdown-item" href="{% url 'vendas:venda_pdf' item.pk %}" target="_blank">
-                  <i class="bx bx-file
-                  me-1"></i> Gerar PDF
+                  <i class="bx bx-file me-1"></i> Gerar PDF
                   </a>
                   <a class="dropdown-item" href="{% url 'vendas:gerar_carne' tipo='carne' pk=item.pk %}" target="_blank">
-                  <i class="bx bx-file
-                  me-1"></i> Gerar Carnê
+                  <i class="bx bx-file me-1"></i> Gerar Carnê
                   </a>
                   <a class="dropdown-item" href="{% url 'vendas:gerar_contrato' pk=item.pk %}" target="_blank">
-                  <i class="bx bx-file
-                  me-1"></i> Gerar Contrato
+                  <i class="bx bx-file me-1"></i> Gerar Contrato
                   </a>
+                {% endif %}
               </div>
             </div>
           </td>

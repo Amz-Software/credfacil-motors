@@ -28,7 +28,7 @@
         }
         th, td {
             border: 1px solid #ddd;
-            padding: 8px;
+            padding: 5px;
             text-align: left;
         }
         th {
@@ -73,6 +73,7 @@
             <thead>
             <tr>
             <th>Loja</th>
+            <th>Data Venda</th>
             <th>Cliente</th>
             <th>Produto</th>
             <th class="center">IMEI</th>
@@ -100,6 +101,7 @@
             {% endif %}
             ">
             <td>{{ conta.venda.loja.nome|title }}</td>
+            <td>{{ conta.venda.data_venda|date:"d/m/Y" }}</td>
             <td>{{ conta.venda.cliente.nome|title }}</td>
             <td>{{ conta.venda.itens_venda.first.produto.nome|title }}</td>
             <td class="center">
@@ -157,7 +159,7 @@
             </tbody>
             <tfoot>
             <tr class="footer">
-                <td colspan="5" class="end">Totais:</td>
+                <td colspan="6" class="end">Totais:</td>
                 <td class="end">{{ total_atrasado|default:"0.00"|floatformat:2 }}</td>
                 <td></td>
                 <td class="end">{{ total_pago|default:"0.00"|floatformat:2 }}</td>

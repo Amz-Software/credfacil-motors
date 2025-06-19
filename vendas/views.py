@@ -712,40 +712,37 @@ class ClienteStatusAppUpdateView(PermissionRequiredMixin, View):
 
 def calcular_data_primeira_parcela(data_pagamento_str):
     """
-    Sempre joga a 1ª parcela pro próximo mês no dia escolhido.
-    Caso o dia escolhido seja menor que 10 e a data calculada fique a menos de 10 dias de hoje,
-    pula mais um mês.
+    Retorna a data com o dia escolhido (01, 10 ou 20) mais distante possível,
+    mas ainda dentro de até 40 dias após a data da compra.
     """
     hoje = timezone.now().date()
-    dia = int(data_pagamento_str)
+    dia_escolhido = int(data_pagamento_str)
+    max_dias = 40
+    ano, mes = hoje.year, hoje.month
 
-    # Calcula para o próximo mês
-    if hoje.month < 12:
-        next_year = hoje.year
-        next_month = hoje.month + 1
-    else:
-        next_year = hoje.year + 1
-        next_month = 1
+    melhor_data = None
+    maior_diferenca = -1
 
-    ultimo = calendar.monthrange(next_year, next_month)[1]
-    dia_calculado = min(dia, ultimo)
-    data_primeira = date(next_year, next_month, dia_calculado)
+    # Verifica até 3 meses à frente
+    for i in range(3):
+        novo_mes = mes + i
+        novo_ano = ano + (novo_mes - 1) // 12
+        novo_mes = ((novo_mes - 1) % 12) + 1
 
-    # Se o dia escolhido for menor que 10 e a data encontrada estiver a menos de 10 dias de hoje,
-    # pula mais um mês.
-    if dia < 10 and (data_primeira - hoje).days < 10:
-        if next_month < 12:
-            final_year = next_year
-            final_month = next_month + 1
-        else:
-            final_year = next_year + 1
-            final_month = 1
+        # Verifica se o mês tem o dia escolhido
+        ultimo_dia_mes = calendar.monthrange(novo_ano, novo_mes)[1]
+        dia_real = min(dia_escolhido, ultimo_dia_mes)
 
-        ultimo = calendar.monthrange(final_year, final_month)[1]
-        dia_calculado = min(dia, ultimo)
-        data_primeira = date(final_year, final_month, dia_calculado)
+        data_candidata = date(novo_ano, novo_mes, dia_real)
+        dias_ate_parcela = (data_candidata - hoje).days
 
-    return data_primeira
+        # Valida se está dentro do prazo
+        if 0 < dias_ate_parcela <= max_dias:
+            if dias_ate_parcela > maior_diferenca:
+                melhor_data = data_candidata
+                maior_diferenca = dias_ate_parcela
+
+    return melhor_data
 
 
 def criar_parcelas(pagamento, loja):

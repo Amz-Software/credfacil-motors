@@ -1792,8 +1792,7 @@ def folha_carne_view(request, pk, tipo):
                 name=loja.nome,
                 key=raw_chave,
                 city=loja.endereco or '',
-                amount=valor_parc,
-                txid=txid,
+                amount=valor_parc
             )
             qr_string = pix_qrcode.generate_code()
             img = qrcode.make(qr_string)

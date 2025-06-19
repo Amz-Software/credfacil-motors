@@ -787,6 +787,18 @@ def gerar_venda(request, cliente_id):
         messages.error(request, "❌ Loja ou cliente não encontrado.")
         return redirect('vendas:cliente_list')
 
+    # --- Validação: clientes com mesmo CPF precisam ter ao menos 3 parcelas pagas em cada venda anterior ---
+    cpf_limpo = re.sub(r'\D', '', cliente.cpf)
+    clientes_mesmo_cpf = Cliente.objects.filter(cpf__regex=rf'\D*{cpf_limpo}\D*')
+    vendas_anteriores = Venda.objects.filter(cliente__in=clientes_mesmo_cpf, is_deleted=False)
+    for venda_ant in vendas_anteriores:
+        pagamentos_credfacil = Pagamento.objects.filter(venda=venda_ant, tipo_pagamento__nome__iexact='CREDFACIL')
+        for pagamento in pagamentos_credfacil:
+            parcelas_pagas = Parcela.objects.filter(pagamento=pagamento, pago=True).count()
+            if parcelas_pagas < 3:
+                messages.error(request, "❌ Para gerar uma nova venda, cada venda anterior do mesmo CPF deve ter pelo menos 3 parcelas pagas.")
+                return redirect('vendas:cliente_list')
+
     # Verifica caixa aberto
     caixa = Caixa.objects.filter(
         loja=loja,

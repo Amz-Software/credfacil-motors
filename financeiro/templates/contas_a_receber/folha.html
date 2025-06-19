@@ -72,89 +72,104 @@
         <table>
             <thead>
             <tr>
-                <th>Loja</th>
-                <th>Cliente</th>
-                <th>Produto</th>
-                <th class="center">IMEI</th>
-                <th class="center">Contato do Cliente</th>
-                <th class="end">Valor Atrasado</th>
-                <th class="end">Primeiro Vencimento</th>
-                <th class="end">Valor Pago</th>
-                <th class="end">Último Pagamento</th>
-                <th class="end">Valor a Vencer</th>
-                <th class="end">Próximo Vencimento</th>
-                <th class="end">Valor Total</th>
-                <th class="center">Parcelas Totais</th>
-                <th class="center">Parcelas Pagas</th>
-                <th class="end">Valor Quitado</th>
+            <th>Loja</th>
+            <th>Cliente</th>
+            <th>Produto</th>
+            <th class="center">IMEI</th>
+            <th class="center">Contato do Cliente</th>
+            <th class="end">Valor Atrasado</th>
+            <th class="end">Primeiro Vencimento</th>
+            <th class="end">Valor Pago</th>
+            <th class="end">Último Pagamento</th>
+            <th class="end">Valor a Vencer</th>
+            <th class="end">Próximo Vencimento</th>
+            <th class="end">Valor Total</th>
+            <th class="center">Parcelas Totais</th>
+            <th class="center">Parcelas Pagas</th>
+            <th class="end">Valor Quitado</th>
             </tr>
             </thead>
             <tbody>
             {% for conta in contas_a_receber %}
             <tr class="
-                {% if conta.bloqueado %}table-purple
-                {% elif conta.com_parcela_atrasada %}table-danger
-                {% elif conta.com_pagamento_pendente %}table-warning
-                {% elif conta.pago_dentro_prazo %}table-success
-                {% elif conta.todas_parcelas_pagas %}table-info
-                {% endif %}
+            {% if conta.bloqueado %}table-purple
+            {% elif conta.com_parcela_atrasada %}table-danger
+            {% elif conta.com_pagamento_pendente %}table-warning
+            {% elif conta.pago_dentro_prazo %}table-success
+            {% elif conta.todas_parcelas_pagas %}table-info
+            {% endif %}
             ">
-                <td>{{ conta.venda.loja.nome|title }}</td>
-                <td>{{ conta.venda.cliente.nome|title }}</td>
-                <td>{{ conta.venda.itens_venda.first.produto.nome|title }}</td>
-                <td class="center">
-                {% if conta.venda.itens_venda.first.imei %}
-                    {{ conta.venda.itens_venda.first.imei }}
-                {% else %}
-                    -
-                {% endif %}
-                </td>
-                <td class="center">
-                {% if conta.venda.cliente.telefone %}
-                    {{ conta.venda.cliente.telefone }}
-                {% else %}
-                    -
-                {% endif %}
-                </td>
-                <td class="end">
-                {{ conta.valor_atrasado|default:"0.00"|floatformat:2 }}
-                </td>
-                <td class="end">
-                {{ conta.ultimo_vencimento|default:"-" }}
-                </td>
-                <td class="end">
-                {{ conta.valor_pago_ultimo|default:"0.00"|floatformat:2 }}
-                </td>
-                <td class="end">
-                {{ conta.ultimo_pagamento|default:"-" }}
-                </td>
-                <td class="end">
-                {{ conta.valor_a_vencer|default:"0.00"|floatformat:2 }}
-                </td>
-                <td class="end">
-                {{ conta.proximo_vencimento|default:"-" }}
-                </td>
-                <td class="end">
-                {{ conta.valor_total_parcelas|floatformat:2 }}
-                </td>
-                <td class="center">
-                {{ conta.parcelas_totais }}
-                </td>
-                <td class="center">
-                {{ conta.parcelas_pagas }}
-                </td>
-                <td class="end">
-                {{ conta.valor_quitado|default:"0.00"|floatformat:2 }}
-                </td>
+            <td>{{ conta.venda.loja.nome|title }}</td>
+            <td>{{ conta.venda.cliente.nome|title }}</td>
+            <td>{{ conta.venda.itens_venda.first.produto.nome|title }}</td>
+            <td class="center">
+            {% if conta.venda.itens_venda.first.imei %}
+                {{ conta.venda.itens_venda.first.imei }}
+            {% else %}
+                -
+            {% endif %}
+            </td>
+            <td class="center">
+            {% if conta.venda.cliente.telefone %}
+                {{ conta.venda.cliente.telefone }}
+            {% else %}
+                -
+            {% endif %}
+            </td>
+            <td class="end">
+            {{ conta.valor_atrasado|default:"0.00"|floatformat:2 }}
+            </td>
+            <td class="end">
+            {{ conta.ultimo_vencimento|default:"-" }}
+            </td>
+            <td class="end">
+            {{ conta.valor_pago_ultimo|default:"0.00"|floatformat:2 }}
+            </td>
+            <td class="end">
+            {{ conta.ultimo_pagamento|default:"-" }}
+            </td>
+            <td class="end">
+            {{ conta.valor_a_vencer|default:"0.00"|floatformat:2 }}
+            </td>
+            <td class="end">
+            {{ conta.proximo_vencimento|default:"-" }}
+            </td>
+            <td class="end">
+            {{ conta.valor_total_parcelas|floatformat:2 }}
+            </td>
+            <td class="center">
+            {{ conta.parcelas_totais }}
+            </td>
+            <td class="center">
+            {{ conta.parcelas_pagas }}
+            </td>
+            <td class="end">
+            {{ conta.valor_quitado|default:"0.00"|floatformat:2 }}
+            </td>
             </tr>
             {% empty %}
             <tr>
-                <td colspan="15" class="center" style="padding: 20px;">
-                Nenhum registro encontrado
-                </td>
+            <td colspan="15" class="center" style="padding: 20px;">
+            Nenhum registro encontrado
+            </td>
             </tr>
             {% endfor %}
             </tbody>
+            <tfoot>
+            <tr class="footer">
+                <td colspan="5" class="end">Totais:</td>
+                <td class="end">{{ total_atrasado|default:"0.00"|floatformat:2 }}</td>
+                <td></td>
+                <td class="end">{{ total_pago|default:"0.00"|floatformat:2 }}</td>
+                <td></td>
+                <td class="end">{{ total_a_vencer|default:"0.00"|floatformat:2 }}</td>
+                <td></td>
+                <td class="end">{{ total|default:"0.00"|floatformat:2 }}</td>
+                <td></td>
+                <td></td>
+                <td class="end">{{ total_quitado|default:"0.00"|floatformat:2 }}</td>
+            </tr>
+            </tfoot>
         </table>
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.2/html2pdf.bundle.min.js"></script>

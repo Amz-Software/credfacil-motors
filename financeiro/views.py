@@ -586,11 +586,36 @@ class FolhaRelatorioContasAReceberView(BaseView, PermissionRequiredMixin, Templa
 
             contas_a_receber = list(pagamentos_qs)
 
+        total_atrasado = sum(
+            pagamento.total_atrasos() for pagamento in contas_a_receber if contas_a_receber
+        )
+        
+        total_pago = sum(
+            pagamento.valor_pago_ultimo() for pagamento in contas_a_receber if contas_a_receber
+        )
+
+        total_a_vencer = sum(
+            pagamento.valor_a_vencer() for pagamento in contas_a_receber if contas_a_receber
+        )
+
+        total = sum(
+            pagamento.valor_total_parcelas() for pagamento in contas_a_receber
+        )
+
+        total_quitado = sum(
+            pagamento.valor_quitado() for pagamento in contas_a_receber if contas_a_receber
+        )
+
         context = super().get_context_data(**kwargs)
         context['contas_a_receber'] = contas_a_receber
         context['lojas'] = Loja.objects.filter(id__in=lojas).values_list('nome', flat=True)
         context['data_inicio'] = datetime.strptime(data_inicio, "%Y-%m-%d").date() if data_inicio else None
         context['data_fim'] = datetime.strptime(data_fim, "%Y-%m-%d").date() if data_fim else None
+        context['total_atrasado'] = total_atrasado
+        context['total_pago'] = total_pago
+        context['total_a_vencer'] = total_a_vencer
+        context['total'] = total
+        context['total_quitado'] = total_quitado
 
         return context
 

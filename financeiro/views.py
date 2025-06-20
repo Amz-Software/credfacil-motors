@@ -396,7 +396,7 @@ class ContasAReceberListView(BaseView, PermissionRequiredMixin, ListView):
         status = self.request.GET.get('status')
         if status == 'no_prazo':
             # Filtra clientes que já realizaram pelo menos 1 pagamento
-            qs = qs.filter(parcelas_pagamento__pagamento_efetuado=True).distinct()
+            qs = qs.filter(parcelas_pagamento__pago=True).distinct()
         elif status == 'atrasado':
             qs = qs.filter(com_parcela_atrasada=True)
         elif status == 'quitado':

@@ -686,6 +686,12 @@ class Pagamento(Base):
     def valor_a_vencer(self):
         return sum(parcela.valor_restante for parcela in self.parcelas_pagamento.filter(pago=False, data_vencimento__gte=timezone.now()))
 
+    def valor_atual_a_vencer(self):
+        proximo = self.parcelas_pagamento.filter(pago=False, data_vencimento__gte=timezone.now()).order_by('data_vencimento').first()
+        if proximo:
+            return proximo.valor_restante
+        return 0
+
     def proximo_vencimento(self):
         proximo = self.parcelas_pagamento.filter(pago=False, data_vencimento__gte=timezone.now()).order_by('data_vencimento').first()
         return proximo.data_vencimento if proximo else None

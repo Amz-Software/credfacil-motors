@@ -82,6 +82,7 @@
             <th class="end">Primeiro Vencimento</th>
             <th class="end">Valor Pago</th>
             <th class="end">Último Pagamento</th>
+            <th class="end">Prox. Parcela</th>
             <th class="end">Valor a Vencer</th>
             <th class="end">Próximo Vencimento</th>
             <th class="end">Valor Total</th>
@@ -131,6 +132,9 @@
             {{ conta.ultimo_pagamento|default:"-" }}
             </td>
             <td class="end">
+            {{ conta.valor_atual_a_vencer|default:"0.00"|floatformat:2 }}
+            </td>
+            <td class="end">
             {{ conta.valor_a_vencer|default:"0.00"|floatformat:2 }}
             </td>
             <td class="end">
@@ -163,6 +167,7 @@
                 <td class="end">{{ total_atrasado|default:"0.00"|floatformat:2 }}</td>
                 <td></td>
                 <td class="end">{{ total_pago|default:"0.00"|floatformat:2 }}</td>
+                <td></td>
                 <td></td>
                 <td class="end">{{ total_a_vencer|default:"0.00"|floatformat:2 }}</td>
                 <td></td>

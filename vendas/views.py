@@ -1058,7 +1058,7 @@ class VendaCreateView(PermissionRequiredMixin, CreateView):
             return self.form_invalid(form)
 
         if not Caixa.caixa_aberto(localtime(now()).date(), loja):
-            messages.warning(self.request, 'Não é possível realizar vendas com o caixa fechado')
+            messages.warning(self.request, 'Não é possível realizar vendas com a loja bloqueada!')
             return self.form_invalid(form)
 
         try:
@@ -1183,7 +1183,7 @@ class VendaUpdateView(PermissionRequiredMixin, UpdateView):
 
         # Verifica se o caixa está aberto
         if not Caixa.caixa_aberto(localtime(now()).date(), loja):
-            messages.warning(self.request, 'Não é possível editar vendas com o caixa fechado')
+            messages.warning(self.request, 'Não é possível editar vendas com a loja bloqueada!')
             logger.warning("Tentativa de editar venda com caixa fechado para a loja %s", loja)
             return self.form_invalid(form)
 
@@ -1325,7 +1325,7 @@ def cancelar_venda(request, id):
         return redirect('vendas:venda_list')
     
     if not Caixa.caixa_aberto(localtime(now()).date(), Loja.objects.get(id=request.session.get('loja_id'))):
-        messages.warning(request, 'Não é possível cancelar vendas com o caixa fechado')
+        messages.warning(request, 'Não é possível cancelar vendas com a loja bloqueada!')
         return redirect('vendas:venda_list')
     
     venda.is_deleted = True

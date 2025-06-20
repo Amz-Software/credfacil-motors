@@ -1889,7 +1889,7 @@ class FolhaRelatorioSolicitacoesView(PermissionRequiredMixin, TemplateView):
         data_final      = request.GET.get('data_final')
         produtos        = request.GET.getlist('produtos')
         vendedores      = request.GET.getlist('vendedores')
-        loja_ids         = request.GET.getlist('lojas')
+        loja_ids        = request.GET.getlist('lojas')
         status_solicitacao = request.GET.get('status_solicitacao')
         parcelas        = request.GET.get('parcelas')
         analise_serasa  = request.GET.get('analise_serasa')
@@ -1936,11 +1936,18 @@ class FolhaRelatorioSolicitacoesView(PermissionRequiredMixin, TemplateView):
             filtros['analise_credito__criado_por__in'] = vendedores
         if produtos:
             filtros['analise_credito__produto__in'] = produtos
+
+        # Loja: se não selecionou, pega a loja do usuário logado
         if loja_ids:
             filtros['loja__id__in'] = loja_ids
             self.loja = Loja.objects.filter(pk__in=loja_ids).first()
         else:
-            self.loja = None
+            loja_id = request.session.get('loja_id')
+            if loja_id:
+                filtros['loja__id'] = loja_id
+                self.loja = Loja.objects.filter(pk=loja_id).first()
+            else:
+                self.loja = None
 
         # executa consulta
         qs = Cliente.objects.filter(**filtros).distinct()
@@ -1951,8 +1958,7 @@ class FolhaRelatorioSolicitacoesView(PermissionRequiredMixin, TemplateView):
         # pré-carrega vendas para calcular totais
         self.solicitacoes = qs.prefetch_related('vendas')
         self.total_vendas = self.solicitacoes.count()
-        
-        
+
         self.total_valor = sum(
             venda.valor_total_venda
             for cliente in self.solicitacoes
@@ -2024,7 +2030,6 @@ class FolhaRelatorioVendasView(PermissionRequiredMixin, TemplateView):
         if data_inicial and data_final:
             di = datetime.strptime(data_inicial, '%Y-%m-%d')
             df = datetime.strptime(data_final, '%Y-%m-%d') + timedelta(days=1)
-            # deixamos as datetimes timezone-aware
             filtros['data_venda__range'] = [
                 timezone.make_aware(di),
                 timezone.make_aware(df),
@@ -2045,11 +2050,18 @@ class FolhaRelatorioVendasView(PermissionRequiredMixin, TemplateView):
             filtros['analises_credito_venda__numero_parcelas__in'] = parcelas
         if produtos:
             filtros['produtos__in'] = produtos
+
+        # Loja: se não selecionou, pega a loja do usuário logado
         if loja_ids:
             filtros['loja__id__in'] = loja_ids
             self.loja = Loja.objects.filter(pk__in=loja_ids).first()
         else:
-            self.loja = None
+            loja_id = request.session.get('loja_id')
+            if loja_id:
+                filtros['loja__id'] = loja_id
+                self.loja = Loja.objects.filter(pk=loja_id).first()
+            else:
+                self.loja = None
 
         # faz a query
         self.vendas = Venda.objects.filter(**filtros).distinct()
@@ -2068,18 +2080,15 @@ class FolhaRelatorioVendasView(PermissionRequiredMixin, TemplateView):
 
         # guarda strings formatadas
         self.data_inicial_str = datetime.strptime(data_inicial, '%Y-%m-%d').strftime("%d/%m/%Y") if data_inicial else None
-        # subtrai o dia extra que adicionamos
         if data_final:
-            df_back = datetime.strptime(data_final, '%Y-%m-%d') 
+            df_back = datetime.strptime(data_final, '%Y-%m-%d')
             self.data_final_str = df_back.strftime("%d/%m/%Y")
         else:
             self.data_final_str = None
 
-        # tudo certo: chama o TemplateView para renderizar
         return super().get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
-        # aqui já sabemos que self.vendas existe e é um QuerySet
         context = super().get_context_data(**kwargs)
         context.update({
             'vendas': self.vendas,

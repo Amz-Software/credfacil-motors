@@ -395,12 +395,13 @@ class ContasAReceberListView(BaseView, PermissionRequiredMixin, ListView):
 
         status = self.request.GET.get('status')
         if status == 'no_prazo':
-            qs = qs.filter(pago_dentro_prazo=True)
+            # Filtra clientes que já realizaram pelo menos 1 pagamento
+            qs = qs.filter(parcelas_pagamento__pagamento_efetuado=True).distinct()
         elif status == 'atrasado':
             qs = qs.filter(com_parcela_atrasada=True)
         elif status == 'quitado':
             qs = qs.filter(todas_parcelas_pagas=True)
-        elif status == 'pendente':                              # novo
+        elif status == 'pendente':  # novo
             qs = qs.filter(com_pagamento_pendente=True)
 
         loja = self.request.GET.get('loja')

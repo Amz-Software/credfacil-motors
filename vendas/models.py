@@ -680,7 +680,7 @@ class Pagamento(Base):
         return ultimo.valor if ultimo else 0
     
     def ultimo_pagamento(self):
-        ultimo = self.parcelas_pagamento.filter(pago=True).order_by('data_pagamento').last()
+        ultimo = self.parcelas_pagamento.filter(pago=True).order_by('-data_pagamento').last()
         return ultimo.data_pagamento if ultimo else None
     
     def valor_a_vencer(self):

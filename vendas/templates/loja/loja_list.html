@@ -90,6 +90,11 @@ Lojas
                           <i class="bx bx-edit me-1"></i> Editar
                         </a>
                         {% endif %}
+                        {% if user|has_perm:"vendas.change_loja" %}
+                        <a class="dropdown-item" href="{% url 'vendas:loja_replicar' loja.pk %}">
+                            <i class='bx bx-transfer'></i> Replicar Codigo/QrCode
+                        </a>
+                        {% endif %}
                       </div>
                     </div>
                   </td>

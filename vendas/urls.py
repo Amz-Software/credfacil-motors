@@ -51,6 +51,7 @@ urlpatterns = [
     path('lojas/nova/', LojaCreateView.as_view(), name='loja_create'),
     path('lojas/editar/<int:pk>/', LojaUpdateView.as_view(), name='loja_update'),
     path('lojas/detalhe/<int:pk>/', LojaDetailView.as_view(), name='loja_detail'),
+    path('lojas/replicar/<int:pk>/', replicar_qr_code_codigo_aplicativo, name='loja_replicar'),
     
     
     path('info-products/', product_information, name='info_produto'),
@@ -115,5 +116,4 @@ urlpatterns = [
     ),
 
     path('graficos/', GraficoTemplateView.as_view(), name='grafico'),
-
 ]

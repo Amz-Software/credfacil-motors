@@ -1499,6 +1499,21 @@ class LojaUpdateView(PermissionRequiredMixin, UpdateView):
         return reverse_lazy('vendas:loja_detail', kwargs={'pk': self.object.id})
 
     
+def replicar_qr_code_codigo_aplicativo(request, pk):
+    loja = get_object_or_404(Loja, id=pk)
+    if not loja.qr_code_aplicativo or loja.codigo_aplicativo is None:
+        messages.error(request, '❌ Loja não possui QR Code ou código do aplicativo configurado.')
+        return redirect('vendas:loja_list')
+
+    lojas = Loja.objects.exclude(id=pk)
+    for l in lojas:
+        l.qr_code_aplicativo = loja.qr_code_aplicativo
+        l.codigo_aplicativo = loja.codigo_aplicativo
+        l.save()
+    
+    messages.success(request, '✅ QR Code e código do aplicativo replicados com sucesso para outras lojas.')
+    return redirect('vendas:loja_list')
+
 from django.db.models import Count, Sum
 from django.utils.dateparse import parse_date
 

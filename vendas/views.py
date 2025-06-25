@@ -517,6 +517,11 @@ class ClienteCreateView(PermissionRequiredMixin, CreateView):
             print("form_comprovantes errors:", form_comprovantes.errors)
             print("form_analise_credito errors:", form_analise_credito.errors)
             
+            for form in [form_cliente, form_adicional, form_informacao, form_comprovantes, form_analise_credito]:   
+                for field, errors in form.errors.items():
+                    for error in errors:
+                        messages.error(request, f"Erro no campo '{field}': {error}")
+                        
             messages.error(request, "❌ Erro ao cadastrar Soliticitação. Verifique os dados e tente novamente.")
 
         # Renderiza novamente com os erros
@@ -598,6 +603,10 @@ class ClienteUpdateView(PermissionRequiredMixin, UpdateView):
             print("form_adicional errors:", form_adicional.errors)
             print("form_comprovantes errors:", form_comprovantes.errors)
             print("form_analise_credito errors:", form_analise_credito.errors)
+            for form in [form_cliente, form_adicional, form_comprovantes, form_analise_credito]:
+                for field, errors in form.errors.items():
+                    for error in errors:
+                        messages.error(request, f"Erro no campo '{field}': {error}")
             messages.error(request, "❌ Erro ao atualizar Soliticitação. Verifique os dados e tente novamente.")
 
         context = self.get_context_data(

@@ -56,13 +56,13 @@ class ClienteForm(forms.ModelForm):
             'nome': forms.TextInput(attrs={'class': 'form-control'}),
             'email': forms.EmailInput(attrs={'class': 'form-control'}),
             'telefone': forms.TextInput(attrs={'class': 'form-control tel'}),
-            'cpf': forms.TextInput(attrs={'class': 'form-control'}),
+            'cpf': forms.TextInput(attrs={'class': 'form-control cpf'}),
             'nascimento': forms.DateInput(
                 attrs={'class': 'form-control', 'type': 'date'},
                 format='%Y-%m-%d'
             ),
-            'rg': forms.TextInput(attrs={'class': 'form-control'}),
-            'cep': forms.TextInput(attrs={'class': 'form-control'}),
+            'rg': forms.TextInput(attrs={'class': 'form-control rg'}),
+            'cep': forms.TextInput(attrs={'class': 'form-control cep'}),
             'bairro': forms.TextInput(attrs={'class': 'form-control'}),
             'endereco': forms.TextInput(attrs={'class': 'form-control'}),
             'cidade': forms.TextInput(attrs={'class': 'form-control'}),
@@ -112,6 +112,46 @@ class ClienteForm(forms.ModelForm):
                 self.fields['endereco'].disabled = True
                 self.fields['cidade'].disabled = True
 
+    def clean_telefone(self):
+        telefone = self.cleaned_data.get('telefone')
+        if telefone:
+            telefone = telefone.replace(' ', '').replace('-', '').replace('(', '').replace(')', '')
+            if not telefone.isdigit():
+                raise forms.ValidationError("Telefone deve conter apenas números.")
+            if len(telefone) < 10 or len(telefone) > 11:
+                raise forms.ValidationError("Telefone deve ter entre 10 e 11 dígitos.")
+        return telefone
+    
+    def clean_cpf(self):
+        cpf = self.cleaned_data.get('cpf')
+        if cpf:
+            cpf = cpf.replace('.', '').replace('-', '')
+            if not cpf.isdigit():
+                raise forms.ValidationError("CPF deve conter apenas números.")
+            if len(cpf) != 11:
+                raise forms.ValidationError("CPF deve ter exatamente 11 dígitos.")
+        return cpf
+
+    def clean_rg(self):
+        rg = self.cleaned_data.get('rg')
+        if rg:
+            rg = rg.replace('.', '').replace('-', '')
+            if not rg.isdigit():
+                raise forms.ValidationError("RG deve conter apenas números.")
+            if len(rg) < 7 or len(rg) > 12:
+                raise forms.ValidationError("RG deve ter entre 7 e 12 dígitos.")
+        return rg
+    
+    def clean_cep(self):
+        cep = self.cleaned_data.get('cep')
+        if cep:
+            cep = cep.replace('-', '').replace('.', '')
+            if not cep.isdigit():
+                raise forms.ValidationError("CEP deve conter apenas números.")
+            if len(cep) != 8:
+                raise forms.ValidationError(f"CEP deve ter exatamente 9 dígitos.")
+        return cep
+    
 class ClienteTelefoneForm(forms.ModelForm):
     class Meta:
         model = Cliente
@@ -200,6 +240,18 @@ class ContatoAdicionalForm(forms.ModelForm):
                     self.fields['obteve_contato'].disabled = True
                     if self.instance.cliente.analise_credito.venda:
                         self.fields['contato'].disabled = True
+
+    def clean_contato(self):
+        contato = self.cleaned_data.get('contato')
+        if contato:
+            contato = contato.replace(' ', '').replace('-', '').replace('(', '').replace(')', '')
+            if not contato.isdigit():
+                raise forms.ValidationError("Contato deve conter apenas números.")
+            if len(contato) < 10 or len(contato) > 11:
+                raise forms.ValidationError("Contato deve ter entre 10 e 11 dígitos.")
+        return contato
+    
+    
 class ContatoAdicionalEditForm(forms.ModelForm):
     obteve_contato = forms.ChoiceField(
         label='Obteve Contato',
@@ -224,6 +276,16 @@ class ContatoAdicionalEditForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         for name, field in self.fields.items():
             field.disabled = True
+
+    def clean_contato(self):
+        contato = self.cleaned_data.get('contato')
+        if contato:
+            contato = contato.replace(' ', '').replace('-', '').replace('(', '').replace(')', '')
+            if not contato.isdigit():
+                raise forms.ValidationError("Contato deve conter apenas números.")
+            if len(contato) < 10 or len(contato) > 11:
+                raise forms.ValidationError("Contato deve ter entre 10 e 11 dígitos.")
+        return contato
 
 class InformacaoPessoalForm(forms.ModelForm):
     nome_pessoal = forms.CharField(label='Nome', widget=forms.TextInput(attrs={'class': 'form-control'}))
@@ -269,6 +331,16 @@ class InformacaoPessoalForm(forms.ModelForm):
                     self.fields['obteve_contato_pessoal'].disabled = True
                     if self.instance.cliente.analise_credito.venda:
                         self.fields['contato_pessoal'].disabled = True
+
+    def clean_contato_pessoal(self):
+        contato = self.cleaned_data.get('contato_pessoal')
+        if contato:
+            contato = contato.replace(' ', '').replace('-', '').replace('(', '').replace(')', '')
+            if not contato.isdigit():
+                raise forms.ValidationError("Contato deve conter apenas números.")
+            if len(contato) < 10 or len(contato) > 11:
+                raise forms.ValidationError("Contato deve ter entre 10 e 11 dígitos.")
+        return contato
         
     def save(self, commit=True):
         self.instance.nome = self.cleaned_data.get('nome_pessoal')
@@ -306,6 +378,16 @@ class InformacaoPessoalEditForm(forms.ModelForm):
         self.instance.endereco = self.cleaned_data.get('endereco_pessoal')
         self.instance.obteve_contato = self.cleaned_data.get('obteve_contato_pessoal')
         return super().save(commit=commit)
+
+    def clean_contato_pessoal(self):
+        contato = self.cleaned_data.get('contato_pessoal')
+        if contato:
+            contato = contato.replace(' ', '').replace('-', '').replace('(', '').replace(')', '')
+            if not contato.isdigit():
+                raise forms.ValidationError("Contato deve conter apenas números.")
+            if len(contato) < 10 or len(contato) > 11:
+                raise forms.ValidationError("Contato deve ter entre 10 e 11 dígitos.")
+        return contato
 
 
 

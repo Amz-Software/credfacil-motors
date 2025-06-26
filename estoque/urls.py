@@ -38,4 +38,5 @@ urlpatterns = [
     
     path('estoque/entrada/liberar/<int:pk>/', liberar_entrada, name='liberar_entrada'),
 
+    path('estoque/imei/produto/', buscar_imei_por_produto, name='buscar_imei_por_produto'),
 ]

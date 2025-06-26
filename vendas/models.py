@@ -342,6 +342,7 @@ class Venda(Base):
     observacao = models.TextField(null=True, blank=True)
     repasse_logista = models.DecimalField(max_digits=10, decimal_places=2)
     is_deleted = models.BooleanField(default=False)
+    is_trocado = models.BooleanField(default=False)
     
     def qtd_total_parcelas(self):
         return sum(pagamento.parcelas for pagamento in self.pagamentos.filter(tipo_pagamento__parcelas=True))

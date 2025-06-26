@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+{% endblock extra_head %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Trocar Produto da Venda #{{ venda.id }}</h2>
+    <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="produto_atual" class="form-label">Produto Atual</label>
+            <select class="form-select" id="produto_atual" name="produto_atual" required>
+                <option value="">Selecione o produto vendido</option>
+                {% for item in produtos %}
+                    <option value="{{ item.id }}" data-imei="{{ item.imei }}">{{ item.produto.nome }} (Qtd: {{ item.quantidade }})</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="novo_produto" class="form-label">Novo Produto</label>
+            <select class="form-select" id="novo_produto" name="novo_produto" required>
+                <option value="">Selecione o novo produto</option>
+                {% for produto in produtos_disponiveis %}
+                    <option value="{{ produto.produto.id }}">{{ produto.produto.nome }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="imei" class="form-label">IMEI</label>
+            <br>
+            <select class="form-select select2" id="imei" name="imei" required>
+                <option value="">Selecione o IMEI</option>
+                {% for imei in imeis_disponiveis %}
+                    <option value="{{ imei }}">{{ imei }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Trocar Produto</button>
+        <a href="{% url 'vendas:venda_detail' venda.id %}" class="btn btn-secondary">Cancelar</a>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    $('.select2').select2();
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const novoProdutoSelect = document.getElementById('novo_produto');
+    const produtoAtualSelect = document.getElementById('produto_atual');
+    const imeiSelect = document.getElementById('imei');
+    
+    novoProdutoSelect.addEventListener('change', buscarImei);
+    produtoAtualSelect.addEventListener('change', buscarImei);
+
+    function buscarImei() {
+        const produtoAtualId = produtoAtualSelect.value;
+        const novoProdutoId = novoProdutoSelect.value;
+        const produtoImei = produtoAtualSelect.options[produtoAtualSelect.selectedIndex]?.getAttribute('data-imei'); 
+
+        if (produtoAtualId && novoProdutoId) {
+            imeiSelect.innerHTML = '<option value="">Carregando...</option>';
+            fetch(`/estoque/imei/produto/?produto_id=${novoProdutoId}&imei=${produtoImei}`)
+                .then(response => response.json())
+                .then(data => {
+                    imeiSelect.innerHTML = '<option value="">Selecione o IMEI</option>';
+                    if (data.imeis) {
+                        data.imeis.forEach(function(imei) {
+                            const option = document.createElement('option');
+                            option.value = imei.id;
+                            option.textContent = imei.imei;
+                            imeiSelect.appendChild(option);
+                        });
+                    }
+                })
+                .catch(() => {
+                    imeiSelect.innerHTML = '<option value="">Erro ao buscar IMEIs</option>';
+                });
+        } else {
+            imeiSelect.innerHTML = '<option value="">Selecione o IMEI</option>';
+        }
+    }
+});
+</script>
+{% endblock %}

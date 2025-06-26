@@ -1324,6 +1324,134 @@ class VendaDetailView(PermissionRequiredMixin, DetailView):
     template_name = 'venda/venda_detail.html'
     permission_required = 'vendas.view_venda'
     
+class VendaTrocarProdutoView(PermissionRequiredMixin, View):
+    permission_required = 'vendas.change_venda'
+
+    # quero um campo select com os produtos disponíveis para troca
+    def get(self, request, pk):
+        venda = get_object_or_404(Venda, pk=pk)
+        loja_id = request.session.get('loja_id')
+        loja = Loja.objects.get(id=loja_id)
+
+        if not Caixa.caixa_aberto(localtime(now()).date(), loja):
+            messages.warning(request, 'Não é possível trocar produtos com a loja bloqueada!')
+            return redirect('vendas:venda_list')
+
+        produtos = ProdutoVenda.objects.filter(venda=venda, loja=loja)
+        produtos_disponiveis = Estoque.objects.filter(loja=venda.loja, quantidade_disponivel__gt=0)
+        context = {
+            'venda': venda,
+            'produtos': produtos,
+            'produtos_disponiveis': produtos_disponiveis,
+            'loja': loja,
+        }
+
+        return render(request, 'venda/venda_trocar_produto.html', context)
+
+    def post(self, request, pk):
+        venda = get_object_or_404(Venda, pk=pk)
+        produto_atual_id = request.POST.get('produto_atual')
+        novo_produto_id = request.POST.get('novo_produto')
+        imei_id = request.POST.get('imei')
+        imei_obj = None
+        if imei_id:
+            try:
+                imei_obj = EstoqueImei.objects.get(id=imei_id)
+                imei = imei_obj.imei
+            except EstoqueImei.DoesNotExist:
+                imei = None
+                messages.error(request, 'IMEI selecionado não encontrado.')
+        else:
+            imei = None
+        loja = Loja.objects.get(id=request.session.get('loja_id'))
+
+        if not produto_atual_id or not novo_produto_id or not imei:
+            messages.error(request, 'Todos os campos são obrigatórios.')
+            return redirect('vendas:venda_trocar_produto', pk=pk)
+
+        try:
+            produto_atual = ProdutoVenda.objects.get(id=produto_atual_id, venda=venda)
+            novo_produto = Produto.objects.get(id=novo_produto_id)
+            quantidade = produto_atual.quantidade
+
+            # Valida estoque do novo produto
+            self._validar_estoque(novo_produto, quantidade, loja)
+            # Valida IMEI do novo produto
+            self._validar_imei(novo_produto, imei)
+
+            # Restaura estoque e IMEI do produto antigo
+            self._restaurar_estoque(produto_atual.produto, quantidade, loja)
+            self._restaurar_imei(produto_atual.produto, produto_atual.imei)
+
+            # Atualiza ProdutoVenda
+            produto_atual.produto = novo_produto
+            produto_atual.imei = imei
+            produto_atual.save()
+
+            # Remove do estoque o novo produto
+            estoque_novo = Estoque.objects.filter(produto=novo_produto, loja=loja).first()
+            if estoque_novo:
+                estoque_novo.remover_estoque(quantidade)
+                estoque_novo.save()
+
+            # Marca IMEI como vendido
+            produto_imei = EstoqueImei.objects.get(imei=imei, produto=novo_produto)
+            produto_imei.vendido = True
+            produto_imei.save()
+            
+            # atualiza venda marcando como is_trocado
+            venda.is_trocado = True
+            venda.save(user=request.user)
+
+            messages.success(request, 'Produto trocado com sucesso!')
+        except ValueError as e:
+            messages.error(request, str(e))
+        except Exception as e:
+            logger.exception("Erro ao trocar produto: %s", e)
+            messages.error(request, "Erro ao trocar produto: %s" % e)
+
+        return redirect('vendas:venda_detail', pk=pk)
+
+    def _validar_estoque(self, produto, quantidade, loja):
+        estoque = Estoque.objects.filter(produto=produto, loja=loja).first()
+        if not estoque or quantidade > estoque.quantidade_disponivel:
+            error_message = f"Quantidade indisponível para o produto {produto}"
+            logger.error(
+                "Estoque insuficiente para o produto %s: solicitado %s, disponível %s",
+                produto, quantidade, estoque.quantidade_disponivel if estoque else 0
+            )
+            raise ValueError(error_message)
+
+    def _validar_imei(self, produto, imei):
+        try:
+            produto_imei = EstoqueImei.objects.get(imei=imei)
+            novo_imei = EstoqueImei.objects.filter(imei=imei, produto=produto).first()
+            imei_antigo = ProdutoVenda.objects.filter(imei=imei).first()
+            if novo_imei and novo_imei != imei_antigo:
+                if produto_imei.vendido:
+                    error_message = f"IMEI {imei} já vendido"
+                    logger.error("IMEI já vendido para o produto %s: %s", produto, imei)
+                    raise ValueError(error_message)
+                produto_imei.vendido = True
+                produto_imei.save()
+        except EstoqueImei.DoesNotExist:
+            error_message = f"IMEI {imei} não encontrado"
+            logger.error("IMEI não encontrado para o produto %s: %s", produto, imei)
+            raise ValueError(error_message)
+
+    def _restaurar_estoque(self, produto, quantidade, loja):
+        estoque = Estoque.objects.filter(produto=produto, loja=loja).first()
+        if estoque:
+            estoque.adicionar_estoque(quantidade)
+            estoque.save()
+
+    def _restaurar_imei(self, produto, imei):
+        try:
+            produto_imei = EstoqueImei.objects.get(imei=imei, produto=produto)
+            produto_imei.vendido = False
+            produto_imei.save()
+        except EstoqueImei.DoesNotExist:
+            logger.warning("Tentativa de restaurar IMEI inexistente %s para o produto %s", imei, produto)
 
 def cancelar_venda(request, id):
     venda = get_object_or_404(Venda, id=id)

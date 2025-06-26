@@ -389,3 +389,17 @@ class FolhaNotaEntradaView(View):
         }
 
         return render(request, "estoque/folha_entrada.html", context)
+    
+def buscar_imei_por_produto(request):
+    if request.method == 'GET':
+        produto_id = request.GET.get('produto_id')
+        imei_antigo = request.GET.get('imei')
+        loja_id = request.session.get('loja_id')
+        loja = get_object_or_404(Loja, pk=loja_id)
+
+        if produto_id:
+            imeis = EstoqueImei.objects.filter(produto_id=produto_id, loja=loja, vendido=False).exclude(imei=imei_antigo) if imei_antigo else EstoqueImei.objects.filter(produto_id=produto_id, loja=loja, vendido=False)
+            imeis_list = [{'id': imei.id, 'imei': f'{imei.imei} - {imei.produto.nome}'} for imei in imeis]
+            return JsonResponse({'imeis': imeis_list})
+        
+    return JsonResponse({'error': 'Produto não encontrado'}, status=404)

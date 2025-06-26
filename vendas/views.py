@@ -1428,6 +1428,8 @@ class VendaTrocarProdutoView(PermissionRequiredMixin, View):
                     logger.error("IMEI já vendido para o produto %s: %s", produto, imei)
                     raise ValueError(error_message)
                 produto_imei.vendido = True
+                produto_imei.aplicativo_instalado = True
+                produto_imei.data_venda = localtime(now())
                 produto_imei.save()
         except EstoqueImei.DoesNotExist:
             error_message = f"IMEI {imei} não encontrado"
@@ -1444,6 +1446,8 @@ class VendaTrocarProdutoView(PermissionRequiredMixin, View):
         try:
             produto_imei = EstoqueImei.objects.get(imei=imei, produto=produto)
             produto_imei.vendido = False
+            produto_imei.aplicativo_instalado = False
+            produto_imei.data_venda = None
             produto_imei.save()
         except EstoqueImei.DoesNotExist:
             logger.warning("Tentativa de restaurar IMEI inexistente %s para o produto %s", imei, produto)

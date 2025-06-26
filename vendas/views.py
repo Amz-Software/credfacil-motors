@@ -1330,15 +1330,10 @@ class VendaTrocarProdutoView(PermissionRequiredMixin, View):
     # quero um campo select com os produtos disponíveis para troca
     def get(self, request, pk):
         venda = get_object_or_404(Venda, pk=pk)
-        loja_id = request.session.get('loja_id')
-        loja = Loja.objects.get(id=loja_id)
+        loja = Loja.objects.get(id=venda.loja.id)
 
-        if not Caixa.caixa_aberto(localtime(now()).date(), loja):
-            messages.warning(request, 'Não é possível trocar produtos com a loja bloqueada!')
-            return redirect('vendas:venda_list')
-
-        produtos = ProdutoVenda.objects.filter(venda=venda, loja=loja)
-        produtos_disponiveis = Estoque.objects.filter(loja=venda.loja, quantidade_disponivel__gt=0)
+        produtos = ProdutoVenda.objects.filter(venda=venda)
+        produtos_disponiveis = Estoque.objects.filter(loja=loja, quantidade_disponivel__gt=0)
         context = {
             'venda': venda,
             'produtos': produtos,

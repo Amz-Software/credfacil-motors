@@ -91,11 +91,6 @@ Vendas
                 {% endif %}
                 {% if not item.is_deleted %}
                   {% if user|has_perm:"vendas.change_venda" %}
-                  <a class="dropdown-item" href="{% url 'vendas:venda_update' item.pk %}">
-                    <i class="bx bx-edit-alt me-1"></i> Editar
-                  </a>
-                  {% endif %}
-                  {% if user|has_perm:"vendas.change_venda" %}
                   <a class="dropdown-item" href="{% url 'vendas:venda_trocar' item.pk %}">
                     <i class="bx bx-refresh me-1"></i> Trocar Produto
                   </a>

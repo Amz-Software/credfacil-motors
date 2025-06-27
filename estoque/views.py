@@ -39,8 +39,7 @@ class EstoqueListView(BaseView, PermissionRequiredMixin, ListView):
     def get_queryset(self):
         loja_id = self.request.session.get('loja_id')
         loja = get_object_or_404(Loja, pk=loja_id)
-        produtos = EstoqueImei.objects.filter(loja=loja, vendido=False).values('produto').distinct()
-        query = Estoque.objects.filter(produto__in=produtos, loja=loja).order_by('produto__nome')
+        query = super().get_queryset().filter(loja=loja)
         search = self.request.GET.get('search', None)
         if search:
             query = query.filter(produto__nome__icontains=search)

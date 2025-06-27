@@ -375,7 +375,7 @@ class ContasAReceberListView(BaseView, PermissionRequiredMixin, ListView):
     def get_queryset(self):
         loja_id = self.request.session.get('loja_id')
         user = self.request.user
-        qs = Pagamento.objects.with_status_flags()
+        qs = Pagamento.objects.exclude(venda__is_deleted=True).with_status_flags()
         
         search = self.request.GET.get('search', '')
         if search:

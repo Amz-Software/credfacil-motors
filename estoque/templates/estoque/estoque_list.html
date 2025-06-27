@@ -96,9 +96,9 @@ Estoque
                 {% for produto in produtos %}
                 <tr>
                   <td>{{ produto.produto|title }}</td>
-                  <td class="text-center">{{ produto.quantidade_disponivel }}</td>
+                  <td class="text-center">{{ produto.quantidade }}</td>
                   <td class="text-center">
-                    {{ produto|total_vendas:loja_id }}
+                    {{ produto.quantidade_vendida }}
                   </td>
                   <td class="text-center">
                     {% if produto.ultima_entrada.entrada.id %}

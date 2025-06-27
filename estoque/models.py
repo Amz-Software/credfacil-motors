@@ -100,6 +100,14 @@ class Estoque(Base):
     produto = models.ForeignKey('produtos.Produto', on_delete=models.CASCADE, related_name='estoque_atual')
     quantidade_disponivel = models.PositiveIntegerField(default=0)
 
+    def quantidade(self):
+        # busca todas unidades do produto no estoque dessa loja
+        return self.produto.estoque_imei.filter(loja=self.loja, vendido=False).count()
+    
+    def quantidade_vendida(self):
+        # busca todas unidades do produto no estoque que foram vendidas
+        return self.produto.estoque_imei.filter(loja=self.loja, vendido=True).count()
+
     @property
     def ultima_entrada(self):
         return self.produto.entradas_estoque.last()

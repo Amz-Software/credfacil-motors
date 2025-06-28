@@ -120,10 +120,18 @@
             <p class="mb-3"><strong>Pago:</strong> {{ p.pago|yesno:"Sim,Não" }}</p>
 
             <div class="text-center mb-3">
-              <img src="data:image/png;base64,{{ item.qr_b64 }}"
-                   alt="QR Code Parcela {{ p.numero_parcela }}"
-                   class="img-fluid" style="max-width:200px;">
+              {% if item.qr_b64 %}
+                <img src="data:image/png;base64,{{ item.qr_b64 }}"
+                    alt="QR Code Parcela {{ item.parcela.numero_parcela }}"
+                    class="qr-img img-fluid"
+                    data-bs-toggle="tooltip"
+                    data-bs-html="true"
+                    title="Escaneie para pagar ou copiar o código PIX." />
+              {% else %}
+                <p><strong>Parcela {{ item.parcela.numero_parcela }}</strong> <em>já paga</em></p>
+              {% endif %}
             </div>
+
 
             {% if p.pago %}
               <span class="badge bg-success w-100 py-2">Pago</span>
@@ -174,9 +182,16 @@
                     <td>{{ p.data_vencimento }}</td>
                     <td>{{ p.pago|yesno:"Sim,Não" }}</td>
                     <td>
-                      <img src="data:image/png;base64,{{ item.qr_b64 }}"
-                           alt="QR Code Parcela {{ p.numero_parcela }}"
-                           class="qr-img img-fluid">
+                      {% if item.qr_b64 %}
+                        <img src="data:image/png;base64,{{ item.qr_b64 }}"
+                            alt="QR Code Parcela {{ item.parcela.numero_parcela }}"
+                            class="qr-img img-fluid"
+                            data-bs-toggle="tooltip"
+                            data-bs-html="true"
+                            title="Escaneie para pagar ou copiar o código PIX." />
+                      {% else %}
+                        <p><strong>Parcela {{ item.parcela.numero_parcela }}</strong> <em>já paga</em></p>
+                      {% endif %}
                     </td>
                     <td style="min-width:140px;">
                       {% if p.pago %}

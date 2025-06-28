@@ -725,7 +725,7 @@ class Pagamento(Base):
         return sum(parcela.valor_pago for parcela in self.parcelas_pagamento.filter(pago=True))
     
     def __str__(self):
-        return f"Pagamento de R$ {self.valor} via {self.tipo_pagamento.nome}"
+        return f"Pagamento({self.id}) de R$ {self.valor} via {self.tipo_pagamento.nome}"
     
     def get_absolute_url(self):
         return reverse('financeiro:contas_a_receber_update', kwargs={'pk': self.pk})

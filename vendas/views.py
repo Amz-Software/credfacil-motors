@@ -28,10 +28,7 @@ from django.utils import timezone
 from django.utils.timezone import localtime, now
 from django.views.generic import TemplateView, ListView, DetailView, CreateView, DeleteView, UpdateView, View, FormView
 from django_select2.views import AutoResponseView
-
-from pixqrcode import PixQrCode
 from pixqrcodegen import Payload
-
 from estoque.models import Estoque, EstoqueImei
 from financeiro.forms import RepasseForm
 from financeiro.models import Repasse
@@ -47,7 +44,7 @@ from .models import (
     AnaliseCreditoCliente, Caixa, Cliente, Loja, Pagamento, Parcela, ProdutoVenda, TipoPagamento, Venda,
     LancamentoCaixa, LancamentoCaixaTotal
 )
-
+from pypix import Pix
 
 
 
@@ -1899,98 +1896,87 @@ class FolhaProdutoPDFView(PermissionRequiredMixin, View):
         return render(request, 'caixa/folha_produtos.html', context)
 
 
+def gerar_qrcode_pix(chave, valor, txid, nome_loja, cidade_loja, descricao=None):
+    pix = Pix()
+    pix.set_pixkey(chave)
+    pix.set_amount(valor)
+    pix.set_txid(txid)
+    pix.set_merchant_name(nome_loja[:25])
+    pix.set_merchant_city(cidade_loja[:15])
+
+    if descricao:
+        pix.set_description(descricao[:30])
+
+    payload = str(pix)
+    print("Payload Pix:", payload)
+    qr = qrcode.QRCode(
+        version=None,
+        error_correction=qrcode.constants.ERROR_CORRECT_M,
+        box_size=10,
+        border=4
+    )
+    qr.add_data(payload)
+    qr.make(fit=True)
+    img = qr.make_image()
+
+    buffer = BytesIO()
+    img.save(buffer, format="PNG")
+    return base64.b64encode(buffer.getvalue()).decode("utf-8")
+
 
 def folha_carne_view(request, pk, tipo):
-    # 1) Busca a venda e o pagamento em carnê/promissória
     venda = get_object_or_404(Venda, pk=pk)
     pagamento_carne = Pagamento.objects.filter(
         venda=venda,
         tipo_pagamento__carne=True
     ).first()
+
     if not pagamento_carne:
         messages.error(request, 'Venda não possui pagamento em carnê ou promissória')
         return redirect('vendas:venda_list')
 
-    # 2) Dados iniciais
     parcelas = pagamento_carne.parcelas_pagamento.all()
-    nome_cliente       = venda.cliente.nome.title()
-    tipo_pagamento     = 'Carnê' if tipo == 'carne' else 'Promissória'
-    endereco_cliente   = venda.cliente.endereco
-    cpf                = venda.cliente.cpf
-    loja               = get_object_or_404(Loja, nome__icontains="CREDFÁCIL")
-    numero_loja        = loja.telefone
-
-    # 3) Sanitiza chave Pix
-    raw_chave     = loja.chave_pix or ""
-    chave_digits  = re.sub(r'\D', '', raw_chave)
-    is_celular    = bool(re.fullmatch(r'(?:\+?55)?\d{11}', raw_chave))
+    cliente = venda.cliente
+    loja = get_object_or_404(Loja, nome__icontains="CREDFÁCIL")
 
     parcelas_info = []
-    for i,parcela in enumerate(parcelas):
-        # vencimento e valor
-        data_venc   = parcela.data_vencimento
-        valor_parc  = f"{parcela.valor:.2f}"
-        txid        = f"{pagamento_carne.pk:04d}{i+1:02d}"
+    for i, parcela in enumerate(parcelas):
+        valor = f"{parcela.valor:.2f}"
+        txid = f"{pagamento_carne.venda.pk:04d}{i+1:02d}"
+        descricao = f"{cliente.nome} - Parcela {i+1} de {len(parcelas)}"
+        qr_base64 = gerar_qrcode_pix(
+            chave=loja.chave_pix,
+            valor=valor,
+            txid=txid,
+            nome_loja="CredFacil",
+            cidade_loja="Belem",
+            descricao=descricao
+        )
 
-        if is_celular:
-            # fluxo antigo
-            pix_qrcode = PixQrCode(
-                name=loja.nome,
-                key=raw_chave,
-                city=loja.endereco or '',
-                amount=valor_parc
-            )
-            qr_string = pix_qrcode.generate_code()
-            img = qrcode.make(qr_string)
-
-        else:
-            payload = Payload(loja.nome, chave_digits, valor_parc, loja.endereco or '', txid)
-
-            buf_out    = io.StringIO()
-            old_stdout = sys.stdout
-            sys.stdout  = buf_out
-            payload.gerarPayload()
-            sys.stdout  = old_stdout
-            emv        = buf_out.getvalue().strip()
-
-            qr = QRCode(
-                version=None,
-                error_correction=ERROR_CORRECT_M,
-                box_size=10,
-                border=4
-            )
-            qr.add_data(emv)
-            qr.make(fit=True)
-            img = qr.make_image()
-
-        # converte a imagem em base64
-        buffer = BytesIO()
-        img.save(buffer, format="PNG")
-        qr_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
 
         parcelas_info.append({
             'parcela': i + 1,
-            'valor_parcela': valor_parc,
-            'data_vencimento': data_venc.strftime('%d/%m/%Y'),
+            'valor_parcela': valor,
+            'data_vencimento': parcela.data_vencimento.strftime('%d/%m/%Y'),
             'qr_code_base64': qr_base64,
-            'chave_pix': raw_chave,
+            'chave_pix': loja.chave_pix,
         })
 
     context = {
         'venda': venda,
         'valor_total': venda.pagamentos_valor_total,
-        'tipo_pagamento': tipo_pagamento,
+        'tipo_pagamento': 'Carnê' if tipo == 'carne' else 'Promissória',
         'quantidade_parcelas': len(parcelas),
-        'nome_cliente': nome_cliente,
-        'endereco_cliente': endereco_cliente,
+        'nome_cliente': cliente.nome.title(),
+        'endereco_cliente': cliente.endereco,
+        'cpf': cliente.cpf,
         'data_atual': localtime(now()).date(),
-        'cpf': cpf,
         'parcelas_info': parcelas_info,
         'loja': loja,
-        'numero_loja': numero_loja,
+        'numero_loja': loja.telefone,
     }
-    return render(request, "venda/folha_carne.html", context)
 
+    return render(request, "venda/folha_carne.html", context)
 
 
 class RelatorioVendasView(PermissionRequiredMixin, FormView):
@@ -2293,55 +2279,6 @@ class ProdutoVendidoListView(PermissionRequiredMixin, ListView):
         return context
 
 
-from django.http import HttpResponse
-from django.shortcuts import get_object_or_404
-from pixqrcode import PixQrCode
-from io import BytesIO
-import qrcode
-from .models import Loja
-
-def gerar_qrcode_pix(request, loja_id):
-    # Obter a loja pelo ID
-    loja = get_object_or_404(Loja, id=loja_id)
-
-    # Verificar se a chave Pix está presente
-    if not loja.chave_pix:
-        return HttpResponse("Chave Pix não encontrada para esta loja.", status=400)
-
-    # Definir o valor fixo para o QR Code (R$10,00)
-    valor = 10.00
-
-    # Definindo a chave Pix da loja
-    chave_pix = loja.chave_pix
-    nome_loja = loja.nome
-    cidade_loja = loja.endereco or "Cidade não especificada"
-
-    # Criando a instância da classe PixQrCode
-    pix_qrcode = PixQrCode(
-        name=nome_loja, 
-        key=chave_pix, 
-        city=cidade_loja, 
-        amount=str(valor)  # O valor precisa ser passado como string
-    )
-
-    # Gerar o código QR Pix
-    qr_code_data = pix_qrcode.generate_code()
-
-    # Gerar a imagem do QR Code
-    qr = qrcode.make(qr_code_data)
-
-    # Salvar o QR Code em memória usando BytesIO
-    buffer = BytesIO()
-    qr.save(buffer, format="PNG")
-    buffer.seek(0)
-
-    # Criar a resposta HTTP com o QR Code gerado
-    response = HttpResponse(buffer, content_type="image/png")
-    response['Content-Disposition'] = 'inline; filename="qrcode_pix.png"'
-
-    return response
-
-
 def contrato_view(request, pk):
     
     # Busca a venda
@@ -2437,52 +2374,54 @@ class PagamentoDetailView(DetailView):
         discount_pct      = getattr(pagamento, 'porcentagem_desconto', Decimal('0'))
         discount_amount   = (total_restante * discount_pct / Decimal('100')).quantize(Decimal('0.01'))
         total_com_desconto= (total_restante - discount_amount).quantize(Decimal('0.01'))
-        
+
         confirmando_count = pagamento.parcelas_pagamento.filter(
             pagamento_efetuado=True,
             pago=False
         ).count()
 
         # dados da loja
-        loja   = get_object_or_404(Loja, nome__iexact='CredFácil')
-        chave  = re.sub(r'\D', '', loja.chave_pix)
-        nome   = loja.nome
-        cidade = 'belem'
+        loja   = get_object_or_404(Loja, nome__iexact='CREDFÁCIL')
+        chave  = loja.chave_pix
+        cidade = "Belem"
 
-        # QR por parcela (já existente)
         qr_items = []
         for parcela in pagamento.parcelas_pagamento.all().order_by('numero_parcela'):
-            txid   = f"{pagamento.pk:04d}{parcela.numero_parcela:02d}"
-            amount = f"{parcela.valor:.2f}"
+            if not parcela.pago:
+                txid   = f"{pagamento.venda.pk:04d}{parcela.numero_parcela:02d}"
+                valor  = f"{parcela.valor:.2f}"
+                descricao = f"Parcela {parcela.numero_parcela} - Pagamento {pagamento.pk}"
 
-            payload = Payload(nome, chave, amount, cidade, txid)
-            buf = io.StringIO()
-            old = sys.stdout; sys.stdout = buf
-            payload.gerarPayload()
-            sys.stdout = old
-            emv = buf.getvalue().strip()
+                qr_b64 = gerar_qrcode_pix(
+                    chave=chave,
+                    valor=valor,
+                    txid=txid,
+                    nome_loja='credfacil',
+                    cidade_loja=cidade,
+                    descricao=descricao
+                )
+            else:
+                qr_b64 = None
 
-            img = qrcode.make(emv)
-            b = BytesIO(); img.save(b, format='PNG')
             qr_items.append({
                 'parcela': parcela,
-                'qr_b64': base64.b64encode(b.getvalue()).decode(),
+                'qr_b64': qr_b64,
             })
 
-        # gera QR de quitação total
+        # QR para quitação total com desconto
         if restantes:
             txid_qt = f"{pagamento.pk:04d}QT"
-            amt_qt   = f"{total_com_desconto:.2f}"
-            payload  = Payload(nome, chave, amt_qt, cidade, txid_qt)
-            buf2 = io.StringIO()
-            old = sys.stdout; sys.stdout = buf2
-            payload.gerarPayload()
-            sys.stdout = old
-            emv_qt = buf2.getvalue().strip()
+            valor_qt = f"{total_com_desconto:.2f}"
+            descricao_qt = f"Quitação total - Pagamento {pagamento.pk}"
 
-            img_qt = qrcode.make(emv_qt)
-            b2 = BytesIO(); img_qt.save(b2, format='PNG')
-            discount_qr_b64 = base64.b64encode(b2.getvalue()).decode()
+            discount_qr_b64 = gerar_qrcode_pix(
+                chave=chave,
+                valor=valor_qt,
+                txid=txid_qt,
+                nome_loja='credfacil',
+                cidade_loja=cidade,
+                descricao=descricao_qt
+            )
         else:
             discount_qr_b64 = None
 

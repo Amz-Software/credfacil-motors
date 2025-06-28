@@ -1,48 +1,53 @@
 import logging
-from datetime import datetime
 import json
-from typing import Any
+import re
+import sys
+import io
+import base64
+import calendar
+from datetime import datetime, date, timedelta
+from dateutil.relativedelta import relativedelta
+from decimal import Decimal
+from collections import defaultdict
+from io import BytesIO
+
+import qrcode
+from qrcode import QRCode
+from qrcode.constants import ERROR_CORRECT_M
+
 from django.contrib import messages
-from django.http import Http404, JsonResponse
+from django.contrib.auth.decorators import login_required, permission_required
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.core.paginator import Paginator
+from django.db import transaction
+from django.db.models import Sum, Count
+from django.http import Http404, JsonResponse, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse_lazy
-from django.views.generic import TemplateView, ListView, DetailView, CreateView, DeleteView, UpdateView, View, FormView
+from django.urls import reverse, reverse_lazy
+from django.utils import timezone
 from django.utils.timezone import localtime, now
+from django.views.generic import TemplateView, ListView, DetailView, CreateView, DeleteView, UpdateView, View, FormView
+from django_select2.views import AutoResponseView
+
+from pixqrcode import PixQrCode
+from pixqrcodegen import Payload
+
 from estoque.models import Estoque, EstoqueImei
 from financeiro.forms import RepasseForm
 from financeiro.models import Repasse
 from produtos.models import Produto
-from vendas.forms import AnaliseCreditoClienteForm, ClienteConsultaForm, ClienteForm, ComprovantesClienteEditForm, ComprovantesClienteForm, ContatoAdicionalEditForm, ContatoAdicionalForm, FormaPagamentoEditFormSet, InformacaoPessoalEditForm, InformacaoPessoalForm, LojaForm, ProdutoVendaEditFormSet, RelatorioSolicitacoesForm, RelatorioVendasForm, VendaForm, ProdutoVendaFormSet, FormaPagamentoFormSet, LancamentoForm, LancamentoCaixaTotalForm, ClienteTelefoneForm, AnaliseCreditoClienteImeiForm
-from .models import AnaliseCreditoCliente, Caixa, Cliente, Loja, Pagamento, Parcela, ProdutoVenda, TipoPagamento, Venda, LancamentoCaixa, LancamentoCaixaTotal
-from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
-from django.utils import timezone
-from django.db import transaction
-from django_select2.views import AutoResponseView
-from django.db.models import Sum
-from django.contrib.auth.decorators import permission_required
-from django.db.models import Count
-from datetime import date, timedelta
-from django.core.paginator import Paginator
-import base64
-from django.http import HttpResponse
-from pixqrcode import PixQrCode
-from io import BytesIO
-import qrcode
-from dateutil.relativedelta import relativedelta
-import calendar
-from datetime import date
-from django.urls import reverse
-from django.contrib.auth.decorators import login_required, permission_required
-import re, sys, io, base64
-import base64
-from io import BytesIO
-from django.shortcuts import get_object_or_404
-from django.views.generic import DetailView
-import qrcode
-from pixqrcodegen import Payload
-from vendas.models import Pagamento, Loja
-from decimal import Decimal
-from collections import defaultdict
+from vendas.forms import (
+    AnaliseCreditoClienteForm, ClienteConsultaForm, ClienteForm, ComprovantesClienteEditForm,
+    ComprovantesClienteForm, ContatoAdicionalEditForm, ContatoAdicionalForm, FormaPagamentoEditFormSet,
+    InformacaoPessoalEditForm, InformacaoPessoalForm, LojaForm, ProdutoVendaEditFormSet, RelatorioSolicitacoesForm,
+    RelatorioVendasForm, VendaForm, ProdutoVendaFormSet, FormaPagamentoFormSet, LancamentoForm,
+    LancamentoCaixaTotalForm, ClienteTelefoneForm, AnaliseCreditoClienteImeiForm
+)
+from .models import (
+    AnaliseCreditoCliente, Caixa, Cliente, Loja, Pagamento, Parcela, ProdutoVenda, TipoPagamento, Venda,
+    LancamentoCaixa, LancamentoCaixaTotal
+)
+
 
 
 
@@ -1895,25 +1900,6 @@ class FolhaProdutoPDFView(PermissionRequiredMixin, View):
 
 
 
-import re
-import sys
-import io
-import base64
-
-from io import BytesIO
-from dateutil.relativedelta import relativedelta
-
-from django.shortcuts import get_object_or_404, redirect, render
-from django.contrib import messages
-
-import qrcode
-from qrcode import QRCode
-from qrcode.constants import ERROR_CORRECT_M
-from pixqrcodegen import Payload
-
-from vendas.models import Venda, Pagamento, Loja
-
-
 def folha_carne_view(request, pk, tipo):
     # 1) Busca a venda e o pagamento em carnê/promissória
     venda = get_object_or_404(Venda, pk=pk)
@@ -2004,6 +1990,8 @@ def folha_carne_view(request, pk, tipo):
         'numero_loja': numero_loja,
     }
     return render(request, "venda/folha_carne.html", context)
+
+
 
 class RelatorioVendasView(PermissionRequiredMixin, FormView):
     template_name = 'relatorios/relatorio_vendas.html'

@@ -1926,12 +1926,12 @@ def folha_carne_view(request, pk, tipo):
         return redirect('vendas:venda_list')
 
     # 2) Dados iniciais
-    quantidade_parcelas = pagamento_carne.parcelas
+    parcelas = pagamento_carne.parcelas_pagamento.all()
     nome_cliente       = venda.cliente.nome.title()
     tipo_pagamento     = 'Carnê' if tipo == 'carne' else 'Promissória'
     endereco_cliente   = venda.cliente.endereco
     cpf                = venda.cliente.cpf
-    loja               = get_object_or_404(Loja, nome__icontains="CredFácil")
+    loja               = get_object_or_404(Loja, nome__icontains="CREDFÁCIL")
     numero_loja        = loja.telefone
 
     # 3) Sanitiza chave Pix
@@ -1940,10 +1940,10 @@ def folha_carne_view(request, pk, tipo):
     is_celular    = bool(re.fullmatch(r'(?:\+?55)?\d{11}', raw_chave))
 
     parcelas_info = []
-    for i in range(quantidade_parcelas):
+    for i,parcela in enumerate(parcelas):
         # vencimento e valor
-        data_venc   = pagamento_carne.data_primeira_parcela + relativedelta(months=i)
-        valor_parc  = f"{pagamento_carne.valor_parcela:.2f}"
+        data_venc   = parcela.data_vencimento
+        valor_parc  = f"{parcela.valor:.2f}"
         txid        = f"{pagamento_carne.pk:04d}{i+1:02d}"
 
         if is_celular:
@@ -1994,7 +1994,7 @@ def folha_carne_view(request, pk, tipo):
         'venda': venda,
         'valor_total': venda.pagamentos_valor_total,
         'tipo_pagamento': tipo_pagamento,
-        'quantidade_parcelas': quantidade_parcelas,
+        'quantidade_parcelas': len(parcelas),
         'nome_cliente': nome_cliente,
         'endereco_cliente': endereco_cliente,
         'data_atual': localtime(now()).date(),

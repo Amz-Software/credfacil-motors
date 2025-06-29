@@ -1942,7 +1942,7 @@ def folha_carne_view(request, pk, tipo):
     parcelas_info = []
     for i, parcela in enumerate(parcelas):
         valor = f"{parcela.valor:.2f}"
-        txid = f"{pagamento_carne.venda.pk:04d}{i+1:02d}"
+        txid = f"{pagamento_carne.pk:04d}{i+1:02d}"
         descricao = f"{cliente.nome} - Parcela {i+1} de {len(parcelas)}"
         qr_base64 = gerar_qrcode_pix(
             chave=loja.chave_pix,
@@ -2388,7 +2388,7 @@ class PagamentoDetailView(DetailView):
         qr_items = []
         for parcela in pagamento.parcelas_pagamento.all().order_by('numero_parcela'):
             if not parcela.pago:
-                txid   = f"{pagamento.venda.pk:04d}{parcela.numero_parcela:02d}"
+                txid   = f"{pagamento.pk:04d}{parcela.numero_parcela:02d}"
                 valor  = f"{parcela.valor:.2f}"
                 descricao = f"Parcela {parcela.numero_parcela} - Pagamento {pagamento.pk}"
 
@@ -2412,7 +2412,7 @@ class PagamentoDetailView(DetailView):
         if restantes:
             txid_qt = f"{pagamento.pk:04d}QT"
             valor_qt = f"{total_com_desconto:.2f}"
-            descricao_qt = f"Quitação total - Pagamento {pagamento.pk}"
+            descricao_qt = f"Quitacao total - Pagamento {pagamento.pk}"
 
             discount_qr_b64 = gerar_qrcode_pix(
                 chave=chave,

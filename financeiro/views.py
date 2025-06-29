@@ -381,7 +381,8 @@ class ContasAReceberListView(BaseView, PermissionRequiredMixin, ListView):
         if search:
             qs = qs.filter(
                 Q(venda__cliente__nome__icontains=search) |
-                Q(venda__cliente__cpf__icontains=search) 
+                Q(venda__cliente__cpf__icontains=search) |
+                Q(id__iexact=search) 
             )
 
         if self.request.GET.get('bloqueado'):

@@ -546,7 +546,7 @@ class FolhaRelatorioContasAReceberView(BaseView, PermissionRequiredMixin, Templa
                 output_field=DateField()
             )
 
-            pagamentos_qs = Pagamento.objects.with_status_flags().distinct()
+            pagamentos_qs = Pagamento.objects.exclude(venda__is_deleted=True).with_status_flags().distinct()
             pagamentos_qs = pagamentos_qs.annotate(
                 proximo_vencimento=proximo_vencimento_subquery,
                 ultimo_vencimento=ultimo_vencimento_subquery,

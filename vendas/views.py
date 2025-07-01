@@ -2068,7 +2068,12 @@ class FolhaRelatorioSolicitacoesView(PermissionRequiredMixin, TemplateView):
             self.loja = Loja.objects.filter(pk__in=loja_ids).first()
         else:
             loja_id = request.session.get('loja_id')
-            if loja_id:
+            if request.user.has_perm('vendas.can_view_all_stores'):
+                # Usuário pode ver todas as lojas e não selecionou nenhuma: pega todas
+                all_lojas = Loja.objects.values_list('id', flat=True)
+                filtros['loja__id__in'] = list(all_lojas)
+                self.loja = None
+            elif loja_id:
                 filtros['loja__id'] = loja_id
                 self.loja = Loja.objects.filter(pk=loja_id).first()
             else:
@@ -2182,7 +2187,12 @@ class FolhaRelatorioVendasView(PermissionRequiredMixin, TemplateView):
             self.loja = Loja.objects.filter(pk__in=loja_ids).first()
         else:
             loja_id = request.session.get('loja_id')
-            if loja_id:
+            if request.user.has_perm('vendas.can_view_all_stores'):
+                # Usuário pode ver todas as lojas e não selecionou nenhuma: pega todas
+                all_lojas = Loja.objects.values_list('id', flat=True)
+                filtros['loja__id__in'] = list(all_lojas)
+                self.loja = None
+            elif loja_id:
                 filtros['loja__id'] = loja_id
                 self.loja = Loja.objects.filter(pk=loja_id).first()
             else:

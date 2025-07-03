@@ -116,8 +116,11 @@ class Estoque(Base):
         qtd_entradas = self.produto.entradas_estoque.count()
         total = 0
         for entrada in self.produto.entradas_estoque.all():
-            total += entrada.venda_unitaria
-        
+            if entrada.venda_unitaria is not None:
+                total += entrada.venda_unitaria or 0
+            else:
+                total += 0
+
         if qtd_entradas > 0:
             preco_medio = total / qtd_entradas
             preco_formatado = f"{preco_medio:.2f}"
@@ -128,7 +131,10 @@ class Estoque(Base):
         qtd_entradas = self.produto.entradas_estoque.count()
         total = 0
         for entrada in self.produto.entradas_estoque.all():
-            total += entrada.custo_unitario
+            if entrada.custo_unitario is not None:
+                total += entrada.custo_unitario or 0
+            else:
+                total += 0
         
         if qtd_entradas > 0:
             preco_medio = total / qtd_entradas

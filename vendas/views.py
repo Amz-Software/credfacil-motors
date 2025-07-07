@@ -1350,6 +1350,7 @@ class VendaTrocarProdutoView(PermissionRequiredMixin, View):
         produto_atual_id = request.POST.get('produto_atual')
         novo_produto_id = request.POST.get('novo_produto')
         imei_id = request.POST.get('imei')
+        motivo_troca = request.POST.get('motivo')
         imei_obj = None
         if imei_id:
             try:
@@ -1370,6 +1371,9 @@ class VendaTrocarProdutoView(PermissionRequiredMixin, View):
             produto_atual = ProdutoVenda.objects.get(id=produto_atual_id, venda=venda)
             novo_produto = Produto.objects.get(id=novo_produto_id)
             quantidade = produto_atual.quantidade
+
+            produto_antigo_nome = produto_atual.produto.nome
+            produto_antigo_imei = produto_atual.imei
 
             # Valida estoque do novo produto
             self._validar_estoque(novo_produto, quantidade, loja)
@@ -1396,8 +1400,16 @@ class VendaTrocarProdutoView(PermissionRequiredMixin, View):
             produto_imei.vendido = True
             produto_imei.save()
             
+            data_atual = localtime(now()).date().strftime('%d/%m/%Y')
+
             # atualiza venda marcando como is_trocado
             venda.is_trocado = True
+            venda.observacao += (
+                f"\n{data_atual} | 🔄 Troca de produto:\n"
+                f"• De: {produto_antigo_nome} - {produto_antigo_imei}\n"
+                f"• Para: {novo_produto.nome} - {imei}\n"
+                f"• Motivo: {motivo_troca}"
+            )
             venda.save(user=request.user)
 
             messages.success(request, 'Produto trocado com sucesso!')

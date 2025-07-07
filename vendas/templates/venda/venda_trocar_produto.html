@@ -37,6 +37,10 @@
                 {% endfor %}
             </select>
         </div>
+        <div class="mb-3">
+            <label for="motivo" class="form-label">Motivo</label>
+            <textarea class="form-control" id="motivo" name="motivo" rows="3" required></textarea>
+        </div>
         <button type="submit" class="btn btn-primary">Trocar Produto</button>
         <a href="{% url 'vendas:venda_detail' venda.id %}" class="btn btn-secondary">Cancelar</a>
     </form>

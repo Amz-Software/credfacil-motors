@@ -30,7 +30,7 @@ Venda {{ venda.data_venda|date:"d/m/Y" }}
           <p><strong>Vendedor:</strong> {{ venda.vendedor.username }}</p>
           <p><strong>Tipo de Venda:</strong> {{ venda.tipo_venda.nome }}</p>
           <p><strong>Tipo de Entrega:</strong> {{ venda.tipo_entrega.nome }}</p>
-          <p><strong>Observação:</strong> {{ venda.observacao }}</p>
+          <p><strong>Observação:</strong> {{ venda.observacao|linebreaksbr }}</p>
           <p><strong>Valor Total:</strong> {{ venda.calcular_valor_total }}</p>
         </div>
       </div>

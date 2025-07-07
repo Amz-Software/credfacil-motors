@@ -1401,11 +1401,12 @@ class VendaTrocarProdutoView(PermissionRequiredMixin, View):
             produto_imei.save()
             
             data_atual = localtime(now()).date().strftime('%d/%m/%Y')
+            hora_atual = localtime(now()).time().strftime('%H:%M')
 
             # atualiza venda marcando como is_trocado
             venda.is_trocado = True
             venda.observacao += (
-                f"\n{data_atual} | 🔄 Troca de produto:\n"
+                f"\n{data_atual} {hora_atual} | 🔄 Troca de produto:\n"
                 f"• De: {produto_antigo_nome} - {produto_antigo_imei}\n"
                 f"• Para: {novo_produto.nome} - {imei}\n"
                 f"• Motivo: {motivo_troca}"

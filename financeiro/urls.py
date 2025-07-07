@@ -30,4 +30,5 @@ urlpatterns = [
 
     path('relatorio/contas-a-receber', RelatorioContasAReceberView.as_view(), name='relatorio_contas_a_receber'),
     path('relatorio/contas-a-pagar/folha', FolhaRelatorioContasAReceberView.as_view(), name='relatorio_folha_contas_a_receber'),
+    
 ]

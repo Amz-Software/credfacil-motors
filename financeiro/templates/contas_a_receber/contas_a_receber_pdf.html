@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: sans-serif; font-size: 12px; }
+    h1,h2 { margin-bottom: .3em; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 1em; }
+    th,td { border: 1px solid #333; padding: 4px; text-align: left; }
+    .small { font-size: 10px; color: #555; }
+  </style>
+</head>
+<body>
+  <h1>Conta a Receber #{{ pagamento.id }}</h1>
+
+  <h2>1. Cliente</h2>
+  <p><strong>Nome:</strong> {{ cliente.nome }}<br>
+     <strong>E-mail:</strong> {{ cliente.email|default:"—" }}<br>
+     <strong>Telefone:</strong> {{ cliente.telefone }}<br>
+     <strong>CPF:</strong> {{ cliente.cpf }} – <strong>Nascimento:</strong> {{ cliente.nascimento }}<br>
+     <strong>Endereço:</strong> {{ cliente.endereco }}, {{ cliente.bairro }} – {{ cliente.cidade }} (CEP {{ cliente.cep }})
+  </p>
+
+  <h2>2. Detalhes da Venda</h2>
+  <p><strong>Venda:</strong> #{{ pagamento.venda.id }} &nbsp;
+     <strong>Produto:</strong> {{ itens.first.produto.nome|title }} &nbsp;
+     <strong>Valor Total:</strong> R$ {{ pagamento.valor|floatformat:2 }}<br>
+     <strong>Tipo Pagamento:</strong> {{ pagamento.tipo_pagamento }} &nbsp;
+     <strong>Parcelas:</strong> {{ pagamento.parcelas }} &nbsp;
+     <strong>1ª Parcela:</strong> {{ pagamento.data_primeira_parcela }}
+  </p>
+
+  <h2>3. Contatos</h2>
+  {% if contatos %}
+  <table>
+    <thead>
+      <tr>
+        <th>Data</th><th>Quem</th><th>Criado em</th><th>Observação</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for c in contatos %}
+      <tr>
+        <td>{{ c.data }}</td>
+        <td>{{ c.criado_por.get_full_name|default:c.criado_por.username }}</td>
+        <td class="small">{{ c.criado_em }}</td>
+        <td>{{ c.observacao }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+    <p>Nenhum contato registrado.</p>
+  {% endif %}
+
+  <h2>4. Informações Adicionais</h2>
+  <p><strong>Info. Pessoal:</strong> {{ cliente.informacao_pessoal.nome|default:"-" }}, {{ cliente.informacao_pessoal.contato|default:"-" }}, {{ cliente.informacao_pessoal.endereco|default:"-" }}<br>
+     <strong>Info. Comercial:</strong> {{ cliente.contato_adicional.nome|default:"-" }}, {{ cliente.contato_adicional.contato|default:"-" }}, {{ cliente.contato_adicional.endereco|default:"-" }}
+  </p>
+
+  <h2>5. Parcelas</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Nº</th><th>Vencimento</th><th>Valor</th><th>Pago?</th><th>Cliente informou?</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in parcelas %}
+      <tr>
+        <td>{{ p.numero_parcela }}</td>
+        <td>{{ p.data_vencimento }}</td>
+        <td>R$ {{ p.valor|floatformat:2 }}</td>
+        <td>{{ p.pago|yesno:"Sim,Não" }}</td>
+        <td>{{ p.pagamento_efetuado|yesno:"Sim,Não" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</body>
+</html>

@@ -1192,3 +1192,21 @@ class ClienteConsultaForm(forms.Form):
             'class': 'form-control'
         })
     )
+
+class ContatoForm(forms.ModelForm):
+    data = forms.DateField(
+        input_formats=['%d/%m/%Y', '%Y-%m-%d'],
+        widget=forms.DateInput(
+            format='%Y-%m-%d',
+            attrs={'class': 'form-control', 'type': 'date'}
+        )
+    )
+
+    class Meta:
+        model = Contato
+        fields = ['data', 'observacao']
+        widgets = {
+            'observacao': forms.Textarea(
+                attrs={'class': 'form-control', 'rows': 3}
+            ),
+        }

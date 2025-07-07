@@ -6,6 +6,7 @@ from django.utils import timezone
 from django.shortcuts import redirect
 from django.shortcuts import get_object_or_404
 from accounts.views import logout_view
+from vendas.forms import ContatoForm
 from vendas.views import BaseView
 from .models import CaixaMensal, CaixaMensalGastoFixo, CaixaMensalFuncionario, GastosAleatorios
 from financeiro.forms import RelatorioSaidaForm
@@ -452,7 +453,14 @@ class ContasAReceberDetailView(PermissionRequiredMixin, DetailView):
             instance=conta_a_receber,
             form_kwargs={'user': self.request.user}
         )
+        cliente = self.get_object().venda.cliente
+        contatos = list(cliente.contatos.all())
+        for c in contatos:
+            c.form = ContatoForm(instance=c)
+        context['contacts'] = contatos
+        context['contato_form'] = ContatoForm()
         return context
+
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
@@ -546,7 +554,7 @@ class FolhaRelatorioContasAReceberView(BaseView, PermissionRequiredMixin, Templa
                 output_field=DateField()
             )
 
-            pagamentos_qs = Pagamento.objects.exclude(venda__is_deleted=True).with_status_flags().distinct()
+            pagamentos_qs = Pagamento.objects.with_status_flags().distinct()
             pagamentos_qs = pagamentos_qs.annotate(
                 proximo_vencimento=proximo_vencimento_subquery,
                 ultimo_vencimento=ultimo_vencimento_subquery,
@@ -700,3 +708,38 @@ class RepasseUpdateView(PermissionRequiredMixin, UpdateView):
 
     def get_success_url(self):
         return reverse_lazy('vendas:loja_detail', kwargs={'pk': self.object.loja.pk})
+    
+    
+class ContatoCreateView(PermissionRequiredMixin, CreateView):
+    model = Contato
+    form_class = ContatoForm
+    permission_required = 'vendas.add_contato'
+
+    def dispatch(self, request, *args, **kwargs):
+        # só POST via modal
+        if request.method != 'POST':
+            return self.handle_no_permission()
+        return super().dispatch(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        pagamento = get_object_or_404(Pagamento, pk=self.kwargs['pagamento_pk'])
+        form.instance.cliente = pagamento.venda.cliente
+        form.instance.criado_por = self.request.user
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse('financeiro:contas_a_receber_update', args=[self.kwargs['pagamento_pk']])
+
+
+class ContatoUpdateView(PermissionRequiredMixin, UpdateView):
+    model = Contato
+    form_class = ContatoForm
+    permission_required = 'vendas.change_contato'
+
+    def form_valid(self, form):
+        form.instance.modificado_por = self.request.user
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        # volta à tela de pagamento
+        return reverse('financeiro:contas_a_receber_update', args=[self.kwargs['pagamento_pk']])

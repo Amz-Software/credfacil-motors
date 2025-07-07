@@ -759,4 +759,20 @@ class Parcela(Base):
 
     def __str__(self):
         return f"Parcela {self.numero_parcela} de {self.pagamento}"
-        
+
+
+
+class Contato(Base):
+    cliente = models.ForeignKey('vendas.Cliente', on_delete=models.CASCADE, related_name='contatos')
+    data = models.DateField()
+    observacao = models.TextField(null=True, blank=True)
+    criado_em = models.DateTimeField(auto_now_add=True)
+    modificado_em = models.DateTimeField(auto_now=True)
+    criado_por = models.ForeignKey('accounts.User', on_delete=models.CASCADE, related_name='%(class)s_criadas', editable=False, null=True, blank=True)
+    modificado_por = models.ForeignKey('accounts.User', on_delete=models.CASCADE, related_name='%(class)s_modificadas', editable=False, null=True, blank=True)
+
+    def __str__(self):
+        return self.nome
+    
+    class Meta:
+        verbose_name_plural = 'Contatos'

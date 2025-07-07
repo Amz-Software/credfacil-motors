@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.urls import path
 
+from financeiro.views import ContatoCreateView, ContatoUpdateView
 from utils.gerador_views import generate_views
 from vendas.forms import *
 from vendas.models import *
@@ -117,4 +118,16 @@ urlpatterns = [
     ),
 
     path('graficos/', GraficoTemplateView.as_view(), name='grafico'),
+    
+    path(
+        'pagamentos/<int:pagamento_pk>/contato/add/',
+        ContatoCreateView.as_view(),
+        name='pagamento_add_contato'
+    ),
+    
+    path(
+      'pagamentos/<int:pagamento_pk>/contato/<int:pk>/edit/',
+      ContatoUpdateView.as_view(),
+      name='pagamento_edit_contato'
+    ),
 ]

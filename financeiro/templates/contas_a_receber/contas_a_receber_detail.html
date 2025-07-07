@@ -10,8 +10,19 @@
     {# -- CARD: Informações do Cliente -- #}
     <div class="col-12">
       <div class="card shadow-sm">
-        <div class="card-header text-white">
-          <h5 class="mb-0">Informações do Cliente</h5>
+        <div class="card-header d-flex justify-content-beetween align-items-center text-white">
+          <a href="{% url 'vendas:cliente_update' conta_a_receber.venda.cliente.id %}"
+             class="btn btn-light btn-md d-flex align-items-center"
+             title="Clique para editar as informações do cliente">
+            <i class="bi bi-pencil-square me-2"></i>
+            <h5 class="mb-0">Informações do Cliente</h5>
+            <span class="ms-2 text-muted small">(Clique aqui)</span>
+          </a>
+
+          <button id="download-pdf" class="btn btn-outline-secondary">
+            <i class="bi bi-file-earmark-pdf-fill"></i> Gerar PDF
+          </button>
+
         </div>
         <div class="card-body">
           <div class="row gx-3 gy-2">
@@ -136,6 +147,127 @@
       </div>
     </div>
 
+    {# -- CARD: Detalhes de informacoes adicionais e comerciais -- #}
+    <div class="col-12">
+      <div class="card shadow-sm">
+        <div class="card-header text-white">
+          <h5 class="mb-0">Informações adicionais e comerciais</h5>
+        </div>
+        <div class="card-body">
+          <div class="row gx-3 gy-2">
+            <div class="col-12 col-md-4">
+              <small class="text-muted">Nome (Info. Adicional)</small>
+              <div>{{ conta_a_receber.venda.cliente.informacao_pessoal.nome|title|default:"Não informado" }}</div>
+            </div>
+            <div class="col-12 col-md-4">
+              <small class="text-muted">Telefone (Info. Adicional)</small>
+              <div>{{ conta_a_receber.venda.cliente.informacao_pessoal.contato|default:"Não informado" }}</div>
+            </div>
+            <div class="col-12 col-md-4">
+              <small class="text-muted">Endereco (Info. Adicional)</small>
+              <div>{{ conta_a_receber.venda.cliente.informacao_pessoal.endereco|default:"Não informado" }}</div>
+            </div>
+            <div class="col-12 col-md-4">
+              <small class="text-muted">Nome (Info. Comercial)</small>
+              <div>{{ conta_a_receber.venda.cliente.contato_adicional.nome|title|default:"Não informado" }}</div>
+            </div>
+            <div class="col-12 col-md-4">
+              <small class="text-muted">Telefone (Info. Comercial)</small>
+              <div>{{ conta_a_receber.venda.cliente.contato_adicional.contato|default:"Não informado" }}</div>
+            </div>
+            <div class="col-12 col-md-4">
+              <small class="text-muted">Endereço (Info. Comercial)</small>
+              <div>{{ conta_a_receber.venda.cliente.contato_adicional.endereco|default:"Não informado" }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {# dentro de content, logo após os cards existentes #}
+    <div class="col-12">
+      <div class="card shadow-sm">
+        <div class="card-header text-white">
+          <h5 class="mb-0">Contatos com o Cliente</h5>
+        </div>
+        <div class="card-body">
+          <ul class="list-group list-group-flush mb-3">
+            {% for c in contacts %}
+              <li class="mb-3" 
+                  style="cursor:pointer"
+                  data-bs-toggle="modal"
+                  data-bs-target="#editContatoModal-{{ c.id }}">
+                <span>
+                  <strong>{{ c.data|date:"d/m/Y" }}</strong> – {{ c.observacao }}
+                </span><br>
+                <small class="text-muted">
+                  Solicitado por {{ c.criado_por.get_full_name|default:c.criado_por.username }}
+                  em {{ c.criado_em|date:"d/m/Y H:i" }}
+                </small>
+              </li>
+
+              <!-- Modal de edição -->
+              <div class="modal fade" id="editContatoModal-{{ c.id }}" tabindex="-1">
+                <div class="modal-dialog">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 class="modal-title">Editar Contato</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form method="post"
+                          action="{% url 'vendas:pagamento_edit_contato' conta_a_receber.id c.id %}">
+                      {% csrf_token %}
+                      <div class="modal-body">
+                        {{ c.form.as_p }}
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary"
+                                data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Salvar</button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            {% empty %}
+              <li>Nenhum contato registrado.</li>
+            {% endfor %}
+          </ul>
+          <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#contatoModal">
+            <i class="bi bi-plus-circle me-1"></i> Novo Contato
+          </button>
+        </div>
+      </div>
+    </div>
+
+    {# -- Modal para adicionar contato -- #}
+
+    <!-- Modal -->
+    <div class="modal fade" id="contatoModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Adicionar Contato</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <form
+            method="post"
+            action="{% url 'vendas:pagamento_add_contato' conta_a_receber.id %}"
+          >
+            {% csrf_token %}
+            <div class="modal-body">
+              {{ contato_form.as_p }}
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                Fechar
+              </button>
+              <button type="submit" class="btn btn-primary">Salvar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
 
     {# -- CARD: Tabela de Parcelas/Editável -- #}
     <div class="col-12">
@@ -187,6 +319,160 @@
       </div>
     </div>
 
+    {# relatório escondido fora da tela para o html2pdf capturar #}
+    <div id="report-content" style="position:absolute; left:-9999px; top:0; width:210mm;">
+      <style>
+        /* escopo somente ao PDF */
+        #report-content {
+          font-family: sans-serif;
+          font-size: 12px;
+          color: #333;
+        }
+        /* Título principal */
+        #report-content h1 {
+          font-size: 18px;
+          margin-bottom: 0.5em;
+          border-bottom: 2px solid #444;
+          padding-bottom: 0.2em;
+        }
+        /* Seções */
+        #report-content h2 {
+          font-size: 14px;
+          margin-top: 1.2em;
+          margin-bottom: 0.3em;
+          color: #555;
+          border-bottom: 1px solid #bbb;
+          padding-bottom: 0.2em;
+        }
+        /* Blocos de contato */
+        #report-content .contact-item {
+          border: 1px solid #ccc;
+          border-radius: 4px;
+          background: #f7f7f7;
+          padding: 8px;
+          margin-bottom: 8px;
+        }
+        #report-content .contact-item .meta {
+          font-size: 10px;
+          color: #666;
+          margin-bottom: 4px;
+        }
+        /* Tabelas simples (parcelas) */
+        #report-content table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-bottom: 1em;
+        }
+        #report-content th,
+        #report-content td {
+          border: 1px solid #999;
+          padding: 4px;
+          text-align: left;
+        }
+        #report-content th {
+          background: #eaeaea;
+        }
+      </style>
+
+      <h1>Conta a Receber #{{ conta_a_receber.id }}</h1>
+
+      <h2>1. Cliente</h2>
+      <p>
+        <strong>Nome:</strong> {{ conta_a_receber.venda.cliente.nome }}<br>
+        <strong>E-mail:</strong> {{ conta_a_receber.venda.cliente.email|default:"—" }}<br>
+        <strong>Telefone:</strong> {{ conta_a_receber.venda.cliente.telefone }}<br>
+        <strong>CPF:</strong> {{ conta_a_receber.venda.cliente.cpf }} –
+        <strong>Nascimento:</strong> {{ conta_a_receber.venda.cliente.nascimento }}<br>
+        <strong>Endereço:</strong>
+          {{ conta_a_receber.venda.cliente.endereco }},
+          {{ conta_a_receber.venda.cliente.bairro }} –
+          {{ conta_a_receber.venda.cliente.cidade }}
+          (CEP {{ conta_a_receber.venda.cliente.cep }})
+      </p>
+
+      <h2>2. Detalhes da Venda</h2>
+      <p>
+        <strong>Venda:</strong> #{{ conta_a_receber.venda.id }} &nbsp;
+        <strong>Produto:</strong> {{ conta_a_receber.venda.itens_venda.first.produto.nome|title }} &nbsp;
+        <strong>Valor Total:</strong> R$ {{ conta_a_receber.valor|floatformat:2 }}<br>
+        <strong>Tipo Pagamento:</strong> {{ conta_a_receber.tipo_pagamento }} &nbsp;
+        <strong>Parcelas:</strong> {{ conta_a_receber.parcelas }} &nbsp;
+        <strong>1ª Parcela:</strong> {{ conta_a_receber.data_primeira_parcela }}
+      </p>
+
+      <h2>3. Contatos</h2>
+      {% if contacts %}
+        {% for c in contacts %}
+          <div class="contact-item">
+            <div class="meta">
+              <strong>{{ c.data|date:"d/m/Y" }}</strong> —
+              {{ c.criado_por.get_full_name|default:c.criado_por.username }}
+              <span>• Criado em {{ c.criado_em|date:"d/m/Y H:i" }}</span>
+            </div>
+            <div>{{ c.observacao }}</div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <p>Nenhum contato registrado.</p>
+      {% endif %}
+
+      <h2>4. Informações Adicionais</h2>
+      <p>
+        <strong>Info. Pessoal:</strong>
+          {{ conta_a_receber.venda.cliente.informacao_pessoal.nome|default:"-" }},
+          {{ conta_a_receber.venda.cliente.informacao_pessoal.contato|default:"-" }},
+          {{ conta_a_receber.venda.cliente.informacao_pessoal.endereco|default:"-" }}<br>
+        <strong>Info. Comercial:</strong>
+          {{ conta_a_receber.venda.cliente.contato_adicional.nome|default:"-" }},
+          {{ conta_a_receber.venda.cliente.contato_adicional.contato|default:"-" }},
+          {{ conta_a_receber.venda.cliente.contato_adicional.endereco|default:"-" }}
+      </p>
+
+      <h2>5. Parcelas</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Nº</th>
+            <th>Vencimento</th>
+            <th>Valor</th>
+            <th>Pago?</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in conta_a_receber.parcelas_pagamento.all %}
+            <tr>
+              <td>{{ p.numero_parcela }}</td>
+              <td>{{ p.data_vencimento }}</td>
+              <td>R$ {{ p.valor|floatformat:2 }}</td>
+              <td>{{ p.pago|yesno:"Sim,Não" }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
   </div>
 </div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.2/html2pdf.bundle.min.js"></script>
+  <script>
+    document.getElementById('download-pdf').addEventListener('click', function() {
+      var el = document.getElementById('report-content');
+      el.style.display = 'block';
+      el.style.position = 'static';
+      html2pdf().set({
+        margin:       [10,10,10,10],
+        filename:     'conta_{{ conta_a_receber.id }}.pdf',
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 3 },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      }).from(el).save().finally(function() {
+        el.style.display = 'none';
+        el.style.position = 'absolute';
+      });
+    });
+  </script>
 {% endblock %}

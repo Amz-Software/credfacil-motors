@@ -195,7 +195,7 @@ class AdicionarEntradaEstoqueView(PermissionRequiredMixin, CreateView):
                 produto.save(user=self.request.user)
                 
                 if produto.imei: 
-                    estoque_imei = EstoqueImei.objects.create(
+                    estoque_imei = EstoqueImei(
                         produto=produto.produto,
                         imei=produto.imei,
                         produto_entrada=produto,
@@ -230,6 +230,7 @@ class EstoqueImeiListView(BaseView, PermissionRequiredMixin, ListView):
     context_object_name = 'produtos'
     permission_required = 'estoque.view_estoqueimei'
     paginate_by = 10
+    ordering = ['-id']
     
     def get_queryset(self):
         loja_id = self.request.session.get('loja_id')
@@ -270,6 +271,21 @@ class FornecedorListView(PermissionRequiredMixin, ListView):
             query = query.filter(nome__icontains=search)
         return query
 
+def cancelar_imei(request, id):
+    imei = get_object_or_404(EstoqueImei, pk=id)
+
+    if not request.user.has_perm('estoque.change_estoqueimei'):
+        messages.error(request, 'Você não tem permissão para cancelar este IMEI.')
+        return redirect('estoque:estoque_imei_list')
+    
+    if imei.cancelado:
+        messages.error(request, 'Este IMEI já está cancelado.')
+    else:
+        imei.cancelado = True
+        imei.save(user=request.user)
+        messages.success(request, 'IMEI cancelado com sucesso.')
+    return redirect('estoque:estoque_imei_list')
+
 @login_required
 def check_produtos(request, produto_id):
     produto = get_object_or_404(Produto, pk=produto_id)
@@ -286,7 +302,7 @@ class EstoqueImeiSearchView(View):
         produto_id = request.GET.get('produto_id', None)
         loja_id = self.request.session.get('loja_id')
         loja = get_object_or_404(Loja, pk=loja_id)
-        queryset = EstoqueImei.objects.filter(vendido=False, produto_entrada__entrada__venda_liberada=True).filter(
+        queryset = EstoqueImei.objects.filter(vendido=False, produto_entrada__entrada__venda_liberada=True, cancelado=False).filter(
             Q(imei__icontains=term) | Q(produto__nome__icontains=term) | Q(loja__nome__icontains=term)
         )
         
@@ -317,7 +333,7 @@ class EstoqueImeiSearchEditView(View):
         loja = get_object_or_404(Loja, pk=loja_id)
         queryset = EstoqueImei.objects.filter(
             Q(imei__icontains=term) | Q(produto__nome__icontains=term)
-        ).filter(loja=loja).filter(vendido=False)
+        ).filter(loja=loja).filter(vendido=False, cancelado=False)
         if produto_id:
             queryset = queryset.filter(produto_id=produto_id)
         results = []
@@ -396,7 +412,7 @@ def buscar_imei_por_produto(request):
         imei_antigo = request.GET.get('imei')
 
         if produto_id:
-            imeis = EstoqueImei.objects.filter(produto_id=produto_id, vendido=False).exclude(imei=imei_antigo) if imei_antigo else EstoqueImei.objects.filter(produto_id=produto_id, vendido=False)
+            imeis = EstoqueImei.objects.filter(produto_id=produto_id, vendido=False, cancelado=False).exclude(imei=imei_antigo) if imei_antigo else EstoqueImei.objects.filter(produto_id=produto_id, vendido=False)
             imeis_list = [{'id': imei.id, 'imei': f'{imei.imei} - {imei.produto.nome}'} for imei in imeis]
             return JsonResponse({'imeis': imeis_list})
         

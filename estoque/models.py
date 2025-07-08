@@ -83,6 +83,7 @@ class EstoqueImei(Base):
     data_venda = models.DateTimeField(blank=True, null=True, verbose_name='Data da Venda')
     produto_entrada = models.ForeignKey(ProdutoEntrada, on_delete=models.CASCADE, related_name='estoque_imei', blank=True, null=True)
     aplicativo_instalado = models.BooleanField(default=False, verbose_name='Aplicativo Instalado')
+    cancelado = models.BooleanField(default=False, verbose_name='Cancelado')
     
     def __str__(self):
         return self.imei

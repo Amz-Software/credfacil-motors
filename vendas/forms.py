@@ -798,7 +798,7 @@ class ProdutoVendaForm(forms.ModelForm):
                 )
             )
         ).filter(loja=loja)
-        self.fields['imei'].queryset = EstoqueImei.objects.filter(vendido=False)
+        self.fields['imei'].queryset = EstoqueImei.objects.filter(vendido=False, cancelado=False)
         
         
 class ProdutoVendaEditForm(forms.ModelForm):

@@ -1686,10 +1686,10 @@ class LojaDetailView(PermissionRequiredMixin, DetailView):
         context['repasses'] = repasse_paginator.get_page(self.request.GET.get('repasse_page'))
 
         vendas_qs = Venda.objects.filter(loja=loja, is_deleted=False).select_related('cliente')
-        data_inicio = self.request.GET.get('data_inicio')
-        data_fim = self.request.GET.get('data_fim')
-        di = parse_date(data_inicio)
-        df = parse_date(data_fim)
+        data_inicio = self.request.GET.get('data_inicio', '')
+        data_fim = self.request.GET.get('data_fim', '')
+        di = parse_date(data_inicio) if data_inicio else None
+        df = parse_date(data_fim) if data_fim else None
 
         if di:
             vendas_qs = vendas_qs.filter(data_venda__date__gte=di)

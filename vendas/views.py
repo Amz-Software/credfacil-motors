@@ -10,7 +10,7 @@ from dateutil.relativedelta import relativedelta
 from decimal import Decimal
 from collections import defaultdict
 from io import BytesIO
-
+from django.db.models import Count, Q
 import qrcode
 from qrcode import QRCode
 from qrcode.constants import ERROR_CORRECT_M
@@ -45,6 +45,7 @@ from .models import (
     LancamentoCaixa, LancamentoCaixaTotal
 )
 from pypix import Pix
+#import q
 
 
 

@@ -800,15 +800,29 @@ def gerar_venda(request, cliente_id):
 
     # --- Validação: clientes com mesmo CPF precisam ter ao menos 3 parcelas pagas em cada venda anterior ---
     cpf_limpo = re.sub(r'\D', '', cliente.cpf)
-    clientes_mesmo_cpf = Cliente.objects.filter(cpf__regex=rf'\D*{cpf_limpo}\D*')
-    vendas_anteriores = Venda.objects.filter(cliente__in=clientes_mesmo_cpf, is_deleted=False)
-    for venda_ant in vendas_anteriores:
-        pagamentos_credfacil = Pagamento.objects.filter(venda=venda_ant, tipo_pagamento__nome__iexact='CREDFACIL')
-        for pagamento in pagamentos_credfacil:
-            parcelas_pagas = Parcela.objects.filter(pagamento=pagamento, pago=True).count()
-            if parcelas_pagas < 3:
-                messages.error(request, "❌ Para gerar uma nova venda, cada venda anterior do mesmo CPF deve ter pelo menos 3 parcelas pagas.")
-                return redirect('vendas:cliente_list')
+
+    vendas_com_poucas_parcelas = (
+        Venda.objects
+        .filter(cliente__cpf=cpf_limpo, is_deleted=False)
+        .annotate(
+            parcelas_pagas=Count(
+                'pagamento__parcela',
+                filter=Q(
+                    pagamento__tipo_pagamento__nome__iexact='CREDFACIL',
+                    pagamento__parcela__pago=True
+                ),
+                distinct=True
+            )
+        )
+        .filter(parcelas_pagas__lt=3)
+    )
+
+    if vendas_com_poucas_parcelas.exists():
+        messages.error(
+            request,
+            "❌ Para gerar uma nova venda, cada venda anterior do mesmo CPF deve ter pelo menos 3 parcelas pagas."
+        )
+        return redirect('vendas:cliente_list')
 
     # Verifica caixa aberto
     caixa = Caixa.objects.filter(

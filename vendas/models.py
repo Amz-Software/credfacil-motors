@@ -8,6 +8,7 @@ from datetime import date, timedelta
 from django.db import models
 from django.utils import timezone
 from django.urls import reverse
+import re
 
 
 class Base(models.Model):
@@ -330,6 +331,10 @@ class Cliente(Base):
     
     class Meta:
         verbose_name_plural = 'Clientes'
+
+    def save(self, *args, **kwargs):
+        self.cpf = re.sub(r'\D', '', self.cpf or '')  # limpa antes de salvar
+        super().save(*args, **kwargs)
         
 
 

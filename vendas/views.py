@@ -807,10 +807,10 @@ def gerar_venda(request, cliente_id):
         .filter(cliente__cpf=cpf_limpo, is_deleted=False)
         .annotate(
             parcelas_pagas=Count(
-                'pagamento__parcela',
+                'pagamentos__parcelas_pagamento',
                 filter=Q(
-                    pagamento__tipo_pagamento__nome__iexact='CREDFACIL',
-                    pagamento__parcela__pago=True
+                    pagamentos__tipo_pagamento__nome__iexact='CREDFACIL',
+                    pagamentos__parcelas_pagamento__pago=True
                 ),
                 distinct=True
             )

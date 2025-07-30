@@ -1402,18 +1402,18 @@ class VendaTrocarProdutoView(PermissionRequiredMixin, View):
             # Atualiza ProdutoVenda
             produto_atual.produto = novo_produto
             produto_atual.imei = imei
-            produto_atual.save()
+            produto_atual.save(user=request.user)
 
             # Remove do estoque o novo produto
             estoque_novo = Estoque.objects.filter(produto=novo_produto, loja=loja).first()
             if estoque_novo:
                 estoque_novo.remover_estoque(quantidade)
-                estoque_novo.save()
+                estoque_novo.save(user=request.user)
 
             # Marca IMEI como vendido
             produto_imei = EstoqueImei.objects.get(imei=imei, produto=novo_produto)
             produto_imei.vendido = True
-            produto_imei.save()
+            produto_imei.save(user=request.user)
             
             data_atual = localtime(now()).date().strftime('%d/%m/%Y')
             hora_atual = localtime(now()).time().strftime('%H:%M')
@@ -1461,7 +1461,7 @@ class VendaTrocarProdutoView(PermissionRequiredMixin, View):
                 produto_imei.vendido = True
                 produto_imei.aplicativo_instalado = True
                 produto_imei.data_venda = localtime(now())
-                produto_imei.save()
+                produto_imei.save(self.request.user)
         except EstoqueImei.DoesNotExist:
             error_message = f"IMEI {imei} não encontrado"
             logger.error("IMEI não encontrado para o produto %s: %s", produto, imei)
@@ -1471,7 +1471,7 @@ class VendaTrocarProdutoView(PermissionRequiredMixin, View):
         estoque = Estoque.objects.filter(produto=produto, loja=loja).first()
         if estoque:
             estoque.adicionar_estoque(quantidade)
-            estoque.save()
+            estoque.save(self.request.user)
 
     def _restaurar_imei(self, produto, imei):
         try:
@@ -1479,7 +1479,7 @@ class VendaTrocarProdutoView(PermissionRequiredMixin, View):
             produto_imei.vendido = False
             produto_imei.aplicativo_instalado = False
             produto_imei.data_venda = None
-            produto_imei.save()
+            produto_imei.save(self.request.user)
         except EstoqueImei.DoesNotExist:
             logger.warning("Tentativa de restaurar IMEI inexistente %s para o produto %s", imei, produto)
 

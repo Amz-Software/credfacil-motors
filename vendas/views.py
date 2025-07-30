@@ -1439,7 +1439,7 @@ class VendaTrocarProdutoView(PermissionRequiredMixin, View):
         return redirect('vendas:venda_detail', pk=pk)
 
     def _validar_estoque(self, produto, quantidade, loja):
-        estoque = Estoque.objects.filter(produto=produto, loja=loja, quantidade_disponivel__gt=0).first()
+        estoque = Estoque.objects.filter(produto__nome=produto.nome, loja=loja, quantidade_disponivel__gt=0).first()
         if not estoque or quantidade > estoque.quantidade_disponivel:
             error_message = f"Quantidade indisponível para o produto {produto}"
             logger.error(

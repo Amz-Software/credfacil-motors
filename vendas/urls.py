@@ -81,6 +81,11 @@ urlpatterns = [
         toggle_bloqueio_pagamento,
         name='toggle_bloqueio_pagamento'
     ),
+    path(
+        'pagamento/<int:pk>/toggle-desativar/',
+        toggle_desativar_pagamento,
+        name='toggle_desativar_pagamento'
+    ),
     
     path(
         'consultar-pagamentos/',

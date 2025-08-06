@@ -149,7 +149,7 @@ class ClienteForm(forms.ModelForm):
             if not cep.isdigit():
                 raise forms.ValidationError("CEP deve conter apenas números.")
             if len(cep) != 8:
-                raise forms.ValidationError(f"CEP deve ter exatamente 9 dígitos.")
+                raise forms.ValidationError("CEP deve ter exatamente 8 dígitos.")
         return cep
     
 class ClienteTelefoneForm(forms.ModelForm):

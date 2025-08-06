@@ -664,6 +664,7 @@ class Pagamento(Base):
     valor = models.DecimalField(max_digits=10, decimal_places=2)
     parcelas = models.PositiveIntegerField(default=1, null=True, blank=True)
     bloqueado = models.BooleanField(default=False)
+    desativado = models.BooleanField(default=False)
     porcentagem_desconto = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
     objects = PagamentoQuerySet.as_manager()
     data_primeira_parcela = models.DateField()

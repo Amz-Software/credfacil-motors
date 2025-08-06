@@ -127,6 +127,35 @@
                 </div>
               {% endif %}
             </div>
+            <div class="col-12">
+              {% if user|has_perm:"vendas.change_pagamento" %}
+                <div class="d-flex justify-content-start">
+                  <form
+                    action="{% url 'vendas:toggle_desativar_pagamento' conta_a_receber.id %}"
+                    method="post"
+                  >
+                    {% csrf_token %}
+                    <div class="form-check form-switch">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        id="bloqueioSwitch"
+                        onchange="this.form.submit()"
+                        {% if conta_a_receber.desativado %}checked{% endif %}
+                      >
+                      <label class="form-check-label" for="bloqueioSwitch">
+                        Aparelho Desativado
+                        {% if conta_a_receber.desativado %}
+                          <span class="badge bg-danger ms-2">Desativado</span>
+                        {% else %}
+                          <span class="badge bg-success ms-2">Ativo</span>
+                        {% endif %}
+                      </label>
+                    </div>
+                  </form>
+                </div>
+              {% endif %}
+            </div>
               <small class="text-muted">% Desconto</small>
               <form id="descontoForm" method="post">
                 {% csrf_token %}

@@ -113,7 +113,8 @@ class IndexView(LoginRequiredMixin, TemplateView):
             for venda in vendas: 
                 parcelas = list(Parcela.objects.filter(
                     pagamento__venda=venda,
-                    pagamento__tipo_pagamento__nome='CREDFACIL'
+                    pagamento__tipo_pagamento__nome='CREDFACIL',
+                    pagamento__desativado=False,
                 ).order_by('data_vencimento')[:3])
 
                 parcelas_vencidas = [p for p in parcelas if p.data_vencimento < timezone.now().date() and not p.pago and not p.pagamento_efetuado]
@@ -477,8 +478,17 @@ class ClienteCreateView(PermissionRequiredMixin, CreateView):
             form_comprovantes.is_valid(),
             form_analise_credito.is_valid()
         ]):
+            
+            contato_adicional_val = form_adicional.cleaned_data.get('contato')
+            contato_pessoal_val = form_informacao.cleaned_data.get('contato_pessoal')
+            endereco_adicional_val = form_adicional.cleaned_data.get('endereco_adicional').lower()
+            endereco_pessoal_val = form_informacao.cleaned_data.get('endereco_pessoal').lower()
 
-            # Primeiro salva os comprovantes
+            if (contato_adicional_val == contato_pessoal_val) or (endereco_adicional_val == endereco_pessoal_val):
+                print("❌ CONDIÇÃO ATINGIDA: Os contatos e endereços adicionais não podem ser iguais.")
+                messages.error(request, "❌ Os contatos e endereços adicionais não podem ser iguais.")
+                return self.form_invalid(form_cliente)
+            
             comprovantes = form_comprovantes.save()
             contato_adicional = form_adicional.save()
             informacao = form_informacao.save()
@@ -589,6 +599,18 @@ class ClienteUpdateView(PermissionRequiredMixin, UpdateView):
             form_comprovantes.is_valid(),
             form_analise_credito.is_valid()
         ]):
+            
+            contato_adicional_val = form_adicional.cleaned_data.get('contato')
+            contato_pessoal_val = form_informacao.cleaned_data.get('contato_pessoal')
+            endereco_adicional_val = form_adicional.cleaned_data.get('endereco_adicional').lower()
+            endereco_pessoal_val = form_informacao.cleaned_data.get('endereco_pessoal').lower()
+
+            if (contato_adicional_val == contato_pessoal_val) or (endereco_adicional_val == endereco_pessoal_val):
+                print("❌ CONDIÇÃO ATINGIDA: Os contatos e endereços adicionais não podem ser iguais.")
+                messages.error(request, "❌ Os contatos e endereços adicionais não podem ser iguais.")
+                return self.form_invalid(form_cliente)
+            
+            
             contato_adicional = form_adicional.save()
             informacao = form_informacao.save()
             comprovantes = form_comprovantes.save()
@@ -2376,6 +2398,15 @@ def toggle_bloqueio_pagamento(request, pk):
     pagamento = get_object_or_404(Pagamento, pk=pk)
     pagamento.bloqueado = not pagamento.bloqueado
     pagamento.save(update_fields=['bloqueado'])
+    return redirect(reverse('financeiro:contas_a_receber_update', args=[pagamento.pk]))
+
+
+@login_required
+@permission_required('vendas.change_pagamento', raise_exception=True)
+def toggle_desativar_pagamento(request, pk):
+    pagamento = get_object_or_404(Pagamento, pk=pk)
+    pagamento.desativado = not pagamento.desativado
+    pagamento.save(update_fields=['desativado'])
     return redirect(reverse('financeiro:contas_a_receber_update', args=[pagamento.pk]))
 
 

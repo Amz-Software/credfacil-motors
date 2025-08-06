@@ -1,4 +1,4 @@
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from vendas.models import AnaliseCreditoCliente, Cliente
 from django.contrib.auth import get_user_model
@@ -7,6 +7,15 @@ from notificacao.utils import enviar_ws_para_usuario
 from estoque.models import EntradaEstoque
 
 User = get_user_model()
+
+@receiver(pre_save, sender=AnaliseCreditoCliente)
+def status_anterior(sender, instance, **kwargs):
+    if instance.pk:
+        try:
+            instance.status_anterior = AnaliseCreditoCliente.objects.get(pk=instance.pk).status
+        except AnaliseCreditoCliente.DoesNotExist:
+            instance.status_anterior = None
+
 
 @receiver(post_save, sender=AnaliseCreditoCliente)
 def notificar_status_analise_credito(sender, instance, created, **kwargs):
@@ -78,8 +87,42 @@ def notificar_status_analise_credito(sender, instance, created, **kwargs):
                     type_notification='analise_credito_cliente',
                 )
 
-# @receiver(post_save, sender=EntradaEstoque)
-# def notificar_entrada_estoque(sender, instance, created, **kwargs):
+    if instance.status != instance.status_anterior:
+        if instance.status == 'A':
+            verb = f'Análise de crédito do cliente {cliente_nome.capitalize()} foi aprovada.'
+            description = f'Imei {instance.imei.imei} da loja {instance.loja.nome.capitalize()}.'
+        elif instance.status == 'R':
+            verb = f'Análise de crédito do cliente {cliente_nome.capitalize()} foi rejeitada.'
+            description = f'Imei {instance.imei.imei} da loja {instance.loja.nome.capitalize()}.'
+        else:
+            return
+        
+        # Somente o Criador
+        usuarios_para_notificar = [instance.criado_por]
+        
+        for user in usuarios_para_notificar:
+            notify.send(
+                instance,
+                recipient=user,
+                verb=verb,
+                description=description,
+                target=instance.cliente,
+            )
+
+            # WebSocket
+            ultima_notificacao = user.notifications.unread().order_by('-timestamp').first()
+            if ultima_notificacao:
+                enviar_ws_para_usuario(
+                    usuario=user,
+                    instance=instance,
+                    notification_id=ultima_notificacao.id,
+                    verb=verb,
+                    description=description,
+                    target_url=instance.cliente.get_absolute_url(),
+                    type_notification='analise_credito_cliente',
+                )
+                
+                
 #     if created:
 #         verb = f'Nova entrada de estoque registrada.'
 #         description = f'Entrada Estoque'

@@ -388,6 +388,9 @@ class ContasAReceberListView(BaseView, PermissionRequiredMixin, ListView):
 
         if self.request.GET.get('bloqueado'):
             qs = qs.filter(bloqueado=True)
+            
+        if self.request.GET.get('desativado'):
+            qs = qs.filter(desativado=True)
         
         if self.request.GET.get('pagamento_efetuado'):
             qs = qs.filter(parcelas_pagamento__pagamento_efetuado=True)

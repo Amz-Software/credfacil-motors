@@ -665,6 +665,7 @@ class Pagamento(Base):
     parcelas = models.PositiveIntegerField(default=1, null=True, blank=True)
     bloqueado = models.BooleanField(default=False)
     desativado = models.BooleanField(default=False)
+    quitado = models.BooleanField(default=False)
     porcentagem_desconto = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
     objects = PagamentoQuerySet.as_manager()
     data_primeira_parcela = models.DateField()
@@ -728,7 +729,7 @@ class Pagamento(Base):
         return sum(parcela.valor_restante for parcela in self.parcelas_pagamento.filter(pago=False, data_vencimento__lt=timezone.now()))
     
     def total_pago(self):
-        return sum(parcela.valor_pago for parcela in self.parcelas_pagamento.filter(pago=True))
+        return sum(parcela.valor for parcela in self.parcelas_pagamento.filter(pago=True))
     
     def __str__(self):
         return f"Pagamento({self.id}) de R$ {self.valor} via {self.tipo_pagamento.nome}"
@@ -741,6 +742,7 @@ class Pagamento(Base):
         permissions = (
             ('can_view_all_payments', 'Pode ver todos os pagamentos'),
             ('can_genarate_report_payments', 'Pode gerar relatório de pagamentos'),
+            ("can_confirm_quitacao", "Pode confirmar quitação de pagamentos"),
         )
     
 

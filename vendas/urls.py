@@ -73,7 +73,7 @@ urlpatterns = [
     path('vendas/solicitacao/', RelatorioSolicitacoesView.as_view(), name='form_solicitacao_relatorio'),
     path('venda/contrato/<int:pk>/', contrato_view, name='gerar_contrato'),
     path('produtos-vendidos/', ProdutoVendidoListView.as_view(), name='produto_vendido_list'),
-    
+    path('pagamento/<int:pk>/confirmar-quitacao/', ConfirmarQuitacaoView.as_view(), name='confirmar_quitacao'),
     path('gerar_qrcode_pix/<int:loja_id>/', gerar_qrcode_pix, name='gerar_qrcode_pix'),
     
     path(

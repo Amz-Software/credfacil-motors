@@ -49,7 +49,7 @@
     </div>
   </div>
   <!-- Oferta de Quitação -->
-  {% if restantes_count > 0 and confirmando_count == 0 %}
+  {% if restantes_count > 0 and not confirmando_count == restantes_count %}
   <div class="row mb-4">
     <div class="col-12">
       <div
@@ -67,9 +67,6 @@
           mas com <strong>{{ discount_pct }}%</strong> OFF,
           fica <strong>R$ {{ total_com_desconto|floatformat:2 }}</strong>!
         </p>
-        <!-- <p class="mb-3 text-danger fst-italic">
-          * Promoção Exclusiva! Não perca essa chance.
-        </p> -->
         <button
           type="button"
           class="btn btn-lg btn-primary btn-quitacao"

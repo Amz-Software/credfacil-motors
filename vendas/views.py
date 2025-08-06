@@ -2419,7 +2419,7 @@ class ConsultaPagamentosView(FormView):
         dob = form.cleaned_data['date_of_birth']
         pagamentos = (
             Pagamento.objects
-            .with_status_flags()     # já inclui with_parcelas_info() internamente
+            .with_status_flags()
             .filter(
                 venda__cliente__cpf=cpf,
                 venda__cliente__nascimento=dob
@@ -2520,30 +2520,109 @@ class InformarPagamentoView(View):
         return redirect('vendas:pagamento_detail', pk=parcela.pagamento.pk)
 
 
+# vendas/views.py
+
 class InformarTodosPagamentosView(View):
+    """
+    View para o CLIENTE. Apenas informa que o pagamento foi efetuado,
+    sem alterar valores ou confirmar o pagamento.
+    """
     def post(self, request, pk):
         pagamento = get_object_or_404(Pagamento, pk=pk)
-        # apenas as parcelas ainda não informadas
-        parcelas = pagamento.parcelas_pagamento.filter(pagamento_efetuado=False)
-        now_dt = timezone.now()
-        today = now_dt.date()
-
-        # atualiza em bloco
-        updated = parcelas.update(
+        
+        # Pega todas as parcelas que ainda não foram informadas nem pagas
+        parcelas_a_informar = pagamento.parcelas_pagamento.filter(
+            pagamento_efetuado=False, 
+            pago=False
+        )
+        
+        # Atualiza todas de uma vez (bulk update)
+        updated_count = parcelas_a_informar.update(
             pagamento_efetuado=True,
-            pagamento_efetuado_em=now_dt,
-            data_pagamento=today
+            pagamento_efetuado_em=timezone.now()
         )
 
-        if updated == 0:
-            msg = "Nenhuma parcela pendente para informar."
-        elif updated == 1:
-            msg = "Parabéns! 1 parcela foi informada com sucesso. Agora está em confirmação pelos nossos analistas."
+        if updated_count > 0:
+            messages.success(
+                request,
+                f"{updated_count} parcelas foram informadas para quitação e agora aguardam a confirmação do nosso time."
+            )
         else:
-            msg = f"Parabéns! Suas {updated} parcelas foram informadas com sucesso. Agora estão em confirmação pelos nossos analistas."
+            messages.warning(request, "Nenhuma parcela nova para informar.")
 
-        messages.success(request, msg)
         return redirect('vendas:pagamento_detail', pk=pagamento.pk)
+
+
+
+class ConfirmarQuitacaoView(PermissionRequiredMixin, View):
+    """
+    View para o ANALISTA. Confirma a quitação, ajusta os valores
+    das parcelas proporcionalmente e marca tudo como pago.
+    """
+    permission_required = 'vendas.can_confirm_quitacao' # <- Permissão customizada
+
+    def post(self, request, pk):
+        pagamento = get_object_or_404(Pagamento, pk=pk)
+
+        try:
+            with transaction.atomic():
+                parcelas_a_confirmar = pagamento.parcelas_pagamento.filter(
+                    pagamento_efetuado=True, 
+                    pago=False
+                ).order_by('numero_parcela')
+
+                num_parcelas = parcelas_a_confirmar.count()
+
+                if num_parcelas == 0:
+                    messages.warning(request, "Nenhuma parcela aguardando confirmação de quitação.")
+                    return redirect('financeiro:contas_a_receber_update', pk=pagamento.pk)
+
+                # A lógica de cálculo de desconto é executada aqui, no momento da confirmação
+                total_restante_original = sum(p.valor for p in parcelas_a_confirmar)
+                discount_pct = getattr(pagamento, 'porcentagem_desconto', Decimal('0'))
+                discount_amount = (total_restante_original * discount_pct / Decimal('100')).quantize(Decimal('0.01'))
+                total_com_desconto = (total_restante_original - discount_amount).quantize(Decimal('0.01'))
+
+                # Lógica de distribuição proporcional (Método do Restante)
+                lista_parcelas = list(parcelas_a_confirmar)
+                soma_parcial_atualizada = Decimal('0.00')
+
+                if total_restante_original > 0:
+                    ratio_desconto = total_com_desconto / total_restante_original
+                else:
+                    ratio_desconto = Decimal('1')
+
+                data_confirmacao = timezone.now().date()
+
+                # Itera sobre N-1 parcelas
+                for parcela in lista_parcelas[:-1]:
+                    novo_valor = (parcela.valor * ratio_desconto).quantize(Decimal('0.01'))
+                    parcela.valor = novo_valor
+                    parcela.pago = True # <- AGORA SIM, marca como PAGO
+                    parcela.data_pagamento = data_confirmacao
+                    parcela.save(update_fields=['valor', 'pago', 'data_pagamento'])
+                    soma_parcial_atualizada += novo_valor
+                
+                # Processa a última parcela
+                if lista_parcelas:
+                    ultima_parcela = lista_parcelas[-1]
+                    valor_ultima_parcela = total_com_desconto - soma_parcial_atualizada
+                    ultima_parcela.valor = valor_ultima_parcela
+                    ultima_parcela.pago = True # <- Marca como PAGO
+                    ultima_parcela.data_pagamento = data_confirmacao
+                    ultima_parcela.save(update_fields=['valor', 'pago', 'data_pagamento'])
+                
+                # Finalmente, atualiza o Pagamento principal
+                pagamento.quitado = True
+                pagamento.save(update_fields=['quitado'])
+
+                messages.success(request, f"Quitação do Pagamento #{pagamento.pk} confirmada! {num_parcelas} parcelas foram ajustadas e marcadas como pagas.")
+
+        except Exception as e:
+            messages.error(request, f"Ocorreu um erro ao confirmar a quitação: {e}")
+
+        return redirect('financeiro:contas_a_receber_update', pk=pagamento.pk)    
+    
     
 class GraficoTemplateView(TemplateView):
     template_name = 'dash/index.html'

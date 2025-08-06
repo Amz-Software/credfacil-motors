@@ -87,7 +87,10 @@ def notificar_status_analise_credito(sender, instance, created, **kwargs):
                     type_notification='analise_credito_cliente',
                 )
 
-    if instance.status != instance.status_anterior:
+    if not hasattr(instance, 'status_anterior'):
+        instance.status_anterior = instance.status
+        
+    if (instance.status != instance.status_anterior) and not created:
         if instance.status == 'A':
             verb = f'Análise de crédito do cliente {cliente_nome.capitalize()} foi aprovada.'
             description = f'Imei {instance.imei.imei} da loja {instance.loja.nome.capitalize()}.'

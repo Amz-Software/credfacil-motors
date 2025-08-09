@@ -38,6 +38,7 @@ class VendaAdmin(AdminBase):
 @admin.register(Pagamento)
 class PagamentoAdmin(AdminBase):
     list_display = ('venda', 'tipo_pagamento', 'valor', 'parcelas', 'valor_parcela', 'data_primeira_parcela')
+    search_fields = ('venda__cliente__nome', 'venda__vendedor__first_name', 'venda__vendedor__last_name')
 
 @admin.register(TipoPagamento)
 class TipoPagamentoAdmin(AdminBase):

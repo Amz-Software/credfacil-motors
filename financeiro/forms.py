@@ -26,10 +26,28 @@ class ParcelaForm(forms.ModelForm):
 
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
-        if user is None or not user.has_perm('vendas.change_pagamento'):
+        
+        # Verifica se o usuário tem permissão para editar data de vencimento
+        can_edit_vencimento = user and user.has_perm('vendas.change_vencimento_parcela')
+        
+        # Verifica se o usuário tem permissão para editar pagamentos
+        can_edit_pagamento = user and user.has_perm('vendas.change_pagamento')
+        
+        if not can_edit_pagamento:
+            # Desabilita todos os campos se não tem permissão de pagamento
             for field in self.fields.values():
                 field.disabled = True
                 field.widget.attrs['disabled'] = 'disabled'
+        else:
+            # Se tem permissão de pagamento, verifica permissão específica para vencimento
+            if can_edit_vencimento:
+                # Remove readonly da data de vencimento se o usuário tem permissão
+                self.fields['data_vencimento'].widget.attrs.pop('readonly', None)
+                self.fields['data_vencimento'].widget.attrs['type'] = 'date'
+            else:
+                # Se não tem permissão para editar vencimento, mantém readonly
+                self.fields['data_vencimento'].widget.attrs['readonly'] = 'readonly'
+                self.fields['data_vencimento'].widget.attrs.pop('type', None)
 
 class GastosAleatoriosForm(forms.ModelForm):
     class Meta:

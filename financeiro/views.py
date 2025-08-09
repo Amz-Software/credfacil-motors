@@ -10,7 +10,7 @@ from vendas.forms import ContatoForm
 from vendas.views import BaseView
 from .models import CaixaMensal, CaixaMensalGastoFixo, CaixaMensalFuncionario, GastosAleatorios
 from financeiro.forms import RelatorioSaidaForm
-from vendas.models import Loja
+from vendas.models import Loja, Parcela
 from .models import CaixaMensal, CaixaMensalFuncionario, CaixaMensalGastoFixo, GastoFixo, GastosAleatorios
 from datetime import datetime, timedelta
 from django.db import transaction
@@ -493,7 +493,19 @@ class ContasAReceberDetailView(PermissionRequiredMixin, DetailView):
             instance=self.object,
             form_kwargs={'user': user}
         )
+        
+        # Verifica se o usuário tentou alterar data de vencimento sem permissão
         if parcela_form.is_valid():
+            for form in parcela_form:
+                if form.cleaned_data and not form.cleaned_data.get('DELETE', False):
+                    # Verifica se a data de vencimento foi alterada
+                    if form.instance.pk:  # Se é uma parcela existente
+                        original_parcela = Parcela.objects.get(pk=form.instance.pk)
+                        if form.cleaned_data.get('data_vencimento') != original_parcela.data_vencimento:
+                            if not user.has_perm('vendas.change_vencimento_parcela'):
+                                messages.error(request, "Você não tem permissão para alterar a data de vencimento das parcelas.")
+                                return redirect(request.path)
+            
             parcela_form.save()
             messages.success(request, "Parcelas atualizadas com sucesso!")
             return redirect(request.path)

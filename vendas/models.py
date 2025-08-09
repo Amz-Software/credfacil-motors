@@ -768,6 +768,11 @@ class Parcela(Base):
     def __str__(self):
         return f"Parcela {self.numero_parcela} de {self.pagamento}"
 
+    class Meta:
+        verbose_name_plural = 'Parcelas'
+        permissions = (
+            ('change_vencimento_parcela', 'Pode alterar data de vencimento de parcelas'),
+        )
 
 
 class Contato(Base):

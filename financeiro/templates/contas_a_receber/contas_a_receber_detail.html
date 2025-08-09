@@ -319,7 +319,12 @@
                     <th scope="col">Número da Parcela</th>
                     <th scope="col">Data do Pagamento</th>
                     <th scope="col">Valor</th>
-                    <th scope="col">Data de Vencimento</th>
+                    <th scope="col">
+                      Data de Vencimento
+                      {% if user|has_perm:"vendas.change_vencimento_parcela" %}
+                        <i class="bi bi-pencil-square text-primary" title="Você pode editar a data de vencimento"></i>
+                      {% endif %}
+                    </th>
                     <th scope="col">Pago?</th>
                     <th scope="col">Cliente Informou?</th>
                   </tr>

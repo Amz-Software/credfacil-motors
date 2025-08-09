@@ -21,24 +21,23 @@ def criar_ou_atualizar_parcelas(sender, instance, created, **kwargs):
                 criado_por=instance.criado_por,
                 modificado_por=instance.modificado_por
             )
-    # else:
-    #     # Só recria as parcelas se algum campo relevante mudou (exceto 'bloqueado')
-    #     update_fields = kwargs.get('update_fields', None)
+    else:
+        update_fields = kwargs.get('update_fields', None)
         
-    #     if update_fields is not None and update_fields == {'bloqueado'}:
-    #         return
+        if update_fields is not None or update_fields == {'bloqueado', 'desativado', 'quitado', 'porcentagem_desconto'}:
+            return
 
-    #     Parcela.objects.filter(pagamento=instance).delete()
+        Parcela.objects.filter(pagamento=instance).delete()
 
-    #     for numero in range(1, instance.parcelas + 1):
-    #         Parcela.objects.create(
-    #             pagamento=instance,
-    #             numero_parcela=numero,
-    #             valor=instance.valor_parcela,
-    #             data_vencimento=calcular_data_vencimento(instance.data_primeira_parcela, numero),
-    #             criado_por=instance.criado_por,
-    #             modificado_por=instance.modificado_por
-    #         )
+        for numero in range(1, instance.parcelas + 1):
+            Parcela.objects.create(
+                pagamento=instance,
+                numero_parcela=numero,
+                valor=instance.valor_parcela,
+                data_vencimento=calcular_data_vencimento(instance.data_primeira_parcela, numero),
+                criado_por=instance.criado_por,
+                modificado_por=instance.modificado_por
+            )
 
 def calcular_data_vencimento(data_primeira_parcela, numero_parcela):
     # Cada parcela é no mesmo dia do mês, nos meses seguintes

@@ -32,6 +32,7 @@ class PagamentoInline(admin.TabularInline):
 @admin.register(Venda)
 class VendaAdmin(AdminBase):
     list_display = ('data_venda', 'cliente', 'vendedor', 'calcular_valor_total')
+    search_fields = ('cliente__nome', 'vendedor__first_name', 'vendedor__last_name')
     inlines = [ProdutoVendaInline, PagamentoInline]
 
 @admin.register(Pagamento)

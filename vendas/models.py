@@ -366,7 +366,10 @@ class Venda(Base):
     
     def calcular_valor_total(self):
         return sum(produto.calcular_valor_total() for produto in self.itens_venda.all())
-    
+
+    def possui_pagamento_bloqueado(self):
+        return self.pagamentos.filter(bloqueado=True).exists()
+
     @cached_property
     def valor_repasse(self):
         return sum(produto.produto.valor_repasse_logista * produto.quantidade for produto in self.itens_venda.all())

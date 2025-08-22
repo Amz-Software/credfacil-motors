@@ -151,13 +151,50 @@ class IndexView(LoginRequiredMixin, TemplateView):
             context['total_vencidas'] = total_vencidas # valor total de parcelas vencidas
             context['total_a_vencer'] = total_a_vencer # valor total de parcelas a vencer
 
-            total_geral_grafico = float(total_pagas) + float(total_vencidas) + float(total_a_vencer)
+            # --- CÁLCULO DOS CLIENTES DESATIVADOS ---
+            total_desativados_vencidas = 0
+            total_desativados_a_vencer = 0
+            qtd_desativados_vencidas = 0
+            qtd_desativados_a_vencer = 0
+
+            # Busca parcelas de clientes desativados (apenas não pagas)
+            parcelas_desativadas = Parcela.objects.filter(
+                pagamento__venda__loja=loja,
+                pagamento__tipo_pagamento__nome='CREDFACIL',
+                pagamento__desativado=True,
+                pago=False  # Apenas parcelas não pagas
+            )
+
+            for parcela in parcelas_desativadas:
+                if parcela.data_vencimento < timezone.now().date():
+                    total_desativados_vencidas += parcela.valor
+                    qtd_desativados_vencidas += 1
+                else:
+                    total_desativados_a_vencer += parcela.valor
+                    qtd_desativados_a_vencer += 1
+
+            # Total de pagamentos desativados
+            total_pagamentos_desativados = Pagamento.objects.filter(
+                venda__loja=loja,
+                tipo_pagamento__nome='CREDFACIL',
+                desativado=True
+            ).count()
+
+            context['total_desativados_vencidas'] = total_desativados_vencidas
+            context['total_desativados_a_vencer'] = total_desativados_a_vencer
+            context['qtd_desativados_vencidas'] = qtd_desativados_vencidas
+            context['qtd_desativados_a_vencer'] = qtd_desativados_a_vencer
+            context['total_pagamentos_desativados'] = total_pagamentos_desativados
+
+            # Incluir desativados no gráfico
+            total_geral_grafico = float(total_pagas) + float(total_vencidas) + float(total_a_vencer) + float(total_desativados_vencidas) + float(total_desativados_a_vencer)
             pct_pagas = round((float(total_pagas) / total_geral_grafico * 100), 2) if total_geral_grafico else 0
             pct_vencidas = round((float(total_vencidas) / total_geral_grafico * 100), 2) if total_geral_grafico else 0
+            pct_desativados = round(((float(total_desativados_vencidas) + float(total_desativados_a_vencer)) / total_geral_grafico * 100), 2) if total_geral_grafico else 0
 
             context['dash'] = json.dumps({
-                'labels': ['Pagas', 'Vencidas'],
-                'data': [pct_pagas, pct_vencidas],
+                'labels': ['Pagas', 'Vencidas', 'Desativados'],
+                'data': [pct_pagas, pct_vencidas, pct_desativados],
             })
 
         context['loja'] = loja
@@ -329,6 +366,11 @@ class ClienteListView(BaseView, PermissionRequiredMixin, ListView):
         qs = Cliente.objects.all()
         search = self.request.GET.get('search')
         status_app = self.request.GET.get('status_app')
+        loja_filter = self.request.GET.get('loja')
+        data_inicio = self.request.GET.get('data_inicio')
+        data_fim = self.request.GET.get('data_fim')
+        vendas_nao_finalizadas = self.request.GET.get('vendas_nao_finalizadas')
+        
         if status_app:
             qs = qs.filter(analise_credito__status_aplicativo=status_app).distinct()
             
@@ -338,6 +380,19 @@ class ClienteListView(BaseView, PermissionRequiredMixin, ListView):
         status = self.request.GET.get('status')
         if status:
             qs = qs.filter(analise_credito__status=status).distinct()
+        
+        if loja_filter:
+            qs = qs.filter(loja_id=loja_filter)
+            
+        if data_inicio and data_fim:
+            qs = qs.filter(analise_credito__data_analise__range=[data_inicio, data_fim]).distinct()
+        elif data_inicio:
+            qs = qs.filter(analise_credito__data_analise__gte=data_inicio).distinct()
+        elif data_fim:
+            qs = qs.filter(analise_credito__data_analise__lte=data_fim).distinct()
+            
+        if vendas_nao_finalizadas:
+            qs = qs.filter(analise_credito__venda__isnull=True).distinct()
             
         if not self.request.user.has_perm('vendas.view_all_analise_credito'):
             loja_id = self.request.session.get('loja_id')
@@ -350,6 +405,7 @@ class ClienteListView(BaseView, PermissionRequiredMixin, ListView):
         loja_id = self.request.session.get('loja_id')
         
         context['loja'] = Loja.objects.get(id=loja_id)
+        context['lojas'] = Loja.objects.all()
 
         if self.request.user.has_perm('vendas.view_all_analise_credito'):
             analises = AnaliseCreditoCliente.objects.all()
@@ -577,14 +633,23 @@ class ClienteUpdateView(PermissionRequiredMixin, UpdateView):
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
         user = request.user
+        
+        # Verifica se o usuário é analista
+        is_analista = user.groups.filter(name='ANALISTA').exists()
+        
+        # Verifica se a venda já foi gerada
+        venda_gerada = self.object.analise_credito.venda is not None
 
-        if not user.has_perm('vendas.change_status_analise') and not self.object.analise_credito.status == 'EA':
-            messages.warning(request, "❌ Somente Soliticitação em análise de crédito em andamento podem ser editados.")
+        # Se não é analista e não tem permissão de mudar status, só pode editar se estiver em análise
+        if not is_analista and not user.has_perm('vendas.change_status_analise') and not self.object.analise_credito.status == 'EA':
+            messages.warning(request, "❌ Somente Solicitacao em análise de crédito em andamento podem ser editados.")
             return redirect(self.success_url)
         
-        if not user.has_perm('vendas.can_edit_finished_sale') and self.object.analise_credito.venda:
-            messages.warning(request, "❌ Somente Solicitações sem venda gerada pode ser editada.")
-            return redirect(self.success_url)
+        # Se a venda foi gerada, apenas usuários com permissão específica podem editar
+        if venda_gerada:
+            if not user.has_perm('vendas.can_edit_finished_sale'):
+                messages.warning(request, "❌ Somente usuários com permissão específica podem editar solicitações após a venda ser gerada.")
+                return redirect(self.success_url)
 
         form_cliente = ClienteForm(request.POST, instance=self.object, user=user)
         form_adicional = ContatoAdicionalForm(request.POST, instance=self.object.contato_adicional, user=user)
@@ -995,7 +1060,7 @@ def cancelar_analise_credito(request, id):
     user = request.user
     try:
         analise = AnaliseCreditoCliente.objects.get(id=id)
-        if (not analise.status == 'EA' and not user.has_perm('vendas.change_status_analise')) and not user.has_perm('vendas.can_edit_finished_sale'):
+        if (not analise.status == 'EA' or not user.has_perm('vendas.change_status_analise')) or not user.has_perm('vendas.can_edit_finished_sale'):
             messages.error(request, 'Somente solicitações em análise podem ser canceladas')
             return redirect('vendas:cliente_list')
         analise.cancelar()
@@ -1053,11 +1118,20 @@ class VendaListView(BaseView, PermissionRequiredMixin, ListView):
         query = Venda.objects.all()
         data_filter = self.request.GET.get('search')
         loja = self.request.GET.get('loja_id')
+        cliente_nome = self.request.GET.get('cliente_nome')
+        vendas_canceladas = self.request.GET.get('vendas_canceladas')
+        vendas_trocadas = self.request.GET.get('vendas_trocadas')
         
         if loja:
             query = query.filter(loja__id=loja)
         if data_filter:
-            return query.filter(data_venda=data_filter)
+            query = query.filter(data_venda=data_filter)
+        if cliente_nome:
+            query = query.filter(cliente__nome__icontains=cliente_nome)
+        if vendas_canceladas:
+            query = query.filter(is_deleted=True)
+        if vendas_trocadas:
+            query = query.filter(is_trocado=True)
         
         if not self.request.user.has_perm('vendas.can_view_all_sales'):
             loja_id = self.request.session.get('loja_id')
@@ -2305,6 +2379,7 @@ class ProdutoVendidoListView(PermissionRequiredMixin, ListView):
         user = self.request.user
         nome = self.request.GET.get('nome')
         imei = self.request.GET.get('imei')
+        cpf = self.request.GET.get('cpf')
         data = self.request.GET.get('data')
         data_fim = self.request.GET.get('data_fim')
         loja = self.request.GET.get('loja')
@@ -2323,6 +2398,8 @@ class ProdutoVendidoListView(PermissionRequiredMixin, ListView):
             query = query.filter(produto__nome__icontains=nome)
         if imei:
             query = query.filter(imei__icontains=imei)
+        if cpf:
+            query = query.filter(venda__cliente__cpf__icontains=cpf)
         if data and data_fim:
             query = query.filter(venda__data_venda__range=[data, data_fim])
         if loja:
@@ -2334,6 +2411,7 @@ class ProdutoVendidoListView(PermissionRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         context['nome'] = self.request.GET.get('nome')
         context['imei'] = self.request.GET.get('imei')
+        context['cpf'] = self.request.GET.get('cpf')
         context['data'] = self.request.GET.get('data')
         context['data_fim'] = self.request.GET.get('data_fim')
         context['loja'] = self.request.GET.get('loja')
@@ -2649,6 +2727,7 @@ class GraficoTemplateView(TemplateView):
 
         valores_por_loja = defaultdict(lambda: {
             'total_pagas': 0, 'total_vencidas': 0, 'total_a_vencer': 0,
+            'total_desativados_vencidas': 0, 'total_desativados_a_vencer': 0,
         })
 
         # --- DASH POR MÊS ---
@@ -2682,6 +2761,20 @@ class GraficoTemplateView(TemplateView):
             valores_por_loja[loja_nome]['total_vencidas'] += valor_vencidas
             valores_por_loja[loja_nome]['total_pagas'] += valor_pagas
 
+            # Calcular desativados por loja
+            parcelas_desativadas_loja = Parcela.objects.filter(
+                pagamento__venda=venda,
+                pagamento__tipo_pagamento__nome='CREDFACIL',
+                pagamento__desativado=True,
+                pago=False
+            )
+
+            for parcela_desativada in parcelas_desativadas_loja:
+                if parcela_desativada.data_vencimento < timezone.now().date():
+                    valores_por_loja[loja_nome]['total_desativados_vencidas'] += parcela_desativada.valor
+                else:
+                    valores_por_loja[loja_nome]['total_desativados_a_vencer'] += parcela_desativada.valor
+
             # DASH MENSAL: soma por mês/ano
             for p in parcelas:
                 mes_ano = p.data_vencimento.strftime('%Y-%m')
@@ -2693,9 +2786,10 @@ class GraficoTemplateView(TemplateView):
                     dash_mensal_lojas[loja_nome][mes_ano]['a_vencer'] += float(p.valor)
 
         for loja_nome, valores in valores_por_loja.items():
-            total_geral = valores['total_pagas'] + valores['total_vencidas'] + valores['total_a_vencer']
+            total_geral = valores['total_pagas'] + valores['total_vencidas'] + valores['total_a_vencer'] + valores['total_desativados_vencidas'] + valores['total_desativados_a_vencer']
             valores['pct_pagas'] = round((valores['total_pagas'] / total_geral) * 100, 2) if total_geral else 0
             valores['pct_vencidas'] = round((valores['total_vencidas'] / total_geral) * 100, 2) if total_geral else 0
+            valores['pct_desativados'] = round(((valores['total_desativados_vencidas'] + valores['total_desativados_a_vencer']) / total_geral) * 100, 2) if total_geral else 0
 
         # Prepara dash mensal para o template (serializável)
         dash_mensal_json = {}
@@ -2709,6 +2803,35 @@ class GraficoTemplateView(TemplateView):
                     'a_vencer': meses[mes_ano]['a_vencer'],
                 })
 
+        # --- CÁLCULO DOS CLIENTES DESATIVADOS ---
+        total_desativados_vencidas = 0
+        total_desativados_a_vencer = 0
+        qtd_desativados_vencidas = 0
+        qtd_desativados_a_vencer = 0
+
+        # Busca parcelas de clientes desativados (apenas não pagas)
+        parcelas_desativadas = Parcela.objects.filter(
+            pagamento__venda__in=vendas,
+            pagamento__tipo_pagamento__nome='CREDFACIL',
+            pagamento__desativado=True,
+            pago=False  # Apenas parcelas não pagas
+        )
+
+        for parcela in parcelas_desativadas:
+            if parcela.data_vencimento < timezone.now().date():
+                total_desativados_vencidas += parcela.valor
+                qtd_desativados_vencidas += 1
+            else:
+                total_desativados_a_vencer += parcela.valor
+                qtd_desativados_a_vencer += 1
+
+        # Total de pagamentos desativados
+        total_pagamentos_desativados = Pagamento.objects.filter(
+            venda__in=vendas,
+            tipo_pagamento__nome='CREDFACIL',
+            desativado=True
+        ).count()
+
         context.update({
             'loja_get': int(loja_get) if loja_get else None,
             'lojas': Loja.objects.all(),
@@ -2721,6 +2844,11 @@ class GraficoTemplateView(TemplateView):
             'total_pagas': total_pagas,
             'total_vencidas': total_vencidas,
             'total_a_vencer': total_a_vencer,
+            'total_desativados_vencidas': total_desativados_vencidas,
+            'total_desativados_a_vencer': total_desativados_a_vencer,
+            'qtd_desativados_vencidas': qtd_desativados_vencidas,
+            'qtd_desativados_a_vencer': qtd_desativados_a_vencer,
+            'total_pagamentos_desativados': total_pagamentos_desativados,
             'dados_lojas': json.dumps(valores_por_loja, default=str),
             'dash_mensal_lojas': json.dumps(dash_mensal_json, default=str) if loja_get else None,
         })

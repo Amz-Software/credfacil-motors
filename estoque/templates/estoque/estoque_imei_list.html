@@ -35,6 +35,11 @@ Estoque
                             <i class="bx bx-file me-1"></i>
                             Gerar PDF
                         </a>
+                        <a type="button" class="btn btn-success" 
+                            href="{% url 'estoque:inventario_imei_excel' %}">
+                            <i class="bx bx-spreadsheet me-1"></i>
+                            Gerar Excel
+                        </a>
                     </div>
                 </div>
                 <div class="card-body">
@@ -48,6 +53,8 @@ Estoque
                                     <th scope="col" class="text-end">App Instalado</th>
                                     <th scope="col" class="text-end">Cancelado</th>
                                     <th scope="col" class="text-end">Data da Venda</th>
+                                    <th scope="col" class="text-end">ID Venda</th>
+                                    <th scope="col" class="text-end">Número Nota</th>
                                     {% if user|has_perm:"estoque.can_view_all_imei" %}
                                     <th scope="col" class="text-end">Loja</th>
                                     {% endif %}
@@ -86,6 +93,12 @@ Estoque
                                     </td>
                                     <td class="text-end">
                                         {{ produto.data_venda|date:"d/m/Y H:i"|default:"-" }}
+                                    </td>
+                                    <td class="text-end">
+                                        {{ produto.id_venda|default:"-" }}
+                                    </td>
+                                    <td class="text-end">
+                                        {{ produto.numero_nota|default:"-" }}
                                     </td>
                                     {% if user|has_perm:"estoque.can_view_all_imei" %}
                                     <td class="text-end">
@@ -129,7 +142,7 @@ Estoque
                                         </div>
                                     </td>
                                     {% empty %}
-                                    <td colspan="5" class="text-center">Nenhum produto encontrado</td>
+                                    <td colspan="13" class="text-center">Nenhum produto encontrado</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>

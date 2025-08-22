@@ -1,13 +1,37 @@
 from django.db import models
 from vendas.models import Base
 from django.urls import reverse
+import datetime
 
 
 class EntradaEstoque(Base):
     fornecedor = models.ForeignKey('estoque.Fornecedor', on_delete=models.PROTECT, related_name='entradas_estoque', verbose_name='Fornecedor', blank=True, null=True)
     data_entrada = models.DateTimeField(verbose_name='Data de Entrada', auto_now_add=True)
-    numero_nota = models.CharField(max_length=20, verbose_name='Número da Nota')
+    numero_nota = models.CharField(max_length=20, verbose_name='Número da Nota', blank=True)
     venda_liberada = models.BooleanField(default=False, verbose_name='Liberada para Venda')
+    
+    def save(self, *args, **kwargs):
+        if not self.numero_nota:
+            # Gerar número automático baseado no ano atual e sequencial
+            ano_atual = self.data_entrada.year if self.data_entrada else datetime.datetime.now().year
+            ultima_entrada = EntradaEstoque.objects.filter(
+                numero_nota__startswith=f'ENT{ano_atual}'
+            ).order_by('-numero_nota').first()
+            
+            if ultima_entrada and ultima_entrada.numero_nota:
+                try:
+                    # Extrair o número sequencial da última entrada
+                    ultimo_numero = int(ultima_entrada.numero_nota.split('-')[-1])
+                    novo_numero = ultimo_numero + 1
+                except (ValueError, IndexError):
+                    novo_numero = 1
+            else:
+                novo_numero = 1
+            
+            # Formato: ENT2024-0001, ENT2024-0002, etc.
+            self.numero_nota = f'ENT{ano_atual}-{novo_numero:04d}'
+        
+        super().save(*args, **kwargs)
     
     @property
     def custo_total(self):
@@ -84,6 +108,23 @@ class EstoqueImei(Base):
     produto_entrada = models.ForeignKey(ProdutoEntrada, on_delete=models.CASCADE, related_name='estoque_imei', blank=True, null=True)
     aplicativo_instalado = models.BooleanField(default=False, verbose_name='Aplicativo Instalado')
     cancelado = models.BooleanField(default=False, verbose_name='Cancelado')
+    
+    @property
+    def id_venda(self):
+        """Retorna o ID da venda relacionada ao IMEI"""
+        if self.vendido:
+            # Busca a venda através do ProdutoVenda que contém este IMEI
+            from vendas.models import ProdutoVenda
+            produto_venda = ProdutoVenda.objects.filter(imei=self.imei).first()
+            return produto_venda.venda.id if produto_venda else None
+        return None
+    
+    @property
+    def numero_nota(self):
+        """Retorna o número da nota da entrada relacionada ao IMEI"""
+        if self.produto_entrada and self.produto_entrada.entrada:
+            return self.produto_entrada.entrada.numero_nota
+        return None
     
     def __str__(self):
         return self.imei

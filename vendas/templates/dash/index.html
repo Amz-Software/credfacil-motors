@@ -143,6 +143,84 @@
             </div>
         </div>
     </div>
+    
+    <!-- Seção de Clientes Desativados -->
+    <div class="row g-4 mb-5">
+        <div class="col-12">
+            <h5 class="text-muted mb-3">
+                <i class="bx bx-error-circle me-2"></i>
+                Clientes Desativados (Parcelas não pagas)
+            </h5>
+        </div>
+        <!-- Total de Pagamentos Desativados -->
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card kpi-card shadow-sm h-100 border-0" style="border-left: 4px solid #6c757d !important;">
+                <div class="card-body d-flex align-items-center">
+                    <span class="avatar bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width:56px;height:56px;">
+                        <i class="bx bx-user-x fs-2"></i>
+                    </span>
+                    <div>
+                        <h6 class="card-title mb-1 text-muted">Total de Pagamentos Desativados</h6>
+                        <h3 class="mb-0 fw-bold" id="kpi-total-pagamentos-desativados">{{ total_pagamentos_desativados|default:"0" }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Parcelas Vencidas - Desativados -->
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card kpi-card shadow-sm h-100 border-0" style="border-left: 4px solid #6c757d !important;">
+                <div class="card-body d-flex align-items-center">
+                    <span class="avatar bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width:56px;height:56px;">
+                        <i class="bx bx-error-circle fs-2"></i>
+                    </span>
+                    <div>
+                        <h6 class="card-title mb-1 text-muted">Parcelas Vencidas (Desativados)</h6>
+                        <h3 class="mb-0 fw-bold" id="kpi-desativados-vencidas">{{ qtd_desativados_vencidas|default:"0" }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card kpi-card shadow-sm h-100 border-0" style="border-left: 4px solid #6c757d !important;">
+                <div class="card-body d-flex align-items-center">
+                    <span class="avatar bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width:56px;height:56px;">
+                        <i class="bx bx-money-withdraw fs-2"></i>
+                    </span>
+                    <div>
+                        <h6 class="card-title mb-1 text-muted">Valor Vencidas (Desativados)</h6>
+                        <h3 class="mb-0 fw-bold" id="kpi-valor-desativados-vencidas">{{ total_desativados_vencidas|intcomma }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Parcelas a Vencer - Desativados -->
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card kpi-card shadow-sm h-100 border-0" style="border-left: 4px solid #6c757d !important;">
+                <div class="card-body d-flex align-items-center">
+                    <span class="avatar bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width:56px;height:56px;">
+                        <i class="bx bx-time-five fs-2"></i>
+                    </span>
+                    <div>
+                        <h6 class="card-title mb-1 text-muted">Parcelas a Vencer (Desativados)</h6>
+                        <h3 class="mb-0 fw-bold" id="kpi-desativados-a-vencer">{{ qtd_desativados_a_vencer|default:"0" }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card kpi-card shadow-sm h-100 border-0" style="border-left: 4px solid #6c757d !important;">
+                <div class="card-body d-flex align-items-center">
+                    <span class="avatar bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width:56px;height:56px;">
+                        <i class="bx bx-wallet-alt fs-2"></i>
+                    </span>
+                    <div>
+                        <h6 class="card-title mb-1 text-muted">Valor a Vencer (Desativados)</h6>
+                        <h3 class="mb-0 fw-bold" id="kpi-valor-desativados-a-vencer">{{ total_desativados_a_vencer|intcomma }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     <!-- Dados Gerais -->
     <div class="row mb-4">
         <div class="col-12">
@@ -185,10 +263,14 @@
     const labels = Object.keys(dadosLojas);
     const pctPagas = labels.map(loja => dadosLojas[loja].pct_pagas);
     const pctVencidas = labels.map(loja => dadosLojas[loja].pct_vencidas);
+    const pctDesativados = labels.map(loja => dadosLojas[loja].pct_desativados || 0);
     const totalPagas = labels.map(loja => dadosLojas[loja].total_pagas);
     const totalVencidas = labels.map(loja => dadosLojas[loja].total_vencidas);
+    const totalDesativados = labels.map(loja => 
+        Number(dadosLojas[loja].total_desativados_vencidas || 0) + Number(dadosLojas[loja].total_desativados_a_vencer || 0)
+    );
     const totais = labels.map(loja =>
-        Number(dadosLojas[loja].total_pagas) + Number(dadosLojas[loja].total_vencidas) + Number(dadosLojas[loja].total_a_vencer)
+        Number(dadosLojas[loja].total_pagas) + Number(dadosLojas[loja].total_vencidas) + Number(dadosLojas[loja].total_a_vencer) + Number(dadosLojas[loja].total_desativados_vencidas || 0) + Number(dadosLojas[loja].total_desativados_a_vencer || 0)
     );
     const ctxLojas = document.getElementById('graficoLojas').getContext('2d');
 
@@ -209,6 +291,13 @@
                     data: pctVencidas,
                     totalValores: totalVencidas,
                     backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                    stack: 'percentual'
+                },
+                {
+                    label: '% Desativados',
+                    data: pctDesativados,
+                    totalValores: totalDesativados,
+                    backgroundColor: 'rgba(108, 117, 125, 0.6)',
                     stack: 'percentual'
                 }
             ]

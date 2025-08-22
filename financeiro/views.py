@@ -419,6 +419,7 @@ class ContasAReceberListView(BaseView, PermissionRequiredMixin, ListView):
                 messages.error(self.request, "Loja não encontrada.")
                 return redirect('financeiro:contas_a_receber_list')
 
+            
         return qs.order_by('-criado_em').exclude(tipo_pagamento__caixa=True).filter(tipo_pagamento__parcelas=True)
 
     def get_context_data(self, **kwargs):
@@ -569,7 +570,7 @@ class FolhaRelatorioContasAReceberView(BaseView, PermissionRequiredMixin, Templa
                 output_field=DateField()
             )
 
-            pagamentos_qs = Pagamento.objects.exclude(venda__is_deleted=True).with_status_flags().distinct()
+            pagamentos_qs = Pagamento.objects.exclude(venda__is_deleted=True).exclude(desativado=True).with_status_flags().distinct()
             pagamentos_qs = pagamentos_qs.annotate(
                 proximo_vencimento=proximo_vencimento_subquery,
                 ultimo_vencimento=ultimo_vencimento_subquery,

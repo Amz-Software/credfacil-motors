@@ -213,16 +213,40 @@
 
           <!-- ABA ANÁLISE DE CRÉDITO -->
           <div class="tab-pane fade" id="tab-analise" role="tabpanel">
-            <h5>Produto</h5><hr>
+            <h5>
+              Produto
+              {% if user|has_group:"ANALISTA" and not cliente.analise_credito.venda %}
+                <i class="bi bi-pencil-square text-primary" title="Analista: Você pode editar todos os campos antes da venda ser gerada"></i>
+              {% elif user|has_perm:"vendas.can_edit_finished_sale" and cliente.analise_credito.venda %}
+                <i class="bi bi-pencil-square text-warning" title="Você pode editar esta solicitação mesmo após a venda ser gerada"></i>
+              {% endif %}
+            </h5><hr>
             {% if form_analise_credito.non_field_errors %}
               <div class="alert alert-danger">
           {{ form_analise_credito.non_field_errors }}
               </div>
             {% endif %}
+            
+            {% if user|has_group:"ANALISTA" and not cliente.analise_credito.venda %}
+              <div class="alert alert-info">
+                <i class="bi bi-info-circle me-2"></i>
+                <strong>Analista:</strong> Você pode editar produto, parcelas, data de vencimento e IMEI antes da venda ser gerada.
+              </div>
+            {% elif user|has_perm:"vendas.can_edit_finished_sale" and cliente.analise_credito.venda %}
+              <div class="alert alert-warning">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                <strong>Atenção:</strong> Esta solicitação já possui venda gerada. Apenas usuários com permissão específica podem editá-la.
+              </div>
+            {% endif %}
             <div class="row">
               {% for field in form_analise_credito %}
           <div class="col-md-12 mb-3">
-            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            <label for="{{ field.id_for_label }}">
+              {{ field.label }}
+              {% if field.field.required %}
+                <span class="text-danger">*</span>
+              {% endif %}
+            </label>
             {{ field }}
             {% if field.errors %}
               <div class="text-danger small">{{ field.errors|striptags }}</div>

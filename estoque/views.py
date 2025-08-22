@@ -391,6 +391,221 @@ def inventario_estoque_imei_pdf (request):
 
     return render(request, "estoque/folha_estoque_imei.html", context)
 
+def inventario_estoque_imei_excel(request):
+    """Gera relatório Excel do estoque de IMEI com métricas financeiras e estratégicas"""
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    from openpyxl.utils import get_column_letter
+    from django.http import HttpResponse
+    from decimal import Decimal
+    
+    loja = get_object_or_404(Loja, pk=request.session.get('loja_id'))
+    
+    # Buscar todos os IMEIs da loja
+    imeis = EstoqueImei.objects.filter(loja=loja).select_related(
+        'produto', 'produto_entrada', 'produto_entrada__entrada'
+    ).prefetch_related('produto__tipo')
+    
+    # Criar workbook
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Estoque IMEI"
+    
+    # Estilos
+    header_font = Font(bold=True, color="FFFFFF")
+    header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+    title_font = Font(bold=True, size=14)
+    border = Border(
+        left=Side(style='thin'),
+        right=Side(style='thin'),
+        top=Side(style='thin'),
+        bottom=Side(style='thin')
+    )
+    center_alignment = Alignment(horizontal='center', vertical='center')
+    
+    # Título
+    ws.merge_cells('A1:N1')
+    ws['A1'] = f"RELATÓRIO DE ESTOQUE IMEI - {loja.nome}"
+    ws['A1'].font = title_font
+    ws['A1'].alignment = center_alignment
+    
+    # Data do relatório
+    ws.merge_cells('A2:N2')
+    ws['A2'] = f"Data de geração: {datetime.datetime.now().strftime('%d/%m/%Y %H:%M')}"
+    ws['A2'].alignment = center_alignment
+    
+    # Cabeçalhos da tabela
+    headers = [
+        'ID', 'Produto', 'IMEI', 'Tipo Produto', 'Vendido', 'App Instalado', 
+        'Cancelado', 'Data Venda', 'ID Venda', 'Número Nota', 'Custo Unitário',
+        'Preço Venda', 'Margem', 'Status'
+    ]
+    
+    for col, header in enumerate(headers, 1):
+        cell = ws.cell(row=4, column=col, value=header)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.border = border
+        cell.alignment = center_alignment
+    
+    # Dados dos IMEIs
+    row = 5
+    total_custo = Decimal('0.00')
+    total_venda = Decimal('0.00')
+    total_margem = Decimal('0.00')
+    imeis_vendidos = 0
+    imeis_disponiveis = 0
+    imeis_cancelados = 0
+    
+    for imei in imeis:
+        # Calcular custo e preço
+        custo_unitario = Decimal('0.00')
+        preco_venda = Decimal('0.00')
+        
+        if imei.produto_entrada and imei.produto_entrada.custo_unitario:
+            custo_unitario = imei.produto_entrada.custo_unitario
+        
+        if imei.produto.valor_repasse_logista:
+            preco_venda = imei.produto.valor_repasse_logista
+        
+        margem = preco_venda - custo_unitario if preco_venda > 0 and custo_unitario > 0 else Decimal('0.00')
+        
+        # Status do IMEI
+        if imei.cancelado:
+            status = "Cancelado"
+            imeis_cancelados += 1
+        elif imei.vendido:
+            status = "Vendido"
+            imeis_vendidos += 1
+        else:
+            status = "Disponível"
+            imeis_disponiveis += 1
+            total_custo += custo_unitario
+            total_venda += preco_venda
+            total_margem += margem
+        
+        # Preencher linha
+        ws.cell(row=row, column=1, value=imei.id).border = border
+        ws.cell(row=row, column=2, value=imei.produto.nome).border = border
+        ws.cell(row=row, column=3, value=imei.imei).border = border
+        ws.cell(row=row, column=4, value=imei.produto.tipo.nome if imei.produto.tipo else "-").border = border
+        ws.cell(row=row, column=5, value="Sim" if imei.vendido else "Não").border = border
+        ws.cell(row=row, column=6, value="Sim" if imei.aplicativo_instalado else "Não").border = border
+        ws.cell(row=row, column=7, value="Sim" if imei.cancelado else "Não").border = border
+        ws.cell(row=row, column=8, value=imei.data_venda.strftime('%d/%m/%Y') if imei.data_venda else "-").border = border
+        ws.cell(row=row, column=9, value=imei.id_venda or "-").border = border
+        ws.cell(row=row, column=10, value=imei.numero_nota or "-").border = border
+        ws.cell(row=row, column=11, value=float(custo_unitario)).border = border
+        ws.cell(row=row, column=12, value=float(preco_venda)).border = border
+        ws.cell(row=row, column=13, value=float(margem)).border = border
+        ws.cell(row=row, column=14, value=status).border = border
+        
+        row += 1
+    
+    # Métricas Financeiras e Estratégicas
+    row_metrics = row + 2
+    
+    # Título das métricas
+    ws.merge_cells(f'A{row_metrics}:N{row_metrics}')
+    ws[f'A{row_metrics}'] = "MÉTRICAS FINANCEIRAS E ESTRATÉGICAS"
+    ws[f'A{row_metrics}'].font = title_font
+    ws[f'A{row_metrics}'].alignment = center_alignment
+    
+    row_metrics += 2
+    
+    # Métricas de Quantidade
+    ws.cell(row=row_metrics, column=1, value="QUANTITATIVAS").font = Font(bold=True)
+    ws.cell(row=row_metrics, column=2, value="Valor").font = Font(bold=True)
+    ws.cell(row=row_metrics, column=3, value="Percentual").font = Font(bold=True)
+    
+    total_imeis = imeis.count()
+    row_metrics += 1
+    
+    ws.cell(row=row_metrics, column=1, value="Total de IMEIs")
+    ws.cell(row=row_metrics, column=2, value=total_imeis)
+    ws.cell(row=row_metrics, column=3, value="100%")
+    
+    row_metrics += 1
+    ws.cell(row=row_metrics, column=1, value="IMEIs Disponíveis")
+    ws.cell(row=row_metrics, column=2, value=imeis_disponiveis)
+    ws.cell(row=row_metrics, column=3, value=f"{(imeis_disponiveis/total_imeis*100):.1f}%" if total_imeis > 0 else "0%")
+    
+    row_metrics += 1
+    ws.cell(row=row_metrics, column=1, value="IMEIs Vendidos")
+    ws.cell(row=row_metrics, column=2, value=imeis_vendidos)
+    ws.cell(row=row_metrics, column=3, value=f"{(imeis_vendidos/total_imeis*100):.1f}%" if total_imeis > 0 else "0%")
+    
+    row_metrics += 1
+    ws.cell(row=row_metrics, column=1, value="IMEIs Cancelados")
+    ws.cell(row=row_metrics, column=2, value=imeis_cancelados)
+    ws.cell(row=row_metrics, column=3, value=f"{(imeis_cancelados/total_imeis*100):.1f}%" if total_imeis > 0 else "0%")
+    
+    row_metrics += 2
+    
+    # Métricas Financeiras
+    ws.cell(row=row_metrics, column=1, value="FINANCEIRAS").font = Font(bold=True)
+    ws.cell(row=row_metrics, column=2, value="Valor (R$)").font = Font(bold=True)
+    
+    row_metrics += 1
+    ws.cell(row=row_metrics, column=1, value="Valor Total em Estoque (Custo)")
+    ws.cell(row=row_metrics, column=2, value=float(total_custo))
+    
+    row_metrics += 1
+    ws.cell(row=row_metrics, column=1, value="Valor Total em Estoque (Venda)")
+    ws.cell(row=row_metrics, column=2, value=float(total_venda))
+    
+    row_metrics += 1
+    ws.cell(row=row_metrics, column=1, value="Margem Total Potencial")
+    ws.cell(row=row_metrics, column=2, value=float(total_margem))
+    
+    row_metrics += 1
+    margem_percentual = (total_margem / total_venda * 100) if total_venda > 0 else 0
+    ws.cell(row=row_metrics, column=1, value="Margem Percentual Média")
+    ws.cell(row=row_metrics, column=2, value=f"{margem_percentual:.1f}%")
+    
+    row_metrics += 2
+    
+    # Métricas Estratégicas
+    ws.cell(row=row_metrics, column=1, value="ESTRATÉGICAS").font = Font(bold=True)
+    ws.cell(row=row_metrics, column=2, value="Valor").font = Font(bold=True)
+    
+    row_metrics += 1
+    # Taxa de conversão (vendidos / total)
+    taxa_conversao = (imeis_vendidos / total_imeis * 100) if total_imeis > 0 else 0
+    ws.cell(row=row_metrics, column=1, value="Taxa de Conversão (Vendidos/Total)")
+    ws.cell(row=row_metrics, column=2, value=f"{taxa_conversao:.1f}%")
+    
+    row_metrics += 1
+    # Taxa de cancelamento
+    taxa_cancelamento = (imeis_cancelados / total_imeis * 100) if total_imeis > 0 else 0
+    ws.cell(row=row_metrics, column=1, value="Taxa de Cancelamento")
+    ws.cell(row=row_metrics, column=2, value=f"{taxa_cancelamento:.1f}%")
+    
+    row_metrics += 1
+    # Valor médio por IMEI
+    valor_medio_imei = total_venda / imeis_disponiveis if imeis_disponiveis > 0 else 0
+    ws.cell(row=row_metrics, column=1, value="Valor Médio por IMEI Disponível")
+    ws.cell(row=row_metrics, column=2, value=f"R$ {valor_medio_imei:.2f}")
+    
+    row_metrics += 1
+    # Margem média por IMEI
+    margem_media_imei = total_margem / imeis_disponiveis if imeis_disponiveis > 0 else 0
+    ws.cell(row=row_metrics, column=1, value="Margem Média por IMEI Disponível")
+    ws.cell(row=row_metrics, column=2, value=f"R$ {margem_media_imei:.2f}")
+    
+    # Ajustar largura das colunas
+    for col in range(1, len(headers) + 1):
+        ws.column_dimensions[get_column_letter(col)].width = 15
+    
+    # Configurar resposta HTTP
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = f'attachment; filename="relatorio_estoque_imei_{loja.nome}_{datetime.datetime.now().strftime("%Y%m%d_%H%M")}.xlsx"'
+    
+    wb.save(response)
+    return response
+
 class FolhaNotaEntradaView(View):
     def get(self, request, *args, **kwargs):
         loja = get_object_or_404(Loja, pk=request.session.get('loja_id'))

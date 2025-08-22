@@ -94,6 +94,57 @@ Clientes
       </div>
       
       <div class="card-body">
+        <!-- Filtros Avançados -->
+        <div class="row mb-4">
+          <div class="col-12">
+            <form method="get" class="card">
+              <div class="card-header">
+                <h6 class="mb-0">Filtros Avançados</h6>
+              </div>
+              <div class="card-body">
+                <div class="row g-3">
+                  <div class="col-md-3">
+                    <label for="search" class="form-label">Nome do Cliente</label>
+                    <input type="text" name="search" id="search" class="form-control" value="{{ request.GET.search }}" placeholder="Nome do cliente">
+                  </div>
+                  <div class="col-md-3">
+                    <label for="loja" class="form-label">Loja</label>
+                    <select name="loja" id="loja" class="form-select">
+                      <option value="">Todas as lojas</option>
+                      {% for loja in lojas %}
+                        <option value="{{ loja.pk }}" {% if request.GET.loja == loja.pk|stringformat:"s" %}selected{% endif %}>{{ loja.nome }}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                  <div class="col-md-2">
+                    <label for="data_inicio" class="form-label">Data Início</label>
+                    <input type="date" name="data_inicio" id="data_inicio" class="form-control" value="{{ request.GET.data_inicio }}">
+                  </div>
+                  <div class="col-md-2">
+                    <label for="data_fim" class="form-label">Data Fim</label>
+                    <input type="date" name="data_fim" id="data_fim" class="form-control" value="{{ request.GET.data_fim }}">
+                  </div>
+                  <div class="col-md-2">
+                    <label class="form-label">&nbsp;</label>
+                    <div class="d-flex gap-2">
+                      <button type="submit" class="btn btn-primary">Filtrar</button>
+                      <a href="{% url 'vendas:cliente_list' %}" class="btn btn-outline-secondary">Limpar</a>
+                    </div>
+                  </div>
+                </div>
+                <div class="row mt-3">
+                  <div class="col-md-3">
+                    <div class="form-check">
+                      <input type="checkbox" name="vendas_nao_finalizadas" class="form-check-input" id="vendas_nao_finalizadas" {% if request.GET.vendas_nao_finalizadas %}checked{% endif %}>
+                      <label class="form-check-label" for="vendas_nao_finalizadas">Vendas não finalizadas</label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+        
       <div class="table-responsive">
         <table class="table table-hover">
         <thead>

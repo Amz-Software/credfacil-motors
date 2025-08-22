@@ -4,6 +4,12 @@
 
 {% block content %}
 <div class="container-xxl mt-4">
+  {% if conta_a_receber.desativado %}
+    <div class="alert alert-secondary" role="alert">
+      <i class="bi bi-exclamation-triangle me-2"></i>
+      <strong>Cliente Desativado:</strong> Este cliente está desativado. As parcelas não aparecem nos gráficos e relatórios de contas a receber.
+    </div>
+  {% endif %}
   <div class="row gy-4">
 
 
@@ -148,9 +154,11 @@
                         {% if conta_a_receber.desativado %}checked{% endif %}
                       >
                       <label class="form-check-label" for="bloqueioSwitch">
-                        Aparelho Desativado
+                        <strong>Desativar Cliente</strong>
+                        <br>
+                        <small class="text-muted">Quando desativado, as parcelas não aparecem nos gráficos e relatórios</small>
                         {% if conta_a_receber.desativado %}
-                          <span class="badge bg-danger ms-2">Desativado</span>
+                          <span class="badge bg-secondary ms-2">Desativado</span>
                         {% else %}
                           <span class="badge bg-success ms-2">Ativo</span>
                         {% endif %}

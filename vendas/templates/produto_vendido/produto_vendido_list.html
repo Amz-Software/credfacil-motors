@@ -24,6 +24,10 @@ Produtos Vendidos
                                 <input type="text" name="imei" id="imei" class="form-control" value="{{ request.GET.imei }}" placeholder="Imei">
                             </div>
                             <div class="col-md-6">
+                                <label for="cpf" class="form-label">CPF do Cliente</label>
+                                <input type="text" name="cpf" id="cpf" class="form-control" value="{{ request.GET.cpf }}" placeholder="CPF do Cliente">
+                            </div>
+                            <div class="col-md-6">
                                 <label for="data" class="form-label">Data Início</label>
                                 <input type="date" name="data" id="data" class="form-control" value="{{ request.GET.data }}" placeholder="Data Venda">
                             </div>
@@ -55,6 +59,7 @@ Produtos Vendidos
                                     <th scope="col">ID</th>
                                     <th scope="col">Produto</th>
                                     <th scope="col">Imei</th>
+                                    <th scope="col">CPF do Cliente</th>
                                     <th scope="col">Venda</th>
                                     {% if user|has_perm:"venda.can_view_all_products_sold" %}
                                     <th scope="col">Loja</th>
@@ -69,6 +74,7 @@ Produtos Vendidos
                                     <td>{{ item.pk }}</td>
                                     <td>{{ item.produto|title }}</td>
                                     <td>{{ item.imei|default:"-" }}</td>
+                                    <td>{{ item.venda.cliente.cpf|default:"-" }}</td>
                                     <td>{{ item.venda }}</td>
                                     {% if user|has_perm:"venda.can_view_all_products_sold" %}
                                     <td>{{ item.venda.loja.nome|title }}</td>
@@ -90,7 +96,7 @@ Produtos Vendidos
                                 </tr>
                                 {% empty %}
                                 <tr>
-                                    <td colspan="6" class="text-center">Nenhum registro encontrado</td>
+                                    <td colspan="7" class="text-center">Nenhum registro encontrado</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>

@@ -12,6 +12,14 @@
       background-color: #6f42c1 !important;
       color: #fff            !important;
     }
+    /* Linha desativada em cinza */
+    .table-secondary,
+    .table-secondary th,
+    .table-secondary td {
+      background-color: #6c757d !important;
+      color: #fff !important;
+      opacity: 0.8;
+    }
     /* Sombreamento leve para o card */
     .card-custom {
       border: none;
@@ -38,6 +46,7 @@
             data-bs-html="true"
             title="
               <ul class='mb-0 ps-3'>
+                <li><strong>Cinza:</strong> Desativado</li>
                 <li><strong>Roxo:</strong> Bloqueado</li>
                 <li><strong>Vermelho:</strong> Atrasado</li>
                 <li><strong>Amarelo:</strong> A vencer</li>
@@ -185,7 +194,8 @@
           <tbody>
             {% for conta in contas_a_receber %}
               <tr class="
-          {% if conta.bloqueado %}table-purple
+          {% if conta.desativado %}table-secondary
+          {% elif conta.bloqueado %}table-purple
           {% elif conta.com_parcela_atrasada %}table-danger
           {% elif conta.com_pagamento_pendente %}table-warning
           {% elif conta.pago_dentro_prazo %}table-success

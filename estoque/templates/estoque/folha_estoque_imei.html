@@ -96,7 +96,17 @@
             <thead>
                 <tr>
                     <th>Nome</th>
-                    <th>Imei</th>
+                    <th>IMEI</th>
+                    <th>Vendido</th>
+                    <th>App Instalado</th>
+                    <th>Cancelado</th>
+                    <th>Data da Venda</th>
+                    <th>ID Venda</th>
+                    <th>Número Nota</th>
+                    <th>Criado Por</th>
+                    <th>Data Criação</th>
+                    <th>Alterado Por</th>
+                    <th>Data Última Alteração</th>
                 </tr>
             </thead>
             <tbody>
@@ -104,6 +114,16 @@
                     <tr>
                         <td>{{ produto.produto|title }}</td>
                         <td>{{ produto.imei }}</td>
+                        <td>{% if produto.vendido %}Sim{% else %}Não{% endif %}</td>
+                        <td>{% if produto.aplicativo_instalado %}Sim{% else %}Não{% endif %}</td>
+                        <td>{% if produto.cancelado %}Sim{% else %}Não{% endif %}</td>
+                        <td>{{ produto.data_venda|date:"d/m/Y H:i"|default:"-" }}</td>
+                        <td>{{ produto.id_venda|default:"-" }}</td>
+                        <td>{{ produto.numero_nota|default:"-" }}</td>
+                        <td>{{ produto.criado_por|title|default:"-" }}</td>
+                        <td>{{ produto.criado_em|date:"d/m/Y H:i"|default:"-" }}</td>
+                        <td>{{ produto.modificado_por|title|default:"-" }}</td>
+                        <td>{{ produto.modificado_em|date:"d/m/Y H:i"|default:"-" }}</td>
                     </tr>
                 {% endfor %}
             </tbody>

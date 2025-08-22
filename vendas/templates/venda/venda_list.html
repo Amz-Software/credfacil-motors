@@ -14,19 +14,41 @@ Vendas
       <h4 class="card-title">Vendas</h4>
       <div>
         <form action="" method="get" class="d-inline-block me-2" id="searchForm">
-          <div class="input-group">
-            <input type="date" name="search" class="form-control" value="{{ request.GET.search }}" onchange="this.form.submit()">
+          <div class="row g-2">
+            <div class="col-auto">
+              <input type="date" name="search" class="form-control" value="{{ request.GET.search }}" placeholder="Data">
+            </div>
+            <div class="col-auto">
+              <input type="text" name="cliente_nome" class="form-control" value="{{ request.GET.cliente_nome }}" placeholder="Nome do Cliente">
+            </div>
             {% if user|has_perm:"vendas.can_view_all_sales" %}
-            <select name="loja_id" class="form-select" onchange="this.form.submit()">
-              <option value="">Selecione uma loja</option>
-              {% for loja in lojas %}
-                <option value="{{ loja.pk }}" {% if request.GET.loja_id == loja.pk %}selected{% endif %}>{{ loja.nome }}</option>
-              {% endfor %}
-            </select>
+            <div class="col-auto">
+              <select name="loja_id" class="form-select">
+                <option value="">Todas as lojas</option>
+                {% for loja in lojas %}
+                  <option value="{{ loja.pk }}" {% if request.GET.loja_id == loja.pk %}selected{% endif %}>{{ loja.nome }}</option>
+                {% endfor %}
+              </select>
+            </div>
             {% endif %}
-            <a href="{% url "vendas:venda_list" %}" class="btn btn-outline-secondary">
-                <i class="bx bx-x"></i>
-            </a>
+            <div class="col-auto">
+              <div class="form-check">
+                <input type="checkbox" name="vendas_canceladas" class="form-check-input" id="vendas_canceladas" {% if request.GET.vendas_canceladas %}checked{% endif %}>
+                <label class="form-check-label" for="vendas_canceladas">Vendas Canceladas</label>
+              </div>
+            </div>
+            <div class="col-auto">
+              <div class="form-check">
+                <input type="checkbox" name="vendas_trocadas" class="form-check-input" id="vendas_trocadas" {% if request.GET.vendas_trocadas %}checked{% endif %}>
+                <label class="form-check-label" for="vendas_trocadas">Vendas Trocadas</label>
+              </div>
+            </div>
+            <div class="col-auto">
+              <button type="submit" class="btn btn-primary">Filtrar</button>
+              <a href="{% url 'vendas:venda_list' %}" class="btn btn-outline-secondary">
+                  <i class="bx bx-x"></i>
+              </a>
+            </div>
           </div>
         </form>
       </div>

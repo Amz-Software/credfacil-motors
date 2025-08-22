@@ -8,7 +8,7 @@ from produtos.models import Produto
 class EntradaEstoqueForm(forms.ModelForm):
     class Meta:
         model = EntradaEstoque
-        fields = ['numero_nota']
+        fields = []  # Removido numero_nota pois será gerado automaticamente
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

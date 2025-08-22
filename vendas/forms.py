@@ -419,22 +419,40 @@ class AnaliseCreditoClienteForm(forms.ModelForm):
         user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
         
+        # Tornar o campo observacao obrigatório
+        self.fields['observacao'].required = True
+        self.fields['observacao'].widget.attrs['required'] = 'required'
+        
         if self.instance and self.instance.pk:
-            if user and not user.has_perm('vendas.change_status_analise'):
+            # Verifica se o usuário é analista
+            is_analista = user and user.groups.filter(name='ANALISTA').exists()
+            
+            # Verifica se a venda já foi gerada
+            venda_gerada = self.instance.venda is not None
+            
+            if user and not user.has_perm('vendas.change_status_analise') and not is_analista:
                 # if self.instance.status == 'EA':
                 self.fields['produto'].disabled = True
                 # self.fields['imei'].disabled = True
                 self.fields['numero_parcelas'].disabled = True
                 self.fields['data_pagamento'].disabled = True
             
-            if user and not user.has_perm('vendas.can_edit_finished_sale'):
-                if not self.instance.cliente.analise_credito.status == 'EA':
+            # Se a venda foi gerada, apenas usuários com permissão específica podem editar
+            if venda_gerada:
+                if not user.has_perm('vendas.can_edit_finished_sale'):
                     self.fields['produto'].disabled = True
                     self.fields['numero_parcelas'].disabled = True
                     self.fields['data_pagamento'].disabled = True
                     self.fields['observacao'].disabled = True
-                    if self.instance.venda:
-                        self.fields['imei'].disabled = True
+                    self.fields['imei'].disabled = True
+            # Se a venda não foi gerada, analistas podem editar tudo
+            elif not venda_gerada and is_analista:
+                # Analistas podem editar tudo antes da venda ser gerada
+                self.fields['produto'].disabled = False
+                self.fields['numero_parcelas'].disabled = False
+                self.fields['data_pagamento'].disabled = False
+                self.fields['observacao'].disabled = False
+                self.fields['imei'].disabled = False
 class AnaliseCreditoClienteImeiForm(forms.ModelForm):
     produto = ProdutoChoiceField(
         queryset=Produto.objects.all(),
@@ -462,6 +480,10 @@ class AnaliseCreditoClienteImeiForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
+
+        # Tornar o campo observacao obrigatório
+        self.fields['observacao'].required = True
+        self.fields['observacao'].widget.attrs['required'] = 'required'
 
         # Desabilita todos os campos, exceto 'imei'
         for field_name in ['produto', 'data_pagamento', 'numero_parcelas', 'observacao']:

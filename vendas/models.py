@@ -564,6 +564,33 @@ class ProdutoVenda(Base):
     valor_desconto = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     venda = models.ForeignKey('vendas.Venda', on_delete=models.CASCADE, related_name='itens_venda')
     
+    def clean(self):
+        from django.core.exceptions import ValidationError
+        super().clean()
+        
+        # Validar se o IMEI não está sendo usado em outra venda
+        if self.imei:
+            produto_venda_existente = ProdutoVenda.objects.filter(
+                imei=self.imei
+            ).exclude(pk=self.pk).first()
+            
+            if produto_venda_existente:
+                # Em vez de bloquear, apenas registrar um warning
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.warning(f'IMEI {self.imei} já está sendo usado na venda {produto_venda_existente.venda.id}')
+    
+    def save(self, *args, **kwargs):
+        try:
+            self.clean()
+        except Exception as e:
+            # Log do erro mas não interromper a operação
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f'Erro na validação do IMEI {self.imei}: {str(e)}')
+        
+        super().save(*args, **kwargs)
+    
 
     def calcular_valor_total(self):
         return (self.valor_unitario * self.quantidade) - self.valor_desconto

@@ -134,6 +134,37 @@ class EntradaUpdateView(PermissionRequiredMixin, UpdateView):
             for produto in formset.deleted_objects:
                 produto.delete()
 
+            # Verificar duplicações de IMEI antes de salvar
+            imeis_duplicados = []
+            
+            # Primeiro, verificar todos os IMEIs antes de salvar qualquer coisa
+            for produto in produtos:
+                # Se o produto for serializado, verificar os IMEIs na tabela EstoqueImei
+                if produto.imei:  # Presumindo que o IMEI é obrigatório
+                    # Verificar se já existe um IMEI igual para o mesmo produto e loja
+                    imei_existente = EstoqueImei.objects.filter(
+                        imei=produto.imei,
+                        produto=produto.produto,
+                        loja=loja
+                    ).first()
+                    
+                    if imei_existente:
+                        imeis_duplicados.append({
+                            'imei': produto.imei,
+                            'produto': produto.produto.nome,
+                            'entrada_existente': imei_existente.produto_entrada.entrada.numero_nota if imei_existente.produto_entrada else 'N/A'
+                        })
+            
+            # Se houver duplicações, bloquear a atualização e mostrar alerta
+            if imeis_duplicados:
+                duplicados_msg = "❌ Não foi possível atualizar a entrada devido a IMEIs duplicados:\n\n"
+                for dup in imeis_duplicados:
+                    duplicados_msg += f"• IMEI {dup['imei']} - Produto: {dup['produto']} (já existe na entrada {dup['entrada_existente']})\n"
+                duplicados_msg += "\nPor favor, corrija os IMEIs duplicados e tente novamente."
+                messages.error(self.request, duplicados_msg)
+                return self.form_invalid(form)
+            
+            # Se não houver duplicações, prosseguir com a atualização
             for produto in produtos:
                 produto.entrada = entrada_estoque
                 produto.loja = loja
@@ -189,12 +220,42 @@ class AdicionarEntradaEstoqueView(PermissionRequiredMixin, CreateView):
             entrada_estoque.save(user=self.request.user)
             produtos = formset.save(commit=False)
 
+            # Verificar duplicações de IMEI antes de salvar
+            imeis_duplicados = []
+            
+            # Primeiro, verificar todos os IMEIs antes de salvar qualquer coisa
+            for produto in produtos:
+                if produto.imei:
+                    # Verificar se já existe um IMEI igual para o mesmo produto e loja
+                    imei_existente = EstoqueImei.objects.filter(
+                        imei=produto.imei,
+                        produto=produto.produto,
+                        loja=loja
+                    ).first()
+                    
+                    if imei_existente:
+                        imeis_duplicados.append({
+                            'imei': produto.imei,
+                            'produto': produto.produto.nome,
+                            'entrada_existente': imei_existente.produto_entrada.entrada.numero_nota if imei_existente.produto_entrada else 'N/A'
+                        })
+            
+            # Se houver duplicações, bloquear a criação e mostrar alerta
+            if imeis_duplicados:
+                duplicados_msg = "❌ Não foi possível criar a entrada devido a IMEIs duplicados:\n\n"
+                for dup in imeis_duplicados:
+                    duplicados_msg += f"• IMEI {dup['imei']} - Produto: {dup['produto']} (já existe na entrada {dup['entrada_existente']})\n"
+                duplicados_msg += "\nPor favor, corrija os IMEIs duplicados e tente novamente."
+                messages.error(self.request, duplicados_msg)
+                return self.form_invalid(form)
+            
+            # Se não houver duplicações, prosseguir com a criação
             for produto in produtos:
                 produto.entrada = entrada_estoque
                 produto.loja = loja
                 produto.save(user=self.request.user)
                 
-                if produto.imei: 
+                if produto.imei:
                     estoque_imei = EstoqueImei(
                         produto=produto.produto,
                         imei=produto.imei,

@@ -1458,6 +1458,7 @@ class VendaTrocarProdutoView(PermissionRequiredMixin, View):
 
     def post(self, request, pk):
         venda = get_object_or_404(Venda, pk=pk)
+        self.venda_atual = venda  # Adicionar referência para validação
         produto_atual_id = request.POST.get('produto_atual')
         novo_produto_id = request.POST.get('novo_produto')
         imei_id = request.POST.get('imei')
@@ -1507,9 +1508,12 @@ class VendaTrocarProdutoView(PermissionRequiredMixin, View):
                 estoque_novo.save(user=request.user)
 
             # Marca IMEI como vendido
-            produto_imei = EstoqueImei.objects.get(imei=imei, produto=novo_produto)
-            produto_imei.vendido = True
-            produto_imei.save(user=request.user)
+            estoque_imei = EstoqueImei.objects.filter(imei=imei, produto=novo_produto).first()
+            if estoque_imei:
+                estoque_imei.vendido = True
+                estoque_imei.aplicativo_instalado = True
+                estoque_imei.data_venda = localtime(now())
+                estoque_imei.save(user=request.user)
             
             data_atual = localtime(now()).date().strftime('%d/%m/%Y')
             hora_atual = localtime(now()).time().strftime('%H:%M')
@@ -1546,22 +1550,34 @@ class VendaTrocarProdutoView(PermissionRequiredMixin, View):
 
     def _validar_imei(self, produto, imei):
         try:
-            produto_imei = EstoqueImei.objects.get(imei=imei)
-            novo_imei = EstoqueImei.objects.filter(imei=imei, produto=produto).first()
-            imei_antigo = ProdutoVenda.objects.filter(imei=imei).first()
-            if novo_imei and novo_imei != imei_antigo:
-                if produto_imei.vendido:
-                    error_message = f"IMEI {imei} já vendido"
-                    logger.error("IMEI já vendido para o produto %s: %s", produto, imei)
-                    raise ValueError(error_message)
-                produto_imei.vendido = True
-                produto_imei.aplicativo_instalado = True
-                produto_imei.data_venda = localtime(now())
-                produto_imei.save(user=self.request.user)
+            # Verificar se o IMEI existe no estoque para o produto específico
+            estoque_imei = EstoqueImei.objects.filter(imei=imei, produto=produto).first()
+            if not estoque_imei:
+                error_message = f"IMEI {imei} não encontrado para o produto {produto.nome}"
+                logger.error("IMEI não encontrado para o produto %s: %s", produto, imei)
+                raise ValueError(error_message)
+            
+            # Verificar se o IMEI já está vendido
+            if estoque_imei.vendido:
+                error_message = f"IMEI {imei} já vendido"
+                logger.error("IMEI já vendido para o produto %s: %s", produto, imei)
+                raise ValueError(error_message)
+            
+            # Verificar se o IMEI já está sendo usado em outra venda (exceto a atual)
+            produto_venda_existente = ProdutoVenda.objects.filter(imei=imei).exclude(
+                venda=self.venda_atual
+            ).first()
+            
+            if produto_venda_existente:
+                # Em vez de bloquear, apenas registrar um warning
+                logger.warning(f"IMEI {imei} já está sendo usado na venda {produto_venda_existente.venda.id}")
+                # Não bloquear a operação, apenas alertar
 
-        except EstoqueImei.DoesNotExist:
-            error_message = f"IMEI {imei} não encontrado"
-            logger.error("IMEI não encontrado para o produto %s: %s", produto, imei)
+        except Exception as e:
+            if isinstance(e, ValueError):
+                raise e
+            error_message = f"Erro ao validar IMEI {imei}: {str(e)}"
+            logger.error("Erro ao validar IMEI %s: %s", imei, e)
             raise ValueError(error_message)
 
     def _restaurar_estoque(self, produto, quantidade, loja):
@@ -2832,6 +2848,21 @@ class GraficoTemplateView(TemplateView):
             desativado=True
         ).count()
 
+        # --- CÁLCULO DO VALOR TOTAL DE REPASSES ---
+        total_repasses = 0
+        repasses_por_loja = defaultdict(lambda: 0)
+        
+        # Buscar todos os produtos vendidos das vendas filtradas
+        produtos_vendidos = ProdutoVenda.objects.filter(
+            venda__in=vendas
+        ).select_related('produto', 'venda__loja')
+        
+        for produto_venda in produtos_vendidos:
+            valor_repasse = produto_venda.produto.valor_repasse_logista or 0
+            total_repasses += valor_repasse
+            loja_nome = produto_venda.venda.loja.nome if produto_venda.venda.loja else 'Desconhecida'
+            repasses_por_loja[loja_nome] += valor_repasse
+
         context.update({
             'loja_get': int(loja_get) if loja_get else None,
             'lojas': Loja.objects.all(),
@@ -2849,6 +2880,8 @@ class GraficoTemplateView(TemplateView):
             'qtd_desativados_vencidas': qtd_desativados_vencidas,
             'qtd_desativados_a_vencer': qtd_desativados_a_vencer,
             'total_pagamentos_desativados': total_pagamentos_desativados,
+            'total_repasses': total_repasses,
+            'repasses_por_loja': dict(repasses_por_loja),
             'dados_lojas': json.dumps(valores_por_loja, default=str),
             'dash_mensal_lojas': json.dumps(dash_mensal_json, default=str) if loja_get else None,
         })

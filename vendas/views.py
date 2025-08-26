@@ -939,7 +939,7 @@ def gerar_venda(request, cliente_id):
         messages.error(request, "❌ IMEI já vendido. Altere o IMEI para continuar.")
         return redirect('vendas:cliente_list')
 
-    estoque = Estoque.objects.filter(produto__nome=produto.nome, loja=loja)
+    estoque = Estoque.objects.filter(produto__nome=produto.nome)
 
     if not estoque.exists():
         messages.error(request, f"❌ Estoque não encontrado para o produto {produto.nome}.")

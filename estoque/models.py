@@ -144,11 +144,11 @@ class Estoque(Base):
 
     def quantidade(self):
         # busca todas unidades do produto no estoque dessa loja
-        return self.produto.estoque_imei.filter(produto__nome=self.produto.nome, loja=self.loja, vendido=False).count()
+        return self.produto.estoque_imei.filter(produto__nome=self.produto.nome, loja=self.loja, vendido=False, cancelado=False).count()
     
     def quantidade_vendida(self):
         # busca todas unidades do produto no estoque que foram vendidas
-        return self.produto.estoque_imei.filter(produto__nome=self.produto.nome, loja=self.loja, vendido=True).count()
+        return self.produto.estoque_imei.filter(produto__nome=self.produto.nome, loja=self.loja, vendido=True, cancelado=False).count()
 
     @property
     def ultima_entrada(self):

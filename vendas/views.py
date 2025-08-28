@@ -1520,7 +1520,7 @@ class VendaTrocarProdutoView(PermissionRequiredMixin, View):
 
             # atualiza venda marcando como is_trocado
             venda.is_trocado = True
-            venda.observacao += (
+            venda.observacao = (venda.observacao or "") + (
                 f"\n{data_atual} {hora_atual} | 🔄 Troca de produto:\n"
                 f"• Usuário: {request.user.username}\n"
                 f"• De: {produto_antigo_nome} - {produto_antigo_imei}\n"

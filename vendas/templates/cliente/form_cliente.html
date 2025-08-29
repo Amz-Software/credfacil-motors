@@ -11,6 +11,251 @@
       padding: 1rem;
       border-top: 1px solid #ddd;
       z-index: 10;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+    }
+    
+    /* Progress Bar */
+    .progress-container {
+      background: #f8f9fa;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 30px;
+      border: 1px solid #e9ecef;
+    }
+    
+    .progress-step {
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    
+    .progress-step:last-child {
+      margin-bottom: 0;
+    }
+    
+    .step-number {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: #e9ecef;
+      color: #6c757d;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      margin-right: 15px;
+      transition: all 0.3s ease;
+    }
+    
+    .step-number.active {
+      background: #007bff;
+      color: white;
+    }
+    
+    .step-number.completed {
+      background: #28a745;
+      color: white;
+    }
+    
+    .step-text {
+      flex: 1;
+      font-weight: 500;
+    }
+    
+    .step-text.completed {
+      color: #28a745;
+    }
+    
+    /* Form Improvements */
+    .form-section {
+      background: white;
+      border-radius: 10px;
+      padding: 25px;
+      margin-bottom: 20px;
+      border: 1px solid #e9ecef;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    
+    .form-section h5 {
+      color: #495057;
+      border-bottom: 2px solid #007bff;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    .form-label {
+      font-weight: 600;
+      color: #495057;
+      margin-bottom: 8px;
+    }
+    
+    .form-control:focus {
+      border-color: #007bff;
+      box-shadow: 0 0 0 0.2rem rgba(0,123,255,0.25);
+    }
+    
+    .form-control.is-valid {
+      border-color: #28a745;
+      box-shadow: 0 0 0 0.2rem rgba(40,167,69,0.25);
+    }
+    
+    .form-control.is-invalid {
+      border-color: #dc3545;
+      box-shadow: 0 0 0 0.2rem rgba(220,53,69,0.25);
+    }
+    
+    .validation-feedback {
+      font-size: 0.875rem;
+      margin-top: 5px;
+    }
+    
+    .validation-feedback.valid-feedback {
+      color: #28a745;
+    }
+    
+    .validation-feedback.invalid-feedback {
+      color: #dc3545;
+    }
+    
+    /* Product Cards */
+    .product-info-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+    }
+    
+    .info-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-radius: 10px;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      transition: transform 0.3s ease;
+    }
+    
+    .info-card:hover {
+      transform: translateY(-2px);
+    }
+    
+    .info-card.entrada {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+    
+    .info-card.total {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+    
+    .info-card.parcelas {
+      background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    }
+    
+    .info-card-label {
+      font-size: 0.875rem;
+      opacity: 0.9;
+      margin-bottom: 5px;
+    }
+    
+    .info-card-value {
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+    
+    /* Tabs Enhancement */
+    .nav-tabs .nav-link {
+      border: none;
+      color: #6c757d;
+      font-weight: 500;
+      padding: 12px 20px;
+      border-radius: 8px 8px 0 0;
+      transition: all 0.3s ease;
+    }
+    
+    .nav-tabs .nav-link:hover {
+      color: #007bff;
+      background: #f8f9fa;
+    }
+    
+    .nav-tabs .nav-link.active {
+      color: #007bff;
+      background: white;
+      border-bottom: 3px solid #007bff;
+    }
+    
+    /* Alert Improvements */
+    .alert {
+      border-radius: 8px;
+      border: none;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .alert-info {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    
+    .alert-warning {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      color: white;
+    }
+    
+    /* IMEI Section */
+    .imei-section {
+      background: #f8f9fa;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-left: 4px solid #007bff;
+    }
+    
+    .imei-status {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+    }
+    
+    .imei-status.success {
+      background: #d4edda;
+      border: 1px solid #c3e6cb;
+      color: #155724;
+    }
+    
+    .imei-status.warning {
+      background: #fff3cd;
+      border: 1px solid #ffeaa7;
+      color: #856404;
+    }
+    
+    /* Tooltip */
+    .tooltip-icon {
+      color: #6c757d;
+      cursor: help;
+      margin-left: 5px;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+      .product-info-cards {
+        grid-template-columns: 1fr;
+      }
+      
+      .progress-step {
+        flex-direction: column;
+        text-align: center;
+      }
+      
+      .step-number {
+        margin-right: 0;
+        margin-bottom: 10px;
+      }
     }
   </style>
 {% endblock extra_head %}
@@ -22,10 +267,10 @@
 {% block content %}
 <div class="container-xxl mt-4">
   <div class="card">
-    <!-- aqui -->
-    {# dentro de card-header, no lugar do badge estático #}
+    <!-- Header -->
     <div class="card-header d-flex align-items-center p-3">
       <h4 class="mb-0">
+        <i class="bx bx-user-plus me-2"></i>
         {% if cliente.pk %}Editar Análise de Crédito{% else %}Criar Análise de Crédito{% endif %}
       </h4>
 
@@ -78,218 +323,320 @@
       {% endif %}
     </div>
 
-    <form method="post" enctype="multipart/form-data">
+    <form method="post" enctype="multipart/form-data" id="clienteForm">
       {% csrf_token %}
       <div class="card-body">
+        
+        <!-- Progress Bar -->
+        <div class="progress-container">
+          <h6 class="mb-3"><i class="bx bx-list-check me-2"></i>Progresso do Preenchimento</h6>
+          <div class="progress-step" id="step-dados">
+            <div class="step-number" id="step-dados-number">1</div>
+            <div class="step-text" id="step-dados-text">Dados do Cliente</div>
+          </div>
+          <div class="progress-step" id="step-comprovantes">
+            <div class="step-number" id="step-comprovantes-number">2</div>
+            <div class="step-text" id="step-comprovantes-text">Comprovantes</div>
+          </div>
+          <div class="progress-step" id="step-produto">
+            <div class="step-number" id="step-produto-number">3</div>
+            <div class="step-text" id="step-produto-text">Produto e Condições</div>
+          </div>
+        </div>
+
         <!-- Nav tabs -->
         <ul class="nav nav-tabs mb-3" id="clienteTabs" role="tablist">
           <li class="nav-item" role="presentation">
-            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-dados" type="button">Dados</button>
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-dados" type="button">
+              <i class="bx bx-user me-1"></i>Dados
+            </button>
           </li>
           <li class="nav-item" role="presentation">
-            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-comprovantes" type="button">Comprovantes</button>
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-comprovantes" type="button">
+              <i class="bx bx-file me-1"></i>Comprovantes
+            </button>
           </li>
           <li class="nav-item" role="presentation">
-            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-analise" type="button">Produto</button>
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-analise" type="button">
+              <i class="bx bx-package me-1"></i>Produto
+            </button>
           </li>
         </ul>
 
         <div class="tab-content">
           <!-- ABA DADOS CLIENTE -->
           <div class="tab-pane fade show active" id="tab-dados" role="tabpanel">
-            <h5>Dados Cliente</h5><hr>
-            {% if form_cliente.non_field_errors %}
-              <div class="alert alert-danger">
-          {{ form_cliente.non_field_errors }}
-              </div>
-            {% endif %}
-            <div class="row">
-              {% for field in form_cliente %}
-          {% if field.label == 'Cliente cred facil' %}
-            <div class="col-md-12">
-              <div class="form-check form-switch mt-3">
-                {{ field }} 
-                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                {% if field.errors %}
-            <div class="text-danger small">{{ field.errors|striptags }}</div>
-                {% endif %}
-              </div>
-            </div>
-          {% elif field.label == 'Nascimento' %}
-            <div class="col-md-6">
-              <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-              <input type="date" class="form-control" id="{{ field.id_for_label }}" name="{{ field.name }}"
-               value="{{ field.value|date:'Y-m-d' }}">
-              {% if field.errors %}
-                <div class="text-danger small">{{ field.errors|striptags }}</div>
+            <div class="form-section">
+              <h5><i class="bx bx-user me-2"></i>Dados do Cliente</h5>
+              
+              {% if form_cliente.non_field_errors %}
+                <div class="alert alert-danger">
+                  {{ form_cliente.non_field_errors }}
+                </div>
               {% endif %}
-            </div>
-          {% else %}
-            <div class="col-md-6">
-              <div class="mb-3">
-                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                {{ field }}
-                {% if field.errors %}
-            <div class="text-danger small">{{ field.errors|striptags }}</div>
-                {% endif %}
+              
+              <div class="row">
+                {% for field in form_cliente %}
+                  {% if field.label == 'Cliente cred facil' %}
+                    <div class="col-md-12">
+                      <div class="form-check form-switch mt-3">
+                        {{ field }} 
+                        <label for="{{ field.id_for_label }}" class="form-check-label">{{ field.label }}</label>
+                        {% if field.errors %}
+                          <div class="text-danger small">{{ field.errors|striptags }}</div>
+                        {% endif %}
+                      </div>
+                    </div>
+                  {% elif field.label == 'Nascimento' %}
+                    <div class="col-md-6">
+                      <div class="form-group">
+                        <label for="{{ field.id_for_label }}" class="form-label">
+                          {{ field.label }}
+                          {% if field.field.required %}
+                            <span class="text-danger">*</span>
+                          {% endif %}
+                        </label>
+                        {{ field }}
+                        {% if field.errors %}
+                          <div class="text-danger small">{{ field.errors|striptags }}</div>
+                        {% endif %}
+                      </div>
+                    </div>
+                  {% else %}
+                    <div class="col-md-6">
+                      <div class="form-group">
+                        <label for="{{ field.id_for_label }}" class="form-label">
+                          {{ field.label }}
+                          {% if field.field.required %}
+                            <span class="text-danger">*</span>
+                          {% endif %}
+                        </label>
+                        {{ field }}
+                        {% if field.errors %}
+                          <div class="text-danger small">{{ field.errors|striptags }}</div>
+                        {% endif %}
+                      </div>
+                    </div>
+                  {% endif %}
+                {% endfor %}
               </div>
-            </div>
-          {% endif %}
-              {% endfor %}
             </div>
 
-            <h3 class="mt-3">Informações Comerciais</h3>
-            <hr>
-            {% if form_adicional.non_field_errors %}
-              <div class="alert alert-danger">
-          {{ form_adicional.non_field_errors }}
+            <!-- Informações Pessoais -->
+            <div class="form-section">
+              <h5><i class="bx bx-info-circle me-2"></i>Informações Pessoais</h5>
+              
+              {% if form_informacao.non_field_errors %}
+                <div class="alert alert-danger">
+                  {{ form_informacao.non_field_errors }}
+                </div>
+              {% endif %}
+              
+              <div class="row">
+                {% for field in form_informacao %}
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label for="{{ field.id_for_label }}" class="form-label">
+                        {{ field.label }}
+                        {% if field.field.required %}
+                          <span class="text-danger">*</span>
+                        {% endif %}
+                      </label>
+                      {{ field }}
+                      {% if field.errors %}
+                        <div class="text-danger small">{{ field.errors|striptags }}</div>
+                      {% endif %}
+                    </div>
+                  </div>
+                {% endfor %}
               </div>
-            {% endif %}
-            <div class="row">
-          {% for field in form_adicional %}
-              <div class="col-md-6">
-            <div class="form-group mt-3">
-                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                {{ field }}
-                {% if field.errors %}
-                  <div class="text-danger small">{{ field.errors|striptags }}</div>
-                {% endif %}
-            </div>
-              </div>
-          {% endfor %}
             </div>
 
-            <h3 class="mt-3">Informações Pessoais</h3>
-            <hr>
-            {% if form_informacao.non_field_errors %}
-              <div class="alert alert-danger">
-          {{ form_informacao.non_field_errors }}
+            <!-- Contato Adicional -->
+            <div class="form-section">
+              <h5><i class="bx bx-phone me-2"></i>Contato Adicional</h5>
+              
+              {% if form_adicional.non_field_errors %}
+                <div class="alert alert-danger">
+                  {{ form_adicional.non_field_errors }}
+                </div>
+              {% endif %}
+              
+              <div class="row">
+                {% for field in form_adicional %}
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label for="{{ field.id_for_label }}" class="form-label">
+                        {{ field.label }}
+                        {% if field.field.required %}
+                          <span class="text-danger">*</span>
+                        {% endif %}
+                      </label>
+                      {{ field }}
+                      {% if field.errors %}
+                        <div class="text-danger small">{{ field.errors|striptags }}</div>
+                      {% endif %}
+                    </div>
+                  </div>
+                {% endfor %}
               </div>
-            {% endif %}
-            <div class="row">
-          {% for field in form_informacao %}
-              <div class="col-md-6">
-            <div class="form-group mt-3">
-                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                {{ field }}
-                {% if field.errors %}
-                  <div class="text-danger small">{{ field.errors|striptags }}</div>
-                {% endif %}
-            </div>
-              </div>
-          {% endfor %}
             </div>
           </div>
 
           <!-- ABA COMPROVANTES -->
           <div class="tab-pane fade" id="tab-comprovantes" role="tabpanel">
-            <h5>Comprovantes</h5><hr>
-            {% if form_comprovantes.non_field_errors %}
-              <div class="alert alert-danger">
-          {{ form_comprovantes.non_field_errors }}
+            <div class="form-section">
+              <h5><i class="bx bx-file me-2"></i>Comprovantes</h5>
+              
+              {% if form_comprovantes.non_field_errors %}
+                <div class="alert alert-danger">
+                  {{ form_comprovantes.non_field_errors }}
+                </div>
+              {% endif %}
+              
+              <div class="row">
+                {% for field in form_comprovantes %}
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label for="{{ field.id_for_label }}" class="form-label">
+                        {{ field.label }}
+                        {% if field.field.required %}
+                          <span class="text-danger">*</span>
+                        {% endif %}
+                        <i class="bx bx-help-circle tooltip-icon" data-bs-toggle="tooltip" title="Clique para selecionar um arquivo"></i>
+                      </label>
+                      
+                      {% if field.value and field.value.url %}
+                        <div class="mb-2">
+                          <a href="{{ field.value.url }}" target="_blank" class="d-block mb-2">
+                            <img src="{{ field.value.url }}" class="img-thumbnail" style="max-height:100px;">
+                          </a>
+                          <small class="text-muted">Escolha um novo arquivo se quiser substituir.</small>
+                        </div>
+                      {% endif %}
+                      
+                      {{ field }}
+                      {% if field.errors %}
+                        <div class="text-danger small">{{ field.errors|striptags }}</div>
+                      {% endif %}
+                    </div>
+                  </div>
+                {% endfor %}
               </div>
-            {% endif %}
-            <div class="row">
-              {% for field in form_comprovantes %}
-          <div class="col-md-12 mb-3">
-            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-            {% if field.field.widget.input_type == 'checkbox' %}
-              <input type="hidden" name="{{ field.html_name }}" value="False">
-            {% endif %}
-            {% if field.value and field.field.widget.input_type != 'checkbox' %}
-              <a href="{{ field.value.url }}" target="_blank" class="d-block mb-2">
-                <img src="{{ field.value.url }}" class="img-thumbnail" style="max-height:100px;">
-              </a>
-              <small>Escolha um novo arquivo se quiser substituir.</small>
-            {% endif %}
-            {{ field }}
-            {% if field.errors %}
-              <div class="text-danger small">{{ field.errors|striptags }}</div>
-            {% endif %}
-          </div>
-              {% endfor %}
             </div>
           </div>
 
           <!-- ABA ANÁLISE DE CRÉDITO -->
           <div class="tab-pane fade" id="tab-analise" role="tabpanel">
-            <h5>
-              Produto
+            <div class="form-section">
+              <h5>
+                <i class="bx bx-package me-2"></i>Produto e Condições
+                {% if user|has_group:"ANALISTA" and not cliente.analise_credito.venda %}
+                  <i class="bi bi-pencil-square text-primary" title="Analista: Você pode editar todos os campos antes da venda ser gerada"></i>
+                {% elif user|has_perm:"vendas.can_edit_finished_sale" and cliente.analise_credito.venda %}
+                  <i class="bi bi-pencil-square text-warning" title="Você pode editar esta solicitação mesmo após a venda ser gerada"></i>
+                {% endif %}
+              </h5>
+              
+              {% if form_analise_credito.non_field_errors %}
+                <div class="alert alert-danger">
+                  {{ form_analise_credito.non_field_errors }}
+                </div>
+              {% endif %}
+              
               {% if user|has_group:"ANALISTA" and not cliente.analise_credito.venda %}
-                <i class="bi bi-pencil-square text-primary" title="Analista: Você pode editar todos os campos antes da venda ser gerada"></i>
+                <div class="alert alert-info">
+                  <i class="bi bi-info-circle me-2"></i>
+                  <strong>Analista:</strong> Você pode editar produto, parcelas, data de vencimento e IMEI antes da venda ser gerada.
+                </div>
               {% elif user|has_perm:"vendas.can_edit_finished_sale" and cliente.analise_credito.venda %}
-                <i class="bi bi-pencil-square text-warning" title="Você pode editar esta solicitação mesmo após a venda ser gerada"></i>
+                <div class="alert alert-warning">
+                  <i class="bi bi-exclamation-triangle me-2"></i>
+                  <strong>Atenção:</strong> Esta solicitação já possui venda gerada. Apenas usuários com permissão específica podem editá-la.
+                </div>
               {% endif %}
-            </h5><hr>
-            {% if form_analise_credito.non_field_errors %}
-              <div class="alert alert-danger">
-          {{ form_analise_credito.non_field_errors }}
+              
+              {# Seção de IMEI #}
+              {% if cliente.analise_credito %}
+              <div class="imei-section">
+                <h6 class="mb-3"><i class="bx bx-mobile me-2"></i>Informações do IMEI</h6>
+                
+                {% if cliente.analise_credito.imei %}
+                  <div class="imei-status success">
+                    <div>
+                      <i class="bi bi-check-circle me-2"></i>
+                      <strong>IMEI informado:</strong> {{ cliente.analise_credito.imei.imei }}
+                    </div>
+                    {% if user|has_perm:"vendas.change_analisecreditocliente" %}
+                    <a href="{% url 'vendas:informar_imei_analise' cliente.analise_credito.pk %}" class="btn btn-sm btn-outline-primary">
+                      <i class="bi bi-pencil"></i> Alterar
+                    </a>
+                    {% endif %}
+                  </div>
+                {% else %}
+                  <div class="imei-status warning">
+                    <div>
+                      <i class="bi bi-exclamation-triangle me-2"></i>
+                      <strong>IMEI não informado.</strong> 
+                    </div>
+                    {% if user|has_perm:"vendas.change_analisecreditocliente" %}
+                    <a href="{% url 'vendas:informar_imei_analise' cliente.analise_credito.pk %}" class="btn btn-sm btn-primary">
+                      <i class="bi bi-plus-circle"></i> Informar IMEI
+                    </a>
+                    {% endif %}
+                  </div>
+                {% endif %}
               </div>
-            {% endif %}
-            
-            {% if user|has_group:"ANALISTA" and not cliente.analise_credito.venda %}
-              <div class="alert alert-info">
-                <i class="bi bi-info-circle me-2"></i>
-                <strong>Analista:</strong> Você pode editar produto, parcelas, data de vencimento e IMEI antes da venda ser gerada.
-              </div>
-            {% elif user|has_perm:"vendas.can_edit_finished_sale" and cliente.analise_credito.venda %}
-              <div class="alert alert-warning">
-                <i class="bi bi-exclamation-triangle me-2"></i>
-                <strong>Atenção:</strong> Esta solicitação já possui venda gerada. Apenas usuários com permissão específica podem editá-la.
-              </div>
-            {% endif %}
-            <div class="row">
-              {% for field in form_analise_credito %}
-          <div class="col-md-12 mb-3">
-            <label for="{{ field.id_for_label }}">
-              {{ field.label }}
-              {% if field.field.required %}
-                <span class="text-danger">*</span>
               {% endif %}
-            </label>
-            {{ field }}
-            {% if field.errors %}
-              <div class="text-danger small">{{ field.errors|striptags }}</div>
-            {% endif %}
-          </div>
-              {% endfor %}
-              <div class="col-md-12 mb-3">
-              <label class="form-label">Previsão dos vencimentos</label>
-              <div id="vencimento-previsao-analise" class="form-text text-primary"></div>
-            </div>
-              <div class="row text-center mb-4" id="parcelas-info">
-          <div class="col-12 col-md-4 mb-2">
-            <div class="card border-primary h-100">
-              <div class="card-body">
-                <h6 class="card-subtitle fs-5 fw-semibold text-primary text-uppercase">
-            Entrada
-                </h6>
-                <p class="card-text display-6" id="info-entrada">—</p>
-              </div>
-            </div>
-          </div>
-          <div class="col-12 col-md-4 mb-2">
-            <div class="card border-success h-100">
-              <div class="card-body">
-                <h6 class="card-subtitle fs-5 fw-semibold text-success text-uppercase">
-            Total
-                </h6>
-                <p class="card-text display-6" id="info-total">—</p>
-              </div>
-            </div>
-          </div>
-          <div class="col-12 col-md-4 mb-2">
-            <div class="card border-warning h-100">
-              <div class="card-body">
-                <h6 class="card-subtitle fs-5 fw-semibold text-warning text-uppercase">
-            Parcelas
-                </h6>
-                <p class="card-text display-6" id="info-parcela">—</p>
-              </div>
-            </div>
-          </div>
+              
+              <div class="row">
+                {% for field in form_analise_credito %}
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label for="{{ field.id_for_label }}" class="form-label">
+                        {{ field.label }}
+                        {% if field.field.required %}
+                          <span class="text-danger">*</span>
+                        {% endif %}
+                        {% if field.label == 'Produto' %}
+                          <i class="bx bx-help-circle tooltip-icon" data-bs-toggle="tooltip" title="Selecione o produto desejado para ver os valores automaticamente"></i>
+                        {% elif field.label == 'Número de parcelas' %}
+                          <i class="bx bx-help-circle tooltip-icon" data-bs-toggle="tooltip" title="Escolha o número de parcelas para calcular o valor total"></i>
+                        {% elif field.label == 'Data de pagamento' %}
+                          <i class="bx bx-help-circle tooltip-icon" data-bs-toggle="tooltip" title="Escolha o dia do mês para o vencimento das parcelas"></i>
+                        {% endif %}
+                      </label>
+                      {{ field }}
+                      {% if field.errors %}
+                        <div class="text-danger small">{{ field.errors|striptags }}</div>
+                      {% endif %}
+                    </div>
+                  </div>
+                {% endfor %}
+                
+                <div class="col-md-12">
+                  <div class="form-group">
+                    <label class="form-label">Previsão dos vencimentos</label>
+                    <div id="vencimento-previsao-analise" class="form-text text-primary"></div>
+                  </div>
+                </div>
               </div>
               
+              <!-- Product Info Cards -->
+              <div class="product-info-cards" id="parcelas-info">
+                <div class="info-card entrada">
+                  <div class="info-card-label">Entrada</div>
+                  <div class="info-card-value" id="info-entrada">—</div>
+                </div>
+                <div class="info-card total">
+                  <div class="info-card-label">Total</div>
+                  <div class="info-card-value" id="info-total">—</div>
+                </div>
+                <div class="info-card parcelas">
+                  <div class="info-card-label">Parcelas</div>
+                  <div class="info-card-value" id="info-parcela">—</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -320,7 +667,9 @@
         {# ações de salvar/voltar, à direita #}
         <div>
           {% if user|has_perm:'vendas.change_cliente' %}
-            <input type="submit" class="btn btn-primary me-2" value="Salvar">
+            <button type="submit" class="btn btn-primary me-2" id="submitBtn">
+              <i class="bx bx-save me-1"></i> Salvar
+            </button>
           {% endif %}
           <a href="{% url 'vendas:cliente_list' %}" class="btn btn-secondary">
             <i class="bx bx-arrow-back me-1"></i> Voltar
@@ -345,6 +694,364 @@
   </script>
   <script>
     $(function(){
+      // Inicializar tooltips
+      var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+      var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+      });
+
+      // Progress tracking
+      function updateProgress() {
+        let completedSteps = 0;
+        let totalSteps = 3;
+        
+        // Check dados step
+        let dadosComplete = checkDadosComplete();
+        console.log('Dados complete:', dadosComplete);
+        if (dadosComplete) {
+          $('#step-dados-number').removeClass('active').addClass('completed');
+          $('#step-dados-text').addClass('completed');
+          completedSteps++;
+        } else {
+          $('#step-dados-number').removeClass('completed').addClass('active');
+          $('#step-dados-text').removeClass('completed');
+        }
+        
+        // Check comprovantes step
+        let comprovantesComplete = checkComprovantesComplete();
+        if (comprovantesComplete) {
+          $('#step-comprovantes-number').removeClass('active').addClass('completed');
+          $('#step-comprovantes-text').addClass('completed');
+          completedSteps++;
+        } else {
+          $('#step-comprovantes-number').removeClass('completed').addClass('active');
+          $('#step-comprovantes-text').removeClass('completed');
+        }
+        
+        // Check produto step
+        let produtoComplete = checkProdutoComplete();
+        if (produtoComplete) {
+          $('#step-produto-number').removeClass('active').addClass('completed');
+          $('#step-produto-text').addClass('completed');
+          completedSteps++;
+        } else {
+          $('#step-produto-number').removeClass('completed').addClass('active');
+          $('#step-produto-text').removeClass('completed');
+        }
+        
+        // Update submit button
+        if (completedSteps === totalSteps) {
+          $('#submitBtn').removeClass('btn-primary').addClass('btn-success');
+          $('#submitBtn').html('<i class="bx bx-check me-1"></i> Formulário Completo - Salvar');
+        } else {
+          $('#submitBtn').removeClass('btn-success').addClass('btn-primary');
+          $('#submitBtn').html('<i class="bx bx-save me-1"></i> Salvar');
+        }
+      }
+      
+      function checkDadosComplete() {
+        let requiredFields = [
+          '#id_nome',
+          '#id_cpf',
+          '#id_nascimento',
+          '#id_telefone',
+          '#id_email',
+          '#id_rg',
+          '#id_cep'
+        ];
+        
+        console.log('=== DEBUG CHECK DADOS COMPLETE ===');
+        requiredFields.forEach(field => {
+          console.log('Field exists:', field, $(field).length > 0);
+          if ($(field).length > 0) {
+            console.log('Field value:', field, $(field).val());
+            console.log('Field type:', field, $(field).attr('type'));
+          }
+        });
+        
+        let complete = true;
+        console.log('Starting validation with complete = true');
+        requiredFields.forEach(field => {
+          let value = $(field).val();
+          console.log('Checking field:', field, 'Value:', value, 'Length:', value ? value.length : 0);
+          if (!value || value.trim() === '') {
+            console.log('❌ Field empty:', field, '- Setting complete = false');
+            complete = false;
+            return false;
+          }
+          console.log('✅ Field OK:', field);
+          
+          if (field === '#id_email') {
+            // Email validation for completion check
+            console.log('Validating email:', value);
+            if (!value.includes('@')) {
+              console.log('❌ Email validation failed: no @ - Setting complete = false');
+              complete = false;
+              return false;
+            } else {
+              const parts = value.split('@');
+              console.log('Email parts:', parts);
+              if (parts.length !== 2 || parts[0].length === 0 || parts[1].length === 0) {
+                console.log('❌ Email validation failed: invalid parts - Setting complete = false');
+                complete = false;
+                return false;
+              } else if (!/[a-zA-Z]/.test(parts[0]) || !/[a-zA-Z]/.test(parts[1])) {
+                console.log('❌ Email validation failed: no letters - Setting complete = false');
+                complete = false;
+                return false;
+              }
+            }
+            console.log('✅ Email validation passed');
+          }
+          
+          if (field === '#id_telefone') {
+            // Phone validation - check if it has between 10 and 11 digits
+            console.log('Validating phone:', value);
+            const digitsOnly = value.replace(/\D/g, '');
+            console.log('Phone digits only:', digitsOnly, 'Length:', digitsOnly.length);
+            if (digitsOnly.length < 10 || digitsOnly.length > 11) {
+              console.log('❌ Phone validation failed: must have between 10 and 11 digits - Setting complete = false');
+              complete = false;
+              return false;
+            }
+            console.log('✅ Phone validation passed');
+          }
+          
+          if (field === '#id_rg') {
+            // RG validation - check if it has between 7 and 12 digits
+            console.log('Validating RG:', value);
+            const digitsOnly = value.replace(/\D/g, '');
+            console.log('RG digits only:', digitsOnly, 'Length:', digitsOnly.length);
+            if (digitsOnly.length < 7 || digitsOnly.length > 12) {
+              console.log('❌ RG validation failed: must have between 7 and 12 digits - Setting complete = false');
+              complete = false;
+              return false;
+            }
+            console.log('✅ RG validation passed');
+          }
+          
+          if (field === '#id_nascimento') {
+            // Age validation - check if person is at least 18 years old
+            console.log('Validating birth date:', value);
+            if (value) {
+              const birthDate = new Date(value);
+              const today = new Date();
+              const age = today.getFullYear() - birthDate.getFullYear();
+              const monthDiff = today.getMonth() - birthDate.getMonth();
+              
+              // Adjust age if birthday hasn't occurred this year
+              if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                age--;
+              }
+              
+              console.log('Calculated age:', age);
+              if (age < 18) {
+                console.log('❌ Age validation failed: must be at least 18 years old - Setting complete = false');
+                complete = false;
+                return false;
+              }
+              console.log('✅ Age validation passed');
+            }
+          }
+          
+          if (field === '#id_cep') {
+            // CEP validation - check if it has exactly 8 digits
+            console.log('Validating CEP:', value);
+            const digitsOnly = value.replace(/\D/g, '');
+            console.log('CEP digits only:', digitsOnly, 'Length:', digitsOnly.length);
+            if (digitsOnly.length !== 8) {
+              console.log('❌ CEP validation failed: must have exactly 8 digits - Setting complete = false');
+              complete = false;
+              return false;
+            }
+            console.log('✅ CEP validation passed');
+          }
+        });
+        
+        console.log('🎯 Final result - complete =', complete);
+        
+        // Additional validation for duplicate phones
+        if (complete) {
+          const telefone = $('#id_telefone').val();
+          const telefone_adicional = $('#id_telefone_adicional').val();
+          
+          if (telefone && telefone_adicional && telefone === telefone_adicional) {
+            console.log('❌ Duplicate phone validation failed - Setting complete = false');
+            complete = false;
+          }
+        }
+        
+        return complete;
+      }
+      
+      function checkComprovantesComplete() {
+        let requiredFields = [
+          '#id_documento_identificacao_frente',
+          '#id_documento_identificacao_verso',
+          '#id_comprovante_residencia',
+          '#id_foto_cliente'
+        ];
+        
+        let complete = true;
+        requiredFields.forEach(field => {
+          let value = $(field).val();
+          if (!value || value.trim() === '') {
+            complete = false;
+            return false;
+          }
+        });
+        
+        return complete;
+      }
+      
+      function checkProdutoComplete() {
+        let requiredFields = [
+          '#id_produto',
+          '#id_numero_parcelas',
+          '#id_data_pagamento',
+          '#id_observacao'
+        ];
+        
+        let complete = true;
+        requiredFields.forEach(field => {
+          let value = $(field).val();
+          if (!value || value.trim() === '') {
+            complete = false;
+            return false;
+          }
+        });
+        
+        return complete;
+      }
+      
+      // Real-time validation
+      function validateField(field) {
+        let value = $(field).val();
+        let fieldId = $(field).attr('id');
+        let isValid = true;
+        let message = 'Campo preenchido corretamente';
+        
+        // Check if field is empty
+        if (!value || value.trim() === '') {
+          isValid = false;
+          message = 'Este campo é obrigatório';
+        } else {
+          // Specific validations
+          if (fieldId === 'id_cpf') {
+            // CPF validation (basic)
+            const cpfRegex = /^\d{3}\.\d{3}\.\d{3}-\d{2}$/;
+            if (!cpfRegex.test(value)) {
+              isValid = false;
+              message = 'Digite um CPF válido (000.000.000-00)';
+            }
+          } else if (fieldId === 'id_telefone') {
+            // Phone validation - check if it has between 10 and 11 digits
+            const digitsOnly = value.replace(/\D/g, '');
+            if (digitsOnly.length < 10 || digitsOnly.length > 11) {
+              isValid = false;
+              message = 'Telefone deve ter entre 10 e 11 dígitos';
+            }
+          } else if (fieldId === 'id_rg') {
+            // RG validation - check if it has between 7 and 12 digits
+            const digitsOnly = value.replace(/\D/g, '');
+            if (digitsOnly.length < 7 || digitsOnly.length > 12) {
+              isValid = false;
+              message = 'RG deve ter entre 7 e 12 dígitos';
+            }
+          } else if (fieldId === 'id_nascimento') {
+            // Age validation - check if person is at least 18 years old
+            if (value) {
+              const birthDate = new Date(value);
+              const today = new Date();
+              const age = today.getFullYear() - birthDate.getFullYear();
+              const monthDiff = today.getMonth() - birthDate.getMonth();
+              
+              // Adjust age if birthday hasn't occurred this year
+              if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                age--;
+              }
+              
+              if (age < 18) {
+                isValid = false;
+                message = 'Cliente deve ter pelo menos 18 anos';
+              }
+            }
+          } else if (fieldId === 'id_cep') {
+            // CEP validation - check if it has exactly 8 digits
+            const digitsOnly = value.replace(/\D/g, '');
+            if (digitsOnly.length !== 8) {
+              isValid = false;
+              message = 'CEP deve ter exatamente 8 dígitos';
+            }
+          }
+        }
+        
+        if (isValid) {
+          $(field).removeClass('is-invalid').addClass('is-valid');
+          $(field).siblings('.validation-feedback').removeClass('invalid-feedback').addClass('valid-feedback').text(message);
+        } else {
+          $(field).removeClass('is-valid').addClass('is-invalid');
+          $(field).siblings('.validation-feedback').removeClass('valid-feedback').addClass('invalid-feedback').text(message);
+        }
+        
+        updateProgress();
+      }
+      
+      // Add validation feedback elements
+      $('input[required], select[required], textarea[required]').each(function() {
+        if (!$(this).siblings('.validation-feedback').length) {
+          $(this).after('<div class="validation-feedback"></div>');
+        }
+      });
+      
+      // Debug: Check if email field exists
+      console.log('Email field found:', $('#id_email').length);
+      console.log('Email field ID:', $('#id_email').attr('id'));
+      console.log('Email field required:', $('#id_email').prop('required'));
+      
+      // Add validation feedback for email field specifically
+      if ($('#id_email').length && !$('#id_email').siblings('.validation-feedback').length) {
+        $('#id_email').after('<div class="validation-feedback"></div>');
+      }
+      
+      // Bind validation events
+      $('input, select, textarea').on('blur change', function() {
+        if ($(this).prop('required')) {
+          validateField(this);
+        }
+      });
+      
+      // Special validation for email field
+      $('#id_email').on('blur change', function() {
+        validateField(this);
+      });
+      
+      // Validation for duplicate phones
+      function validateDuplicatePhones() {
+        const telefone = $('#id_telefone').val();
+        const telefone_adicional = $('#id_telefone_adicional').val();
+        
+        if (telefone && telefone_adicional && telefone === telefone_adicional) {
+          $('#id_telefone_adicional').removeClass('is-valid').addClass('is-invalid');
+          $('#id_telefone_adicional').siblings('.validation-feedback').removeClass('valid-feedback').addClass('invalid-feedback').text('Telefone adicional não pode ser igual ao telefone principal');
+          return false;
+        } else if (telefone_adicional) {
+          $('#id_telefone_adicional').removeClass('is-invalid').addClass('is-valid');
+          $('#id_telefone_adicional').siblings('.validation-feedback').removeClass('invalid-feedback').addClass('valid-feedback').text('Telefone adicional válido');
+        }
+        return true;
+      }
+      
+      // Bind validation for duplicate phones
+      $('#id_telefone, #id_telefone_adicional').on('blur change', function() {
+        validateDuplicatePhones();
+      });
+      
+      // Tab switching with progress update
+      $('.nav-link').on('click', function() {
+        setTimeout(updateProgress, 100);
+      });
+      
       // lista de produtos do contexto
       const produtos = JSON.parse('{{ produtos_json|escapejs }}');
 
@@ -383,6 +1090,9 @@
           ? `${np}× de ${formatBRL(parcela)}`
           : '—';
         $('#info-parcela').text(textoParcela);
+        
+        // Update progress after product selection
+        updateProgress();
       }
 
       // dispara ao mudar produto (Select2) ou número de parcelas
@@ -393,6 +1103,50 @@
 
       // inicializa ao carregar a página
       atualizaInfo();
+      updateProgress();
+      
+      // Form submission enhancement - simplified
+      $('#clienteForm').on('submit', function(e) {
+        // Allow form submission without blocking
+        // Just show a warning if there are validation errors
+        let incompleteSteps = [];
+        
+        if (!checkDadosComplete()) {
+          incompleteSteps.push('Dados do Cliente');
+        }
+        if (!checkComprovantesComplete()) {
+          incompleteSteps.push('Comprovantes');
+        }
+        if (!checkProdutoComplete()) {
+          incompleteSteps.push('Produto e Condições');
+        }
+        
+        if (incompleteSteps.length > 0) {
+          let message = 'Atenção: As seguintes seções podem estar incompletas:\n\n' + incompleteSteps.join('\n') + '\n\nDeseja continuar mesmo assim?';
+          if (!confirm(message)) {
+            e.preventDefault();
+            // Switch to first incomplete tab
+            if (!checkDadosComplete()) {
+              $('[data-bs-target="#tab-dados"]').tab('show');
+            } else if (!checkComprovantesComplete()) {
+              $('[data-bs-target="#tab-comprovantes"]').tab('show');
+            } else if (!checkProdutoComplete()) {
+              $('[data-bs-target="#tab-analise"]').tab('show');
+            }
+          }
+        }
+      });
+      
+      // Auto-save indicator
+      let autoSaveTimer;
+      $('input, select, textarea').on('input change', function() {
+        clearTimeout(autoSaveTimer);
+        $('#submitBtn').html('<i class="bx bx-time me-1"></i> Salvando...');
+        
+        autoSaveTimer = setTimeout(function() {
+          $('#submitBtn').html('<i class="bx bx-save me-1"></i> Salvar');
+        }, 1000);
+      });
     });
   </script>
   <script>

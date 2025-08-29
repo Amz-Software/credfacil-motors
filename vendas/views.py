@@ -18,6 +18,7 @@ from qrcode.constants import ERROR_CORRECT_M
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from accounts.models import User
 from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import Sum, Count
@@ -767,7 +768,7 @@ class ClienteInstallAppView(PermissionRequiredMixin, View):
 
         analise_credito.status_aplicativo = 'C'
         analise_credito.save()
-        messages.success(request, "Status alterado para “Confirmação Pendente”.")
+        messages.success(request, "Status alterado para Confirmação Pendente.")
         return redirect('vendas:cliente_list')
 
 
@@ -778,13 +779,48 @@ class ClienteConfirmInstalledView(PermissionRequiredMixin, View):
         cliente = get_object_or_404(Cliente, pk=pk)
         analise_credito = cliente.analise_credito
         
-        imei = cliente.analise_credito.imei
-        imei.aplicativo_instalado = True
-        imei.save()
-        
-        analise_credito.status_aplicativo = 'I'
+        # Marcar como confirmação pendente (aguardando analista informar IMEI)
+        analise_credito.status_aplicativo = 'C'
         analise_credito.save()
-        messages.success(request, "Status alterado para “Instalado”. Agora você pode gerar a venda.")
+        
+        # Enviar notificação para analistas
+        from notifications.signals import notify
+        from notificacao.utils import enviar_ws_para_usuario
+        
+        cliente_nome = cliente.nome if cliente else "Cliente"
+        loja = cliente.loja
+        
+        verb = f'Vendedor confirmou instalação do app para cliente {cliente_nome.capitalize()}.'
+        description = f'Aguardando analista informar IMEI. Loja: {loja.nome.capitalize()}.'
+        
+        # Notificar analistas e administradores
+        usuarios_para_notificar = list(
+            User.objects.filter(groups__name__in=['ADMINISTRADOR', 'ANALISTA']).exclude(id=request.user.id)
+        )
+        
+        for user in usuarios_para_notificar:
+            notify.send(
+                analise_credito,
+                recipient=user,
+                verb=verb,
+                description=description,
+                target=cliente,
+            )
+
+            # WebSocket
+            ultima_notificacao = user.notifications.unread().order_by('-timestamp').first()
+            if ultima_notificacao:
+                enviar_ws_para_usuario(
+                    usuario=user,
+                    instance=analise_credito,
+                    notification_id=ultima_notificacao.id,
+                    verb=verb,
+                    description=description,
+                    target_url=cliente.get_absolute_url(),
+                    type_notification='analise_credito_cliente',
+                )
+        
+        messages.success(request, "✅ Instalação confirmada! Aguardando analista informar IMEI.")
         return redirect('vendas:cliente_list')
     
 
@@ -800,8 +836,8 @@ class ClienteStatusAppUpdateView(PermissionRequiredMixin, View):
         if new_status in valid:
             analise_credito.status_aplicativo = new_status
             analise_credito.save()
-            messages.success(request, "Status do aplicativo atualizado para “%s”." %
-                             analise_credito.get_status_aplicativo_display())
+            messages.success(request, "Status do aplicativo atualizado para %s." %
+                              analise_credito.get_status_aplicativo_display())
         else:
             messages.error(request, "Status inválido.")
         # volta para a página de edição
@@ -927,8 +963,11 @@ def gerar_venda(request, cliente_id):
         messages.error(request, "❌ Análise de crédito não aprovada para o cliente.")
         return redirect('vendas:cliente_list')
     if not analise.imei:
-        messages.error(request, "❌ Nenhum IMEI associado à análise de crédito.")
-        return redirect('vendas:cliente_list')
+        messages.error(request, "❌ Nenhum IMEI associado à análise de crédito. Informe o IMEI antes de gerar a venda.")
+        return redirect('vendas:cliente_update', pk=cliente.pk)
+    if analise.status_aplicativo != 'I':
+        messages.error(request, "❌ Aplicativo não está instalado. Confirme a instalação antes de gerar a venda.")
+        return redirect('vendas:cliente_update', pk=cliente.pk)
     if analise.venda:
         messages.error(request, "❌ Essa solicitação já foi convertida em venda.")
         return redirect('vendas:cliente_list')
@@ -2887,3 +2926,182 @@ class GraficoTemplateView(TemplateView):
         })
 
         return context
+
+@permission_required('vendas.change_analisecreditocliente', raise_exception=True)
+def informar_imei_analise(request, pk):
+    """View para analista informar o IMEI na análise de crédito"""
+    # Verificar se o usuário é analista
+    if not request.user.groups.filter(name='ANALISTA').exists():
+        messages.error(request, 'Apenas analistas podem informar o IMEI.')
+        return redirect('vendas:cliente_list')
+    """View para informar o IMEI na análise de crédito antes de gerar a venda"""
+    analise = get_object_or_404(AnaliseCreditoCliente, pk=pk)
+    
+    # Verificar se o status está correto para informar IMEI
+    if analise.status_aplicativo != 'C':
+        messages.error(request, 'Só é possível informar IMEI após o vendedor confirmar a instalação do aplicativo.')
+        return redirect('vendas:cliente_list')
+    
+    if request.method == 'POST':
+        imei_informado = request.POST.get('imei_informado')
+        
+        if not imei_informado:
+            messages.error(request, 'IMEI é obrigatório.')
+            return redirect('vendas:cliente_update', pk=analise.cliente.pk)
+        
+        # Verificar se o IMEI já existe no estoque
+        loja = get_object_or_404(Loja, id=request.session.get('loja_id'))
+        estoque_imei_existente = EstoqueImei.objects.filter(
+            imei=imei_informado,
+            produto=analise.produto,
+            loja=loja,
+            vendido=False,
+            cancelado=False
+        ).first()
+        
+        if estoque_imei_existente:
+            # IMEI já existe no estoque
+            analise.imei = estoque_imei_existente
+            analise.imei_informado = imei_informado
+            analise.save()
+            messages.success(request, f'IMEI {imei_informado} associado com sucesso à análise.')
+        else:
+            # IMEI não existe, criar novo registro no estoque
+            try:
+                # Criar novo registro no EstoqueImei
+                novo_estoque_imei = EstoqueImei.objects.create(
+                    produto=analise.produto,
+                    imei=imei_informado,
+                    loja=loja,
+                    vendido=False,
+                    aplicativo_instalado=False,
+                    cancelado=False
+                )
+                novo_estoque_imei.save(user=request.user)
+                
+                # Associar à análise
+                analise.imei = novo_estoque_imei
+                analise.imei_informado = imei_informado
+                analise.save()
+                
+                messages.success(request, f'IMEI {imei_informado} criado e associado com sucesso à análise.')
+            except Exception as e:
+                messages.error(request, f'Erro ao criar IMEI: {str(e)}')
+                return redirect('vendas:cliente_update', pk=analise.cliente.pk)
+        
+        # Marcar aplicativo como instalado quando o analista informar o IMEI
+        analise.status_aplicativo = 'I'
+        analise.save()
+        messages.success(request, 'IMEI informado com sucesso! Venda liberada para geração pelo vendedor.')
+        
+        # Enviar notificação para analistas e administradores
+        from notifications.signals import notify
+        from notificacao.utils import enviar_ws_para_usuario
+        
+        cliente_nome = analise.cliente.nome if analise.cliente else "Cliente"
+        imei_info = f'Imei {imei_informado}' if imei_informado else 'IMEI não informado'
+        
+        verb = f'Analista informou IMEI para cliente {cliente_nome.capitalize()}.'
+        description = f'{imei_info} da loja {loja.nome.capitalize()}. Venda liberada para geração pelo vendedor.'
+        
+        # Notificar analistas e administradores
+        usuarios_para_notificar = list(
+            User.objects.filter(groups__name__in=['ADMINISTRADOR', 'ANALISTA']).exclude(id=request.user.id)
+        )
+        
+        for user in usuarios_para_notificar:
+            notify.send(
+                analise,
+                recipient=user,
+                verb=verb,
+                description=description,
+                target=analise.cliente,
+            )
+
+            # WebSocket
+            ultima_notificacao = user.notifications.unread().order_by('-timestamp').first()
+            if ultima_notificacao:
+                enviar_ws_para_usuario(
+                    usuario=user,
+                    instance=analise,
+                    notification_id=ultima_notificacao.id,
+                    verb=verb,
+                    description=description,
+                    target_url=analise.cliente.get_absolute_url(),
+                    type_notification='analise_credito_cliente',
+                )
+        
+        return redirect('vendas:cliente_list')
+    
+    # GET request - mostrar formulário
+    context = {
+        'analise': analise,
+        'cliente': analise.cliente,
+    }
+    return render(request, 'vendas/informar_imei_analise.html', context)
+
+class AnalistaConfirmInstalledView(PermissionRequiredMixin, View):
+    permission_required = 'vendas.change_status_analise'
+
+    def post(self, request, pk):
+        cliente = get_object_or_404(Cliente, pk=pk)
+        analise_credito = cliente.analise_credito
+        
+        # Verificar se o usuário é analista
+        if not request.user.groups.filter(name='ANALISTA').exists():
+            messages.error(request, 'Apenas analistas podem confirmar a instalação.')
+            return redirect('vendas:cliente_list')
+        
+        # Verificar se o IMEI está informado
+        if not analise_credito.imei:
+            messages.error(request, 'IMEI deve estar informado para confirmar a instalação.')
+            return redirect('vendas:cliente_list')
+        
+        # Verificar se o status está correto
+        if analise_credito.status_aplicativo != 'C':
+            messages.error(request, 'Status do aplicativo deve estar "Aguardando Confirmação" para confirmar a instalação.')
+            return redirect('vendas:cliente_list')
+        
+        # Marcar como instalado
+        analise_credito.status_aplicativo = 'I'
+        analise_credito.save()
+        
+        # Enviar notificação para vendedores
+        from notifications.signals import notify
+        from notificacao.utils import enviar_ws_para_usuario
+        
+        cliente_nome = cliente.nome if cliente else "Cliente"
+        loja = cliente.loja
+        
+        verb = f'Analista confirmou instalação do app para cliente {cliente_nome.capitalize()}.'
+        description = f'IMEI {analise_credito.imei.imei} da loja {loja.nome.capitalize()}. Venda liberada para geração.'
+        
+        # Notificar vendedores e outros analistas
+        usuarios_para_notificar = list(
+            User.objects.filter(groups__name__in=['VENDEDOR', 'ADMINISTRADOR', 'ANALISTA']).exclude(id=request.user.id)
+        )
+        
+        for user in usuarios_para_notificar:
+            notify.send(
+                analise_credito,
+                recipient=user,
+                verb=verb,
+                description=description,
+                target=cliente,
+            )
+
+            # WebSocket
+            ultima_notificacao = user.notifications.unread().order_by('-timestamp').first()
+            if ultima_notificacao:
+                enviar_ws_para_usuario(
+                    usuario=user,
+                    instance=analise_credito,
+                    notification_id=ultima_notificacao.id,
+                    verb=verb,
+                    description=description,
+                    target_url=cliente.get_absolute_url(),
+                    type_notification='analise_credito_cliente',
+                )
+        
+        messages.success(request, "✅ Instalação confirmada pelo analista! Venda liberada para geração.")
+        return redirect('vendas:cliente_list')

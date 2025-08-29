@@ -465,6 +465,7 @@ class AnaliseCreditoCliente(Base):
     ))
     produto = models.ForeignKey('produtos.Produto', on_delete=models.CASCADE, related_name='analises_credito')
     imei = models.ForeignKey('estoque.EstoqueImei', on_delete=models.CASCADE, related_name='analises_credito_imei', null=True, blank=True)
+    imei_informado = models.CharField(max_length=20, null=True, blank=True, verbose_name='IMEI Informado')
     venda = models.ForeignKey('vendas.Venda', on_delete=models.CASCADE, related_name='analises_credito_venda', null=True, blank=True)
     observacao = models.TextField(null=True, blank=True)
     

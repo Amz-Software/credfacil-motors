@@ -121,6 +121,18 @@ urlpatterns = [
         ClienteStatusAppUpdateView.as_view(),
         name='cliente_status_app_update'
     ),
+    
+    path(
+        'analise/<int:pk>/informar-imei/',
+        informar_imei_analise,
+        name='informar_imei_analise'
+    ),
+    
+    path(
+        'cliente/<int:pk>/analista-confirmar-instalacao/',
+        AnalistaConfirmInstalledView.as_view(),
+        name='analista_confirm_installed'
+    ),
 
     path('graficos/', GraficoTemplateView.as_view(), name='grafico'),
     

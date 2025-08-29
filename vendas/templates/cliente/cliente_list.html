@@ -94,6 +94,35 @@ Clientes
       </div>
       
       <div class="card-body">
+        <!-- Instruções do Fluxo -->
+        <div class="row mb-4">
+          <div class="col-12">
+            <div class="alert alert-info">
+              <h6 class="alert-heading">
+                <i class="bx bx-info-circle me-2"></i>Fluxo de Trabalho - Solicitações de Crédito
+              </h6>
+              <div class="row mt-3">
+                <div class="col-md-6">
+                  <h6 class="text-success">👨‍💻 Vendedor:</h6>
+                  <ol class="mb-0">
+                    <li><strong>Lê o QR Code</strong> para configurar o aparelho</li>
+                    <li><strong>Confirma a leitura</strong> do QR Code</li>
+                    <li><strong>Gera a venda</strong> após analista informar IMEI</li>
+                  </ol>
+                </div>
+                <div class="col-md-6">
+                  <h6 class="text-primary">👨‍💼 Analista:</h6>
+                  <ol class="mb-0">
+                    <li>Aprova a solicitação de crédito</li>
+                    <li><strong>Informa o IMEI</strong> após vendedor confirmar leitura</li>
+                    <li>Libera a venda para geração</li>
+                  </ol>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
         <!-- Filtros Avançados -->
         <div class="row mb-4">
           <div class="col-12">
@@ -159,7 +188,9 @@ Clientes
           <th scope="col">Loja</th>
           {% endif %}
           <th scope="col">Contato</th>
-          <th scope="col">Status Aplicativo</th>
+          <th scope="col">Status IMEI</th>
+          <th scope="col">Status App</th>
+          <th scope="col">Status do Fluxo</th>
           <th scope="col">Venda Realizada</th>
           <th scope="col">Ações</th>
           </tr>
@@ -190,7 +221,60 @@ Clientes
             {% endif %}
             <td>{{ cliente.telefone }}</td>
             <td>
-              {{ cliente.analise_credito.get_status_aplicativo_display }}
+              {% if cliente.analise_credito.imei %}
+                <span class="badge bg-label-success">
+                  <i class="bx bx-check me-1"></i>Informado
+                </span>
+                <br><small class="text-muted">{{ cliente.analise_credito.imei.imei }}</small>
+              {% else %}
+                <span class="badge bg-label-warning">
+                  <i class="bx bx-time me-1"></i>Pendente
+                </span>
+                <br><small class="text-muted">Aguardando analista</small>
+              {% endif %}
+            </td>
+            <td>
+              {% if cliente.analise_credito.status_aplicativo == 'P' %}
+                <span class="badge bg-label-secondary">
+                  <i class="bx bx-time me-1"></i>Pendente
+                </span>
+              {% elif cliente.analise_credito.status_aplicativo == 'C' %}
+                <span class="badge bg-label-warning">
+                  <i class="bx bx-qr me-1"></i>Aguardando Confirmação
+                </span>
+              {% elif cliente.analise_credito.status_aplicativo == 'I' %}
+                <span class="badge bg-label-success">
+                  <i class="bx bx-check-circle me-1"></i>Instalado
+                </span>
+              {% endif %}
+            </td>
+            
+            <td>
+              {% if cliente.analise_credito.venda_gerada %}
+                <span class="badge bg-label-success">
+                  <i class="bx bx-check-double me-1"></i>Finalizado
+                </span>
+              {% elif cliente.analise_credito.status_aplicativo == 'I' and cliente.analise_credito.imei %}
+                <span class="badge bg-label-info">
+                  <i class="bx bx-cart me-1"></i>Pronto para Venda
+                </span>
+              {% elif cliente.analise_credito.status_aplicativo == 'C' and not cliente.analise_credito.imei %}
+                <span class="badge bg-label-warning">
+                  <i class="bx bx-mobile me-1"></i>Aguardando IMEI
+                </span>
+              {% elif cliente.analise_credito.status_aplicativo == 'C' and cliente.analise_credito.imei %}
+                <span class="badge bg-label-primary">
+                  <i class="bx bx-check me-1"></i>Aguardando Confirmação
+                </span>
+              {% elif cliente.analise_credito.status_aplicativo == 'P' %}
+                <span class="badge bg-label-secondary">
+                  <i class="bx bx-qr me-1"></i>Aguardando QR Code
+                </span>
+              {% else %}
+                <span class="badge bg-label-danger">
+                  <i class="bx bx-time me-1"></i>Pendente
+                </span>
+              {% endif %}
             </td>
             
             <td>
@@ -206,67 +290,68 @@ Clientes
                   <i class="bx bx-dots-vertical-rounded"></i>
                 </button>
                 <div class="dropdown-menu">
+                  {# Botão Editar (sempre disponível) #}
                   {% if user|has_perm:"vendas.change_cliente" %}
-                  <a
-                    class="dropdown-item d-flex align-items-center"
-                    href="{% url 'vendas:cliente_update' cliente.pk %}"
-                  >
-                    <i class="bx bx-edit-alt me-1"></i>
-                    Editar
+                  <a href="{% url 'vendas:cliente_update' cliente.pk %}" class="dropdown-item">
+                    <i class="bx bx-edit-alt me-1"></i>Editar Cliente
                   </a>
                   {% endif %}
                   
-                  {% if cliente.analise_credito.status == 'A' and cliente.analise_credito.venda is None %} 
-                  {% if user|has_group:"ANALISTA" or user|has_group:"SUPERVISOR" %}
-                  <a
-                    class="dropdown-item d-flex align-items-center"
-                    href="{% url 'vendas:cliente_update_imei_telefone' cliente.pk %}">
-                    <i class="bx bx-edit me-1"></i>
-                    Editar IMEI/Telefone
-                  </a>
+                  {# Separador visual #}
+                  <div class="dropdown-divider"></div>
                   
+                  {# FLUXO DE TRABALHO - Etapa 1: Ler QR Code #}
+                  {% if cliente.analise_credito.status == 'A' and cliente.analise_credito.status_aplicativo == 'P' %}
+                  <button type="button" 
+                          class="dropdown-item" 
+                          data-bs-toggle="modal" 
+                          data-bs-target="#installModal{{ cliente.pk }}">
+                    <i class="bx bx-qr me-1"></i>📱 1. Ler QR Code (Vendedor)
+                  </button>
                   {% endif %}
+                  
+                  {# FLUXO DE TRABALHO - Etapa 2: Confirmar Leitura #}
+                  {% if cliente.analise_credito.status == 'A' and cliente.analise_credito.status_aplicativo == 'C' and not cliente.analise_credito.imei %}
+                  <form method="post" action="{% url 'vendas:cliente_confirm_installed' cliente.pk %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="dropdown-item">
+                      <i class="bx bx-check-circle me-1"></i>✅ 2. Confirmar Leitura QR (Vendedor)
+                    </button>
+                  </form>
                   {% endif %}
-            
-                  {# 1) Pendente: abre modal de instalação #}
-                  {% if cliente.analise_credito.status_aplicativo == 'P' and user|has_perm:"vendas.change_cliente" and cliente.analise_credito.status == 'A' %}
-                  <a class="dropdown-item"
-                     data-bs-toggle="modal"
-                     data-bs-target="#installModal{{ cliente.pk }}">
-                    <i class="bx bx-mobile-alt me-1"></i>Instalar Aplicativo
+                  
+                  {# FLUXO DE TRABALHO - Etapa 3: Informar IMEI #}
+                  {% if cliente.analise_credito.status == 'A' and not cliente.analise_credito.imei and cliente.analise_credito.status_aplicativo == 'C' and user|has_group:"ANALISTA" %}
+                  <a href="{% url 'vendas:informar_imei_analise' cliente.analise_credito.pk %}" class="dropdown-item">
+                    <i class="bx bx-mobile me-1"></i>📱 3. Informar IMEI (Analista)
                   </a>
                   {% endif %}
-            
-                  {# 2) Confirmação pendente: só informa #}
-                  {% if cliente.analise_credito.status_aplicativo == 'C' %}
-                  <span class="dropdown-item text-warning">
-                    <i class="bx bx-time me-1"></i>Confirmação Pendente
+                  
+                  {# FLUXO DE TRABALHO - Etapa 2.5: Analista Confirmar Instalação #}
+                  {% if cliente.analise_credito.status == 'A' and cliente.analise_credito.status_aplicativo == 'C' and cliente.analise_credito.imei and user|has_group:"ANALISTA" %}
+                  <form method="post" action="{% url 'vendas:analista_confirm_installed' cliente.pk %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="dropdown-item">
+                      <i class="bx bx-check-circle me-1"></i>✅ 2.5. Confirmar Instalação (Analista)
+                    </button>
+                  </form>
+                  {% endif %}
+                  
+                  {# FLUXO DE TRABALHO - Etapa 4: Gerar Venda #}
+                  {% if cliente.analise_credito.status_aplicativo == 'I' and cliente.analise_credito.imei and user|has_perm:"vendas.add_venda" and not cliente.analise_credito.venda_gerada %}
+                  <form method="post" action="{% url 'vendas:gerar_venda' cliente.pk %}" onsubmit="return confirm('Gerar venda para {{ cliente.nome }}?');" class="m-0">
+                    {% csrf_token %}
+                    <button type="submit" class="dropdown-item">
+                      <i class="bx bx-cart me-1"></i>🛒 4. Gerar Venda (Vendedor)
+                    </button>
+                  </form>
+                  {% endif %}
+                  
+                  {# Venda já gerada #}
+                  {% if cliente.analise_credito.venda_gerada %}
+                  <span class="dropdown-item text-success disabled">
+                    <i class="bx bx-check-double me-1"></i>✅ Venda já gerada
                   </span>
-            
-                  {# 2a) Analista pode confirmar instalação #}
-                  {% if user|has_perm:"vendas.change_status_analise" %}
-                  <form method="post"
-                        action="{% url 'vendas:cliente_confirm_installed' cliente.pk %}"
-                        class="d-inline">
-                    {% csrf_token %}
-                    <button type="submit" class="dropdown-item">
-                      <i class="bx bx-check-circle me-1"></i>Confirmar Instalação
-                    </button>
-                  </form>
-                  {% endif %}
-                  {% endif %}
-            
-                  {# 3) Instalado: mostrar botão de gerar venda #}
-                  {% if cliente.analise_credito.status_aplicativo == 'I' and user|has_perm:"vendas.add_venda" %}
-                  <form method="post"
-                        action="{% url 'vendas:gerar_venda' cliente.pk %}"
-                        onsubmit="return confirm('Gerar venda para {{ cliente.nome }}?');"
-                        class="m-0">
-                    {% csrf_token %}
-                    <button type="submit" class="dropdown-item">
-                      <i class="bx bx-cart me-1"></i>Gerar Venda
-                    </button>
-                  </form>
                   {% endif %}
             
                 </div>

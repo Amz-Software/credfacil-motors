@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+Informar IMEI - Análise de Crédito
+{% endblock title %}
+
+{% block content %}
+<div class="container-xxl mt-4">
+    <div class="card">
+        <div class="card-header">
+            <h4 class="mb-0">📱 Informar IMEI - Ação do Analista</h4>
+        </div>
+        <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <strong>Cliente:</strong> {{ cliente.nome }}
+                </div>
+                <div class="col-md-6">
+                    <strong>Produto:</strong> {{ analise.produto.nome }}
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <strong>Status:</strong> 
+                    <span class="badge 
+                        {% if analise.status == 'A' %}bg-success
+                        {% elif analise.status == 'R' %}bg-danger
+                        {% elif analise.status == 'C' %}bg-secondary
+                        {% else %}bg-warning text-dark{% endif %}">
+                        {{ analise.get_status_display }}
+                    </span>
+                </div>
+                <div class="col-md-6">
+                    <strong>Status App:</strong> 
+                    <span class="badge 
+                        {% if analise.status_aplicativo == 'I' %}bg-success
+                        {% elif analise.status_aplicativo == 'C' %}bg-warning text-dark
+                        {% else %}bg-secondary{% endif %}">
+                        {{ analise.get_status_aplicativo_display }}
+                    </span>
+                </div>
+            </div>
+
+            {% if analise.imei %}
+            <div class="alert alert-info">
+                <strong>IMEI já informado:</strong> {{ analise.imei.imei }}
+            </div>
+            {% endif %}
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="imei_informado" class="form-label">
+                        <strong>IMEI do Produto *</strong>
+                    </label>
+                    <input type="text" 
+                           class="form-control" 
+                           id="imei_informado" 
+                           name="imei_informado" 
+                           value="{{ analise.imei_informado|default:'' }}"
+                           placeholder="Digite o IMEI do produto"
+                           required>
+                    <div class="form-text">
+                        <strong>Analista:</strong> O vendedor já confirmou a leitura do QR Code. Agora informe o IMEI do produto. 
+                        Se o IMEI não existir no estoque, ele será criado automaticamente. 
+                        Após informar o IMEI, a venda será liberada para geração pelo vendedor.
+                    </div>
+                </div>
+                
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'vendas:cliente_update' cliente.pk %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Voltar
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Salvar IMEI
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock content %}

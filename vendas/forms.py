@@ -399,19 +399,10 @@ class AnaliseCreditoClienteForm(forms.ModelForm):
     )
     class Meta:
         model = AnaliseCreditoCliente
-        fields = ['produto','data_pagamento','numero_parcelas', 'imei', 'observacao']
+        fields = ['produto','data_pagamento','numero_parcelas', 'observacao']
         widgets = {
             'data_pagamento': forms.Select(attrs={'class': 'form-control'}),
             'numero_parcelas': forms.Select(attrs={'class': 'form-control'}),
-            'imei': EstoqueImeiSelectWidget(
-                max_results=10,
-                attrs={
-                    'class': 'form-control',
-                    'data-minimum-input-length': '0',
-                    'data-placeholder': 'Selecione um IMEI',
-                    'data-allow-clear': 'true',
-                }
-            ),
             'observacao': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }
 
@@ -433,7 +424,6 @@ class AnaliseCreditoClienteForm(forms.ModelForm):
             if user and not user.has_perm('vendas.change_status_analise') and not is_analista:
                 # if self.instance.status == 'EA':
                 self.fields['produto'].disabled = True
-                # self.fields['imei'].disabled = True
                 self.fields['numero_parcelas'].disabled = True
                 self.fields['data_pagamento'].disabled = True
             
@@ -444,7 +434,6 @@ class AnaliseCreditoClienteForm(forms.ModelForm):
                     self.fields['numero_parcelas'].disabled = True
                     self.fields['data_pagamento'].disabled = True
                     self.fields['observacao'].disabled = True
-                    self.fields['imei'].disabled = True
             # Se a venda não foi gerada, analistas podem editar tudo
             elif not venda_gerada and is_analista:
                 # Analistas podem editar tudo antes da venda ser gerada
@@ -452,7 +441,6 @@ class AnaliseCreditoClienteForm(forms.ModelForm):
                 self.fields['numero_parcelas'].disabled = False
                 self.fields['data_pagamento'].disabled = False
                 self.fields['observacao'].disabled = False
-                self.fields['imei'].disabled = False
 class AnaliseCreditoClienteImeiForm(forms.ModelForm):
     produto = ProdutoChoiceField(
         queryset=Produto.objects.all(),

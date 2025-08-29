@@ -948,13 +948,13 @@ def gerar_venda(request, cliente_id):
         )
         return redirect('vendas:cliente_list')
 
-    # Verifica caixa aberto
+    # Verifica caixa aberto para a loja da análise
     caixa = Caixa.objects.filter(
-        loja=loja,
+        loja=analise.loja,
         data_fechamento__isnull=True
     ).first()
     if not caixa:
-        messages.error(request, "❌ Nenhum caixa aberto encontrado.")
+        messages.error(request, f"❌ Nenhum caixa aberto encontrado para a loja {analise.loja.nome}.")
         return redirect('vendas:cliente_list')
 
     # Valida análise de crédito
@@ -978,10 +978,10 @@ def gerar_venda(request, cliente_id):
         messages.error(request, "❌ IMEI já vendido. Altere o IMEI para continuar.")
         return redirect('vendas:cliente_list')
 
-    estoque = Estoque.objects.filter(produto__nome=produto.nome)
+    estoque = Estoque.objects.filter(produto__nome=produto.nome, loja=analise.loja)
 
     if not estoque.exists():
-        messages.error(request, f"❌ Estoque não encontrado para o produto {produto.nome}.")
+        messages.error(request, f"❌ Estoque não encontrado para o produto {produto.nome} na loja {analise.loja.nome}.")
         return redirect('vendas:cliente_list')
     
     # verificar se em algum produto com o mesmo nome possui estoque
@@ -992,12 +992,12 @@ def gerar_venda(request, cliente_id):
             break
         
     if not estoque_produto:
-        messages.error(request, f"❌ Estoque insuficiente para o produto {produto.nome}.")
+        messages.error(request, f"❌ Estoque insuficiente para o produto {produto.nome} na loja {analise.loja.nome}.")
         return redirect('vendas:cliente_list')
 
     # Cria venda
     venda = Venda.objects.create(
-        loja=loja,
+        loja=analise.loja,  # Usa a loja da análise de crédito
         cliente=cliente,
         vendedor=request.user,
         caixa=caixa,
@@ -1029,7 +1029,7 @@ def gerar_venda(request, cliente_id):
 
     # Cria ProdutoVenda
     ProdutoVenda.objects.create(
-        loja=loja,
+        loja=analise.loja,  # Usa a loja da análise de crédito
         venda=venda,
         produto=produto,
         imei=imei.imei,
@@ -1049,7 +1049,7 @@ def gerar_venda(request, cliente_id):
     tipo_credfacil = TipoPagamento.objects.get(nome__iexact='CREDFACIL')
 
     pagamento_entrada = Pagamento.objects.create(
-        loja=loja,
+        loja=analise.loja,  # Usa a loja da análise de crédito
         venda=venda,
         tipo_pagamento=tipo_entrada,
         valor=produto.entrada_cliente,
@@ -1059,7 +1059,7 @@ def gerar_venda(request, cliente_id):
 
     data1 = calcular_data_primeira_parcela(analise.data_pagamento)
     pagamento_credfacil = Pagamento.objects.create(
-        loja=loja,
+        loja=analise.loja,  # Usa a loja da análise de crédito
         venda=venda,
         tipo_pagamento=tipo_credfacil,
         valor=valor_credfacil,
@@ -1068,8 +1068,8 @@ def gerar_venda(request, cliente_id):
         porcentagem_desconto=porcentagem_desconto
     )
 
-    criar_parcelas(pagamento_entrada, loja)
-    criar_parcelas(pagamento_credfacil, loja)
+    criar_parcelas(pagamento_entrada, analise.loja)
+    criar_parcelas(pagamento_credfacil, analise.loja)
 
     messages.success(request, f"✅ Venda criada para o cliente {cliente.nome}!")
     return redirect('vendas:cliente_list')

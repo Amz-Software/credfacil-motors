@@ -948,6 +948,21 @@ def gerar_venda(request, cliente_id):
         )
         return redirect('vendas:cliente_list')
 
+    # Valida análise de crédito
+    analise = cliente.analise_credito
+    if not analise or analise.status != 'A':
+        messages.error(request, "❌ Análise de crédito não aprovada para o cliente.")
+        return redirect('vendas:cliente_list')
+    if not analise.imei:
+        messages.error(request, "❌ Nenhum IMEI associado à análise de crédito. Informe o IMEI antes de gerar a venda.")
+        return redirect('vendas:cliente_update', pk=cliente.pk)
+    if analise.status_aplicativo != 'I':
+        messages.error(request, "❌ Aplicativo não está instalado. Confirme a instalação antes de gerar a venda.")
+        return redirect('vendas:cliente_update', pk=cliente.pk)
+    if analise.venda:
+        messages.error(request, "❌ Essa solicitação já foi convertida em venda.")
+        return redirect('vendas:cliente_list')
+
     # Verifica caixa aberto para a loja da análise
     caixa = Caixa.objects.filter(
         loja=analise.loja,
@@ -956,9 +971,6 @@ def gerar_venda(request, cliente_id):
     if not caixa:
         messages.error(request, f"❌ Nenhum caixa aberto encontrado para a loja {analise.loja.nome}.")
         return redirect('vendas:cliente_list')
-
-    # Valida análise de crédito
-    analise = cliente.analise_credito
     if not analise or analise.status != 'A':
         messages.error(request, "❌ Análise de crédito não aprovada para o cliente.")
         return redirect('vendas:cliente_list')

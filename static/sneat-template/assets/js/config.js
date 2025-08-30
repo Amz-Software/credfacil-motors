@@ -41,7 +41,14 @@ window.config = {
     bodyColor: '#a3a4cc',
     headingColor: '#cbcbe2',
     textMuted: '#7071a4',
-    borderColor: '#444564'
+    borderColor: '#444564',
+    // Cores personalizadas para melhor contraste
+    primary: '#696cff',
+    secondary: '#8592a3',
+    success: '#71dd37',
+    info: '#03c3ec',
+    warning: '#ffab00',
+    danger: '#ff3e1d'
   },
   enableMenuLocalStorage: true // Enable menu state with local storage support
 };

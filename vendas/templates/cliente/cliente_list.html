@@ -6,10 +6,60 @@ Clientes
 
 {% block extra_head %}
   <style>
+    /* Modo Dark Support */
+    :root {
+      --kpi-card-bg-approved: #e6f4ea;
+      --kpi-card-bg-rejected: #fdecea;
+      --kpi-card-bg-cancelled: #f0f0f0;
+      --kpi-card-bg-pending: #fff8e1;
+      --alert-info-bg: rgba(13, 110, 253, 0.1);
+      --alert-info-border: rgba(13, 110, 253, 0.2);
+      --alert-info-color: #0c63e4;
+    }
+
+    .dark-style {
+      --kpi-card-bg-approved: rgba(113, 221, 55, 0.15);
+      --kpi-card-bg-rejected: rgba(255, 62, 29, 0.15);
+      --kpi-card-bg-cancelled: rgba(161, 172, 184, 0.15);
+      --kpi-card-bg-pending: rgba(255, 171, 0, 0.15);
+      --alert-info-bg: rgba(3, 195, 236, 0.15);
+      --alert-info-border: rgba(3, 195, 236, 0.3);
+      --alert-info-color: #03c3ec;
+    }
+
     /* CSS personalizado para aumentar a largura do offcanvas */
     .offcanvas-large {
         width: 50%!important; /* Aumente para 100% ou qualquer largura desejada */
         max-width: none!important; /* Remove o limite padrão */
+    }
+
+    /* KPI Cards com melhor suporte ao dark mode */
+    .kpi-card {
+      transition: all 0.2s ease-in-out;
+    }
+
+    .kpi-card[data-status="A"] .card-body {
+      background-color: var(--kpi-card-bg-approved) !important;
+    }
+
+    .kpi-card[data-status="R"] .card-body {
+      background-color: var(--kpi-card-bg-rejected) !important;
+    }
+
+    .kpi-card[data-status="C"] .card-body {
+      background-color: var(--kpi-card-bg-cancelled) !important;
+    }
+
+    .kpi-card[data-status=""] .card-body,
+    .kpi-card[data-status="P"] .card-body {
+      background-color: var(--kpi-card-bg-pending) !important;
+    }
+
+    /* Alert melhorado para dark mode */
+    .alert-info {
+      background-color: var(--alert-info-bg) !important;
+      border: 1px solid var(--alert-info-border) !important;
+      color: var(--alert-info-color) !important;
     }
   </style>
 {% endblock extra_head %}
@@ -62,18 +112,7 @@ Clientes
               onmouseover="this.classList.add('shadow-lg')"
               onmouseout="this.classList.remove('shadow-lg')"
             >
-              <div class="card-body py-3 rounded" style="
-                background-color:
-                  {% if code == 'A' %}
-                    #e6f4ea
-                  {% elif code == 'R' %}
-                    #fdecea
-                  {% elif code == 'C' %}
-                    #f0f0f0
-                  {% else %}
-                    #fff8e1
-                  {% endif %}
-              ">
+              <div class="card-body py-3 rounded">
                 <div class="mb-2">
                   {% if code == 'A' %}
                     <i class="bi bi-check-circle-fill text-success fs-3"></i>

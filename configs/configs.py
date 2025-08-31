@@ -1,3 +1,3 @@
 command = '/usr/bin/gunicorn'
 pythonpath = '/app'
-bind = '0.0.0.0:8010'
+bind = '0.0.0.0:8020'

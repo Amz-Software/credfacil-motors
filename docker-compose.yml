@@ -10,10 +10,10 @@ services:
     command: >
       sh -c "python3 manage.py migrate &&
              python3 manage.py collectstatic --noinput &&
-             daphne -b 0.0.0.0 -p 8010 core.asgi:application"
+             daphne -b 0.0.0.0 -p 8020 core.asgi:application"
     restart: always
     ports:
-      - '8010:8010'
+      - '8020:8020'
     networks:
       - mynetwork
 
@@ -21,7 +21,7 @@ services:
     image: redis:latest
     restart: always
     ports:
-      - "6385:6379"
+      - "6386:6379"
     networks:
       - mynetwork
 

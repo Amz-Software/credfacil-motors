@@ -52,7 +52,7 @@ class ProdutoEntradaForm(forms.ModelForm):
 
         widgets = {
             'produto': forms.Select(attrs={'class': 'form-control'}),
-            'imei': forms.TextInput(attrs={'class': 'form-control'}),
+            'renavam': forms.TextInput(attrs={'class': 'form-control'}),
             # 'quantidade': forms.NumberInput(attrs={'class': 'form-control'}),
             # 'custo_unitario': forms.TextInput(attrs={'class': 'form-control money'}),
         }
@@ -65,7 +65,7 @@ class ProdutoEntradaForm(forms.ModelForm):
 class EstoqueImeiForm(forms.ModelForm):
     class Meta:
         model = EstoqueImei
-        fields = ['imei', 'vendido', 'produto']
+        fields = ['renavam', 'placa', 'vendido', 'produto']
         #deve ser possivel editar a venda?
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -76,7 +76,7 @@ class EstoqueImeiForm(forms.ModelForm):
 class EstoqueImeiEditForm(forms.ModelForm):
     class Meta:
         model = EstoqueImei
-        fields = ['imei',]
+        fields = ['renavam', 'placa']
     
 ProdutoEntradaFormSet = modelformset_factory(
     ProdutoEntrada,

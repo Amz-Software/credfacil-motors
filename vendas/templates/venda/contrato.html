@@ -162,8 +162,11 @@
     <p><strong>1. Objeto do Contrato</strong></p>
     <p>O Locador concorda em alugar ao Locatário o seguinte celular:</p>
     <ul>
-        <li>Modelo de Celular: {{aparelho.produto.nome|title}}</li>
-        <li>Número de Série/IMEI: {{imei}}</li>
+        <li>Modelo: {{aparelho.produto.nome|title}}</li>
+        <li>Número de Série/RENAVAM: {{renavam}}</li>
+        {% if placa_veiculo %}
+        <li>Placa do Veículo: {{placa_veiculo}}</li>
+        {% endif %}
     </ul>
     <p><strong>2. Período de Locação</strong></p>
     <p>O período de locação começará em {{primeira_parcela}} e terminará em {{ultima_parcela}}.</p>
@@ -186,7 +189,10 @@
     <p>O Locador concorda em alugar ao Locatário o seguinte celular:</p>
     <ul>
         <li>Modelo de Celular: {{aparelho.produto.nome|title}}</li>
-        <li>Número de Série/IMEI: {{imei}}</li>
+        <li>Número de Série/RENAVAM: {{renavam}}</li>
+        {% if placa_veiculo %}
+        <li>Placa do Veículo: {{placa_veiculo}}</li>
+        {% endif %}
     </ul>
     <p><strong>2. Período de Locação</strong></p>
     <p>O período de locação começará em {{primeira_parcela}} e terminará em {{ultima_parcela}}.</p>

@@ -165,9 +165,9 @@ class Loja(Base):
     gerentes = models.ManyToManyField('accounts.User', related_name='lojas_gerenciadas')
     chave_pix = models.CharField(max_length=100, null=True, blank=True)
     credfacil = models.BooleanField(default=False)
-    porcentagem_desconto_4 = models.DecimalField(max_digits=5, decimal_places=2, default=25.00)
-    porcentagem_desconto_6 = models.DecimalField(max_digits=5, decimal_places=2, default=25.00)
-    porcentagem_desconto_8 = models.DecimalField(max_digits=5, decimal_places=2, default=25.00)
+    porcentagem_desconto_10 = models.DecimalField(max_digits=5, decimal_places=2, default=25.00)
+    porcentagem_desconto_12 = models.DecimalField(max_digits=5, decimal_places=2, default=25.00)
+    porcentagem_desconto_14 = models.DecimalField(max_digits=5, decimal_places=2, default=25.00)
     qr_code_aplicativo = models.ImageField(upload_to='qr_codes_aplicativo/', null=True, blank=True)
     codigo_aplicativo = models.CharField(max_length=100, null=True, blank=True)
     objects = LojaQuerySet.as_manager()
@@ -442,8 +442,8 @@ class AnaliseCreditoCliente(Base):
     ]
     STATUS_APP_CHOICES = [
         ('P', 'Pendente'),
-        ('C', 'Confirmação pendente'),
-        ('I', 'Instalado'),
+        ('A', 'Aguardando RENAVAM e Placa'),
+        ('L', 'Liberado para Venda'),
     ]
     cliente = models.OneToOneField('vendas.Cliente', on_delete=models.CASCADE, related_name='analise_credito')
     data_analise = models.DateTimeField(auto_now_add=True)
@@ -459,13 +459,14 @@ class AnaliseCreditoCliente(Base):
         ('20', 'Dia 20'),
     ), verbose_name='Data de pagamento')
     numero_parcelas = models.CharField(max_length=20, choices=(
-        ('4', '4x'),
-        ('6', '6x'),
-        ('8', '8x'),
+        ('10', '10x'),
+        ('12', '12x'),
+        ('14', '14x'),
     ))
     produto = models.ForeignKey('produtos.Produto', on_delete=models.CASCADE, related_name='analises_credito')
-    imei = models.ForeignKey('estoque.EstoqueImei', on_delete=models.CASCADE, related_name='analises_credito_imei', null=True, blank=True)
-    imei_informado = models.CharField(max_length=20, null=True, blank=True, verbose_name='IMEI Informado')
+    renavam = models.ForeignKey('estoque.EstoqueImei', on_delete=models.CASCADE, related_name='analises_credito_renavam', null=True, blank=True, verbose_name='RENAVAM')
+    renavam_informado = models.CharField(max_length=20, null=True, blank=True, verbose_name='RENAVAM Informado')
+    placa_veiculo = models.CharField(max_length=10, null=True, blank=True, verbose_name='Placa do Veículo')
     venda = models.ForeignKey('vendas.Venda', on_delete=models.CASCADE, related_name='analises_credito_venda', null=True, blank=True)
     observacao = models.TextField(null=True, blank=True)
     
@@ -551,6 +552,9 @@ class ComprovantesCliente(Base):
     
     foto_cliente = models.FileField(upload_to='comprovantes_clientes', null=True, blank=True)
     
+    foto_cnh = models.FileField(upload_to='comprovantes_clientes', null=True, blank=True, verbose_name='Foto da CNH')
+    foto_cnh_analise = models.BooleanField(default=False, verbose_name='Análise da Foto da CNH')
+    
     class Meta:
         verbose_name_plural = 'Comprovantes Clientes'
 
@@ -559,7 +563,7 @@ class ComprovantesCliente(Base):
 
 class ProdutoVenda(Base):
     produto = models.ForeignKey('produtos.Produto', on_delete=models.CASCADE, related_name='produto_vendas')
-    imei = models.CharField(max_length=100, null=True, blank=True)
+    renavam = models.CharField(max_length=100, null=True, blank=True)
     valor_unitario = models.DecimalField(max_digits=10, decimal_places=2)
     quantidade = models.PositiveIntegerField()
     valor_desconto = models.DecimalField(max_digits=10, decimal_places=2, default=0)
@@ -569,17 +573,17 @@ class ProdutoVenda(Base):
         from django.core.exceptions import ValidationError
         super().clean()
         
-        # Validar se o IMEI não está sendo usado em outra venda
-        if self.imei:
+        # Validar se o RENAVAM não está sendo usado em outra venda
+        if self.renavam:
             produto_venda_existente = ProdutoVenda.objects.filter(
-                imei=self.imei
+                renavam=self.renavam
             ).exclude(pk=self.pk).first()
             
             if produto_venda_existente:
                 # Em vez de bloquear, apenas registrar um warning
                 import logging
                 logger = logging.getLogger(__name__)
-                logger.warning(f'IMEI {self.imei} já está sendo usado na venda {produto_venda_existente.venda.id}')
+                logger.warning(f'RENAVAM {self.renavam} já está sendo usado na venda {produto_venda_existente.venda.id}')
     
     def save(self, *args, **kwargs):
         try:
@@ -588,7 +592,7 @@ class ProdutoVenda(Base):
             # Log do erro mas não interromper a operação
             import logging
             logger = logging.getLogger(__name__)
-            logger.warning(f'Erro na validação do IMEI {self.imei}: {str(e)}')
+            logger.warning(f'Erro na validação do RENAVAM {self.renavam}: {str(e)}')
         
         super().save(*args, **kwargs)
     

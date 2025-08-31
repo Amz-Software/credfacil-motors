@@ -123,9 +123,9 @@ urlpatterns = [
     ),
     
     path(
-        'analise/<int:pk>/informar-imei/',
-        informar_imei_analise,
-        name='informar_imei_analise'
+        'analise/<int:pk>/informar-renavam-placa/',
+        informar_renavam_placa_analise,
+        name='informar_renavam_placa_analise'
     ),
     
     path(

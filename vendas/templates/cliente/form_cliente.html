@@ -603,7 +603,7 @@
                       <strong>IMEI informado:</strong> {{ cliente.analise_credito.imei.imei }}
                     </div>
                     {% if user|has_perm:"vendas.change_analisecreditocliente" %}
-                    <a href="{% url 'vendas:informar_imei_analise' cliente.analise_credito.pk %}" class="btn btn-sm btn-outline-primary">
+                    <a href="{% url 'vendas:informar_renavam_placa_analise' cliente.analise_credito.pk %}" class="btn btn-sm btn-outline-primary">
                       <i class="bi bi-pencil"></i> Alterar
                     </a>
                     {% endif %}
@@ -615,8 +615,8 @@
                       <strong>IMEI não informado.</strong> 
                     </div>
                     {% if user|has_perm:"vendas.change_analisecreditocliente" %}
-                    <a href="{% url 'vendas:informar_imei_analise' cliente.analise_credito.pk %}" class="btn btn-sm btn-primary">
-                      <i class="bi bi-plus-circle"></i> Informar IMEI
+                    <a href="{% url 'vendas:informar_renavam_placa_analise' cliente.analise_credito.pk %}" class="btn btn-sm btn-primary">
+                                              <i class="bi bi-plus-circle"></i> Informar RENAVAM e Placa
                     </a>
                     {% endif %}
                   </div>
@@ -1107,12 +1107,12 @@
         // busca dados do produto
         const p = produtos.find(x => x.id == prodId) || {};
         const entrada = p.entrada  || 0;
-        const valor4  = p.valor4   || 0;
-        const valor6  = p.valor6   || 0;
-        const valor8  = p.valor8   || 0;
+        const valor10 = p.valor10  || 0;
+        const valor12 = p.valor12  || 0;
+        const valor14 = p.valor14  || 0;
 
         // escolhe total conforme parcelas
-        const total = { '4': valor4, '6': valor6, '8': valor8 }[np] || 0;
+        const total = { '10': valor10, '12': valor12, '14': valor14 }[np] || 0;
         const parcela = (np && total)
           ? total / parseInt(np, 10)
           : 0;

@@ -441,7 +441,7 @@ class AnaliseCreditoClienteForm(forms.ModelForm):
                 self.fields['numero_parcelas'].disabled = False
                 self.fields['data_pagamento'].disabled = False
                 self.fields['observacao'].disabled = False
-class AnaliseCreditoClienteImeiForm(forms.ModelForm):
+class AnaliseCreditoClienteRenavamForm(forms.ModelForm):
     produto = ProdutoChoiceField(
         queryset=Produto.objects.all(),
         widget=Select2Widget(attrs={'class': 'form-control'}),
@@ -449,16 +449,16 @@ class AnaliseCreditoClienteImeiForm(forms.ModelForm):
     )
     class Meta:
         model = AnaliseCreditoCliente
-        fields = ['produto','data_pagamento','numero_parcelas', 'imei', 'observacao']
+        fields = ['produto','data_pagamento','numero_parcelas', 'renavam', 'observacao']
         widgets = {
             'data_pagamento': forms.Select(attrs={'class': 'form-control'}),
             'numero_parcelas': forms.Select(attrs={'class': 'form-control'}),
-            'imei': EstoqueImeiSelectWidget(
+            'renavam': EstoqueImeiSelectWidget(
                 max_results=10,
                 attrs={
                     'class': 'form-control',
                     'data-minimum-input-length': '0',
-                    'data-placeholder': 'Selecione um IMEI',
+                    'data-placeholder': 'Selecione um RENAVAM',
                     'data-allow-clear': 'true',
                 }
             ),
@@ -473,10 +473,10 @@ class AnaliseCreditoClienteImeiForm(forms.ModelForm):
         self.fields['observacao'].required = True
         self.fields['observacao'].widget.attrs['required'] = 'required'
 
-        # Desabilita todos os campos, exceto 'imei'
+        # Desabilita todos os campos, exceto 'renavam'
         for field_name in ['produto', 'data_pagamento', 'numero_parcelas', 'observacao']:
             self.fields[field_name].disabled = True
-        # 'imei' permanece habilitado
+        # 'renavam' permanece habilitado
 
 
 
@@ -500,6 +500,8 @@ class ComprovantesClienteForm(forms.ModelForm):
             'consulta_serasa': forms.FileInput(attrs={'class': 'form-control'}),
             'consulta_serasa_analise': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'foto_cliente': forms.FileInput(attrs={'class': 'form-control'}),
+            'foto_cnh': forms.FileInput(attrs={'class': 'form-control'}),
+            'foto_cnh_analise': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
         labels = {
             'documento_identificacao_frente': 'Documento de Identificação Frente*',
@@ -512,6 +514,8 @@ class ComprovantesClienteForm(forms.ModelForm):
             'consulta_serasa_analise': 'Análise Consulta Serasa',
             'restricao': 'Restrição',
             'foto_cliente': 'Foto do Cliente*',
+            'foto_cnh': 'Foto da CNH*',
+            'foto_cnh_analise': 'Análise da Foto da CNH',
         }
 
     def __init__(self, *args, **kwargs):
@@ -522,6 +526,7 @@ class ComprovantesClienteForm(forms.ModelForm):
             self.fields.pop('consulta_serasa', None)
             self.fields.pop('consulta_serasa_analise', None)
             self.fields.pop('restricao', None)
+            self.fields.pop('foto_cnh_analise', None)
 
         # 1) Se não tiver permissão, remove todos os campos que terminam em "_analise"
         if not (user and user.has_perm('vendas.view_all_analise_credito')):
@@ -535,6 +540,7 @@ class ComprovantesClienteForm(forms.ModelForm):
             'documento_identificacao_verso_analise',
             'comprovante_residencia_analise',
             'consulta_serasa_analise',
+            'foto_cnh_analise',
             'restricao',
         ):
             if analise_field in self.fields:
@@ -547,6 +553,7 @@ class ComprovantesClienteForm(forms.ModelForm):
             'documento_identificacao_frente_analise',
             'documento_identificacao_verso_analise',
             'comprovante_residencia_analise',
+            'foto_cnh_analise',
         }
         for name, field in self.fields.items():
             if name not in exceptions:
@@ -558,6 +565,7 @@ class ComprovantesClienteForm(forms.ModelForm):
                 self.fields['documento_identificacao_verso'].disabled = True
                 self.fields['comprovante_residencia'].disabled = True
                 self.fields['foto_cliente'].disabled = True
+                self.fields['foto_cnh'].disabled = True
             
             if user and not user.has_perm('vendas.can_edit_finished_sale'):
                 if self.instance.cliente.analise_credito and  not self.instance.cliente.analise_credito.status == 'EA':
@@ -566,6 +574,7 @@ class ComprovantesClienteForm(forms.ModelForm):
                     self.fields['comprovante_residencia'].disabled = True
                     self.fields['consulta_serasa'].disabled = True
                     self.fields['foto_cliente'].disabled = True
+                    self.fields['foto_cnh'].disabled = True
                     
                     
 class ComprovantesClienteEditForm(forms.ModelForm):
@@ -588,6 +597,8 @@ class ComprovantesClienteEditForm(forms.ModelForm):
             'consulta_serasa': forms.FileInput(attrs={'class': 'form-control'}),
             'consulta_serasa_analise': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'foto_cliente': forms.FileInput(attrs={'class': 'form-control'}),
+            'foto_cnh': forms.FileInput(attrs={'class': 'form-control'}),
+            'foto_cnh_analise': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
         labels = {
             'documento_identificacao_frente': 'Documento de Identificação Frente*',
@@ -600,6 +611,8 @@ class ComprovantesClienteEditForm(forms.ModelForm):
             'consulta_serasa_analise': 'Análise Consulta Serasa',
             'restricao': 'Restrição',
             'foto_cliente': 'Foto do Cliente*',
+            'foto_cnh': 'Foto da CNH*',
+            'foto_cnh_analise': 'Análise da Foto da CNH',
         }
 
     def __init__(self, *args, **kwargs):
@@ -623,6 +636,7 @@ class ComprovantesClienteEditForm(forms.ModelForm):
             'documento_identificacao_verso_analise',
             'comprovante_residencia_analise',
             'consulta_serasa_analise',
+            'foto_cnh_analise',
             'restricao',
         ):
             if analise_field in self.fields:
@@ -635,6 +649,7 @@ class ComprovantesClienteEditForm(forms.ModelForm):
             'documento_identificacao_frente_analise',
             'documento_identificacao_verso_analise',
             'comprovante_residencia_analise',
+            'foto_cnh_analise',
         }
         for name, field in self.fields.items():
             if name not in exceptions:
@@ -646,6 +661,7 @@ class ComprovantesClienteEditForm(forms.ModelForm):
                 self.fields['documento_identificacao_verso'].disabled = True
                 self.fields['comprovante_residencia'].disabled = True
                 self.fields['foto_cliente'].disabled = True
+                self.fields['foto_cnh'].disabled = True
             
             if user and not user.has_perm('vendas.can_edit_finished_sale'):
                 if self.instance.cliente.analise_credito and not self.instance.cliente.analise_credito.status == 'EA':
@@ -654,6 +670,7 @@ class ComprovantesClienteEditForm(forms.ModelForm):
                     self.fields['comprovante_residencia'].disabled = True
                     self.fields['consulta_serasa'].disabled = True
                     self.fields['foto_cliente'].disabled = True
+                    self.fields['foto_cnh'].disabled = True
                     
                     
 class EnderecoForm(forms.ModelForm):
@@ -979,14 +996,14 @@ class LojaForm(forms.ModelForm):
         if user_loja_id:
             self.fields['loja'].initial = Loja.objects.get(id=user_loja_id)
 
-        if self.instance and self.instance.porcentagem_desconto_4 is not None:
-            self.initial['porcentagem_desconto_4'] = str(self.instance.porcentagem_desconto_4).replace(',', '.')
+        if self.instance and self.instance.porcentagem_desconto_10 is not None:
+            self.initial['porcentagem_desconto_10'] = str(self.instance.porcentagem_desconto_10).replace(',', '.')
             
-        if self.instance and self.instance.porcentagem_desconto_6 is not None:
-            self.initial['porcentagem_desconto_6'] = str(self.instance.porcentagem_desconto_6).replace(',', '.')
+        if self.instance and self.instance.porcentagem_desconto_12 is not None:
+            self.initial['porcentagem_desconto_12'] = str(self.instance.porcentagem_desconto_12).replace(',', '.')
             
-        if self.instance and self.instance.porcentagem_desconto_8 is not None:
-            self.initial['porcentagem_desconto_8'] = str(self.instance.porcentagem_desconto_8).replace(',', '.')
+        if self.instance and self.instance.porcentagem_desconto_14 is not None:
+            self.initial['porcentagem_desconto_14'] = str(self.instance.porcentagem_desconto_14).replace(',', '.')
 
 
     def save(self, commit=True):

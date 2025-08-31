@@ -10,7 +10,7 @@ Estoque
         <div class="col-12">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h4 class="card-title">Estoque IMEI</h4>
+                    <h4 class="card-title">Estoque RENAVAM</h4>
                     <div>
                         <form action="" method="get" class="d-inline-block me-2" id="searchForm">
                             <div class="input-group">
@@ -48,7 +48,7 @@ Estoque
                             <thead>
                                 <tr>
                                     <th scope="col">Nome</th>
-                                    <th scope="col" class="text-center">IMEI</th>
+                                    <th scope="col" class="text-center">RENAVAM</th>
                                     <th scope="col" class="text-end">Vendido</th>
                                     <th scope="col" class="text-end">App Instalado</th>
                                     <th scope="col" class="text-end">Cancelado</th>
@@ -69,7 +69,7 @@ Estoque
                                 {% for produto in produtos %}
                                 <tr>
                                     <td>{{ produto.produto|title }}</td>
-                                    <td class="text-center">{{ produto.imei }}</td>
+                                    <td class="text-center">{{ produto.renavam }}</td>
                                     <td class="text-end">
                                         {% if produto.vendido %}
                                         <i class="bx bx-check-circle text-success"></i>
@@ -133,9 +133,9 @@ Estoque
                                                 {% endif %}
                                                 {% if user|has_perm:"estoque.change_estoqueimei" %}
                                                 <a class="dropdown-item"
-                                                    href="{% url 'estoque:cancelar_imei' produto.pk %}">
+                                                    href="{% url 'estoque:cancelar_renavam' produto.pk %}">
                                                     <i class="bx bx-x-circle me-1"></i>
-                                                    Cancelar IMEI
+                                                    Cancelar RENAVAM
                                                 </a>
                                                 {% endif %}
                                             </div>

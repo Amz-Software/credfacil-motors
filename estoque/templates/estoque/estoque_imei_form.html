@@ -14,7 +14,7 @@ Adicionar Entrada
                 <div class="card-body">
                     <form method="post">
                         {% csrf_token %}
-                        {{ form.imei|as_crispy_field }}
+                        {{ form.renavam|as_crispy_field }}
                         {{ form.produto|as_crispy_field }}
                         
                         <div class="form-group">

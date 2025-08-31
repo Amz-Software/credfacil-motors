@@ -46,33 +46,33 @@ Criar Produto
                       {{ form.entrada_cliente }}
                     </div>
 
-                    <!-- Campo Valor 8 Vezes -->
+                    <!-- Campo Valor 14 Vezes -->
                     <div class="form-group mb-3">
-                      {{ form.valor_8_vezes.label_tag }}
-                      {{ form.valor_8_vezes }}
+                      {{ form.valor_14_vezes.label_tag }}
+                      {{ form.valor_14_vezes }}
 
-                      <!-- Campo calculado 8 vezes -->
-                      <label for="id_valor_8_vezes_calculado" class="mt-2">Valor da parcela 8x</label>
-                      <input type="text" id="id_valor_8_vezes_calculado" class="form-control" readonly>
+                      <!-- Campo calculado 14 vezes -->
+                      <label for="id_valor_14_vezes_calculado" class="mt-2">Valor da parcela 14x</label>
+                      <input type="text" id="id_valor_14_vezes_calculado" class="form-control" readonly>
                     </div>
-                    <!-- Campo Valor 6 Vezes -->
+                    <!-- Campo Valor 12 Vezes -->
                     <div class="form-group mb-3">
-                      {{ form.valor_6_vezes.label_tag }}
-                      {{ form.valor_6_vezes }}
+                      {{ form.valor_12_vezes.label_tag }}
+                      {{ form.valor_12_vezes }}
 
-                      <!-- Campo calculado 6 vezes -->
-                      <label for="id_valor_6_vezes_calculado" class="mt-2">Valor da parcela 6x</label>
-                      <input type="text" id="id_valor_6_vezes_calculado" class="form-control" readonly>
+                      <!-- Campo calculado 12 vezes -->
+                      <label for="id_valor_12_vezes_calculado" class="mt-2">Valor da parcela 12x</label>
+                      <input type="text" id="id_valor_12_vezes_calculado" class="form-control" readonly>
                     </div>
 
-                    <!-- Campo Valor 4 Vezes -->
+                    <!-- Campo Valor 10 Vezes -->
                     <div class="form-group mb-3">
-                      {{ form.valor_4_vezes.label_tag }}
-                      {{ form.valor_4_vezes }}
+                      {{ form.valor_10_vezes.label_tag }}
+                      {{ form.valor_10_vezes }}
 
-                      <!-- Campo calculado 4 vezes -->
-                      <label for="id_valor_4_vezes_calculado" class="mt-2">Valor da parcela 4x</label>
-                      <input type="text" id="id_valor_4_vezes_calculado" class="form-control" readonly>
+                      <!-- Campo calculado 10 vezes -->
+                      <label for="id_valor_10_vezes_calculado" class="mt-2">Valor da parcela 10x</label>
+                      <input type="text" id="id_valor_10_vezes_calculado" class="form-control" readonly>
                     </div>
 
                     <!-- Campo Tipo -->
@@ -121,23 +121,23 @@ Criar Produto
 
 <script>
 function updateValues() {
-    const valor6Vezes = parseFloat(document.getElementById('id_valor_6_vezes').value) || 0;
-    const valor4Vezes = parseFloat(document.getElementById('id_valor_4_vezes').value) || 0;
-    const valor8Vezes = parseFloat(document.getElementById('id_valor_8_vezes').value) || 0;
+    const valor14Vezes = parseFloat(document.getElementById('id_valor_14_vezes').value) || 0;
+    const valor12Vezes = parseFloat(document.getElementById('id_valor_12_vezes').value) || 0;
+    const valor10Vezes = parseFloat(document.getElementById('id_valor_10_vezes').value) || 0;
     
-    document.getElementById('id_valor_6_vezes_calculado').value = (valor6Vezes / 6).toFixed(2);
-    document.getElementById('id_valor_4_vezes_calculado').value = (valor4Vezes / 4).toFixed(2);
-    document.getElementById('id_valor_8_vezes_calculado').value = (valor8Vezes / 8).toFixed(2);
+    document.getElementById('id_valor_14_vezes_calculado').value = (valor14Vezes / 14).toFixed(2);
+    document.getElementById('id_valor_12_vezes_calculado').value = (valor12Vezes / 12).toFixed(2);
+    document.getElementById('id_valor_10_vezes_calculado').value = (valor10Vezes / 10).toFixed(2);
 }
 
 // Ativa o update automático ao digitar
 document.addEventListener('DOMContentLoaded', function() {
-    const campo6 = document.getElementById('id_valor_6_vezes');
-    const campo4 = document.getElementById('id_valor_4_vezes');
-    const campo8 = document.getElementById('id_valor_8_vezes');
-    if (campo6) campo6.addEventListener('input', updateValues);
-    if (campo4) campo4.addEventListener('input', updateValues);
-    if (campo8) campo8.addEventListener('input', updateValues);
+    const campo14 = document.getElementById('id_valor_14_vezes');
+    const campo12 = document.getElementById('id_valor_12_vezes');
+    const campo10 = document.getElementById('id_valor_10_vezes');
+    if (campo14) campo14.addEventListener('input', updateValues);
+    if (campo12) campo12.addEventListener('input', updateValues);
+    if (campo10) campo10.addEventListener('input', updateValues);
 });
 </script>
 

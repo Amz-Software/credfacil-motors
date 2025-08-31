@@ -39,7 +39,7 @@ from vendas.forms import (
     ComprovantesClienteForm, ContatoAdicionalEditForm, ContatoAdicionalForm, FormaPagamentoEditFormSet,
     InformacaoPessoalEditForm, InformacaoPessoalForm, LojaForm, ProdutoVendaEditFormSet, RelatorioSolicitacoesForm,
     RelatorioVendasForm, VendaForm, ProdutoVendaFormSet, FormaPagamentoFormSet, LancamentoForm,
-    LancamentoCaixaTotalForm, ClienteTelefoneForm, AnaliseCreditoClienteImeiForm
+    LancamentoCaixaTotalForm, ClienteTelefoneForm
 )
 from .models import (
     AnaliseCreditoCliente, Caixa, Cliente, Loja, Pagamento, Parcela, ProdutoVenda, TipoPagamento, Venda,
@@ -502,14 +502,14 @@ class ClienteCreateView(PermissionRequiredMixin, CreateView):
         context['form_comprovantes'] = kwargs.get('form_comprovantes', ComprovantesClienteForm(user=self.request.user))
         context['form_analise_credito'] = kwargs.get('form_analise_credito', AnaliseCreditoClienteForm(user=self.request.user))
         
-        produtos = Produto.objects.all().values('id', 'nome', 'valor_4_vezes', 'valor_6_vezes', 'valor_8_vezes', 'entrada_cliente')
+        produtos = Produto.objects.all().values('id', 'nome', 'valor_10_vezes', 'valor_12_vezes', 'valor_14_vezes', 'entrada_cliente')
         produtos_list = [
             {
                 'id': p['id'],
                 'nome': p['nome'],
-                'valor4': float(p['valor_4_vezes']),
-                'valor6': float(p['valor_6_vezes']),
-                'valor8': float(p['valor_8_vezes']),
+                'valor10': float(p['valor_10_vezes']),
+                'valor12': float(p['valor_12_vezes']),
+                'valor14': float(p['valor_14_vezes']),
                 'entrada': float(p['entrada_cliente']),
             }
             for p in produtos
@@ -724,7 +724,7 @@ class ClienteUpdateImeiTelefoneView(PermissionRequiredMixin, UpdateView):
         context['form_adicional'] = kwargs.get('form_adicional', ContatoAdicionalEditForm(instance=cliente.contato_adicional, user=self.request.user))
         context['form_informacao'] = kwargs.get('form_informacao', InformacaoPessoalEditForm(instance=cliente.informacao_pessoal, user=self.request.user))
         context['form_comprovantes'] = kwargs.get('form_comprovantes', ComprovantesClienteEditForm(instance=cliente.comprovantes, user=self.request.user))
-        context['form_analise_credito'] = kwargs.get('form_analise_credito', AnaliseCreditoClienteImeiForm(instance=cliente.analise_credito, user=self.request.user))
+        context['form_analise_credito'] = kwargs.get('form_analise_credito', AnaliseCreditoClienteForm(instance=cliente.analise_credito, user=self.request.user))
         context['cliente_id'] = cliente.id
         context['analise_credito'] = cliente.analise_credito
         context['status_app_choices'] = AnaliseCreditoCliente.STATUS_APP_CHOICES
@@ -736,7 +736,7 @@ class ClienteUpdateImeiTelefoneView(PermissionRequiredMixin, UpdateView):
         user = request.user
 
         form_cliente = ClienteTelefoneForm(request.POST, instance=self.object, user=user)
-        form_analise_credito = AnaliseCreditoClienteImeiForm(request.POST, instance=self.object.analise_credito, user=request.user)
+        form_analise_credito = AnaliseCreditoClienteForm(request.POST, instance=self.object.analise_credito, user=request.user)
 
         if form_cliente.is_valid() and form_analise_credito.is_valid():
             form_analise_credito.save()
@@ -953,11 +953,11 @@ def gerar_venda(request, cliente_id):
     if not analise or analise.status != 'A':
         messages.error(request, "❌ Análise de crédito não aprovada para o cliente.")
         return redirect('vendas:cliente_list')
-    if not analise.imei:
-        messages.error(request, "❌ Nenhum IMEI associado à análise de crédito. Informe o IMEI antes de gerar a venda.")
+    if not analise.renavam:
+        messages.error(request, "❌ Nenhum RENAVAM associado à análise de crédito. Informe o RENAVAM antes de gerar a venda.")
         return redirect('vendas:cliente_update', pk=cliente.pk)
-    if analise.status_aplicativo != 'I':
-        messages.error(request, "❌ Aplicativo não está instalado. Confirme a instalação antes de gerar a venda.")
+    if analise.status_aplicativo != 'L':
+        messages.error(request, "❌ RENAVAM e placa não foram informados pelo analista. Aguarde o analista informar esses dados.")
         return redirect('vendas:cliente_update', pk=cliente.pk)
     if analise.venda:
         messages.error(request, "❌ Essa solicitação já foi convertida em venda.")
@@ -974,20 +974,20 @@ def gerar_venda(request, cliente_id):
     if not analise or analise.status != 'A':
         messages.error(request, "❌ Análise de crédito não aprovada para o cliente.")
         return redirect('vendas:cliente_list')
-    if not analise.imei:
-        messages.error(request, "❌ Nenhum IMEI associado à análise de crédito. Informe o IMEI antes de gerar a venda.")
+    if not analise.renavam:
+        messages.error(request, "❌ Nenhum RENAVAM associado à análise de crédito. Informe o RENAVAM antes de gerar a venda.")
         return redirect('vendas:cliente_update', pk=cliente.pk)
-    if analise.status_aplicativo != 'I':
-        messages.error(request, "❌ Aplicativo não está instalado. Confirme a instalação antes de gerar a venda.")
+    if analise.status_aplicativo != 'L':
+        messages.error(request, "❌ RENAVAM e placa não foram informados pelo analista. Aguarde o analista informar esses dados.")
         return redirect('vendas:cliente_update', pk=cliente.pk)
     if analise.venda:
         messages.error(request, "❌ Essa solicitação já foi convertida em venda.")
         return redirect('vendas:cliente_list')
 
     produto = analise.produto
-    imei = analise.imei
-    if imei.vendido:
-        messages.error(request, "❌ IMEI já vendido. Altere o IMEI para continuar.")
+    renavam = analise.renavam
+    if renavam.vendido:
+        messages.error(request, "❌ RENAVAM já vendido. Altere o RENAVAM para continuar.")
         return redirect('vendas:cliente_list')
 
     estoque = Estoque.objects.filter(produto__nome=produto.nome, loja=analise.loja)
@@ -1026,34 +1026,34 @@ def gerar_venda(request, cliente_id):
     porcentagem_desconto = 0
     
     # Define valores e número de parcelas
-    if analise.numero_parcelas == '4':
-        valor_credfacil = produto.valor_4_vezes
-        parcelas = 4
-        porcentagem_desconto = credfacil.porcentagem_desconto_4
-    elif analise.numero_parcelas == '6':
-        valor_credfacil = produto.valor_6_vezes
-        parcelas = 6
-        porcentagem_desconto = credfacil.porcentagem_desconto_6
-    elif analise.numero_parcelas == '8':
-        valor_credfacil = produto.valor_8_vezes
-        parcelas = 8
-        porcentagem_desconto = credfacil.porcentagem_desconto_8
+    if analise.numero_parcelas == '10':
+        valor_credfacil = produto.valor_10_vezes
+        parcelas = 10
+        porcentagem_desconto = credfacil.porcentagem_desconto_10
+    elif analise.numero_parcelas == '12':
+        valor_credfacil = produto.valor_12_vezes
+        parcelas = 12
+        porcentagem_desconto = credfacil.porcentagem_desconto_12
+    elif analise.numero_parcelas == '14':
+        valor_credfacil = produto.valor_14_vezes
+        parcelas = 14
+        porcentagem_desconto = credfacil.porcentagem_desconto_14
 
     # Cria ProdutoVenda
     ProdutoVenda.objects.create(
         loja=analise.loja,  # Usa a loja da análise de crédito
         venda=venda,
         produto=produto,
-        imei=imei.imei,
+        renavam=renavam.renavam,
         valor_unitario=valor_credfacil,
         quantidade=1,
         valor_desconto=0
     )
 
-    # Atualiza IMEI e estoque
-    imei.vendido = True
-    imei.data_venda = timezone.now()
-    imei.save()
+    # Atualiza RENAVAM e estoque
+    renavam.vendido = True
+    renavam.data_venda = timezone.now()
+    renavam.save()
     estoque_produto.remover_estoque(1)
 
     # Pagamentos
@@ -2955,16 +2955,17 @@ def informar_imei_analise(request, pk):
         return redirect('vendas:cliente_list')
     
     if request.method == 'POST':
-        imei_informado = request.POST.get('imei_informado')
+        renavam_informado = request.POST.get('renavam_informado')
+        placa_veiculo = request.POST.get('placa_veiculo')
         
-        if not imei_informado:
-            messages.error(request, 'IMEI é obrigatório.')
+        if not renavam_informado:
+            messages.error(request, 'RENAVAM é obrigatório.')
             return redirect('vendas:cliente_update', pk=analise.cliente.pk)
         
-        # Verificar se o IMEI já existe no estoque
+        # Verificar se o RENAVAM já existe no estoque
         loja = get_object_or_404(Loja, id=request.session.get('loja_id'))
         estoque_imei_existente = EstoqueImei.objects.filter(
-            imei=imei_informado,
+            renavam=renavam_informado,
             produto=analise.produto,
             loja=loja,
             vendido=False,
@@ -2972,49 +2973,49 @@ def informar_imei_analise(request, pk):
         ).first()
         
         if estoque_imei_existente:
-            # IMEI já existe no estoque
-            analise.imei = estoque_imei_existente
-            analise.imei_informado = imei_informado
+            # RENAVAM já existe no estoque
+            analise.renavam = estoque_imei_existente
+            analise.renavam_informado = renavam_informado
             analise.save()
-            messages.success(request, f'IMEI {imei_informado} associado com sucesso à análise.')
+            messages.success(request, f'RENAVAM {renavam_informado} associado com sucesso à análise.')
         else:
-            # IMEI não existe, criar novo registro no estoque
+            # RENAVAM não existe, criar novo registro no estoque
             try:
                 # Criar novo registro no EstoqueImei
                 novo_estoque_imei = EstoqueImei.objects.create(
                     produto=analise.produto,
-                    imei=imei_informado,
+                    renavam=renavam_informado,
+                    placa=placa_veiculo,
                     loja=loja,
                     vendido=False,
-                    aplicativo_instalado=False,
                     cancelado=False
                 )
                 novo_estoque_imei.save(user=request.user)
                 
                 # Associar à análise
-                analise.imei = novo_estoque_imei
-                analise.imei_informado = imei_informado
+                analise.renavam = novo_estoque_imei
+                analise.renavam_informado = renavam_informado
                 analise.save()
                 
-                messages.success(request, f'IMEI {imei_informado} criado e associado com sucesso à análise.')
+                messages.success(request, f'RENAVAM {renavam_informado} criado e associado com sucesso à análise.')
             except Exception as e:
-                messages.error(request, f'Erro ao criar IMEI: {str(e)}')
+                messages.error(request, f'Erro ao criar RENAVAM: {str(e)}')
                 return redirect('vendas:cliente_update', pk=analise.cliente.pk)
         
-        # Marcar aplicativo como instalado quando o analista informar o IMEI
-        analise.status_aplicativo = 'I'
+        # Marcar como liberado para venda quando o analista informar o RENAVAM e placa
+        analise.status_aplicativo = 'L'
         analise.save()
-        messages.success(request, 'IMEI informado com sucesso! Venda liberada para geração pelo vendedor.')
+        messages.success(request, 'RENAVAM e placa informados com sucesso! Venda liberada para geração pelo vendedor.')
         
         # Enviar notificação para analistas e administradores
         from notifications.signals import notify
         from notificacao.utils import enviar_ws_para_usuario
         
         cliente_nome = analise.cliente.nome if analise.cliente else "Cliente"
-        imei_info = f'Imei {imei_informado}' if imei_informado else 'IMEI não informado'
+        renavam_info = f'RENAVAM {renavam_informado}' if renavam_informado else 'RENAVAM não informado'
         
-        verb = f'Analista informou IMEI para cliente {cliente_nome.capitalize()}.'
-        description = f'{imei_info} da loja {loja.nome.capitalize()}. Venda liberada para geração pelo vendedor.'
+        verb = f'Analista informou RENAVAM e placa para cliente {cliente_nome.capitalize()}.'
+        description = f'{renavam_info} da loja {loja.nome.capitalize()}. Venda liberada para geração pelo vendedor.'
         
         # Notificar analistas e administradores
         usuarios_para_notificar = list(
@@ -3050,7 +3051,7 @@ def informar_imei_analise(request, pk):
         'analise': analise,
         'cliente': analise.cliente,
     }
-    return render(request, 'vendas/informar_imei_analise.html', context)
+    return render(request, 'vendas/informar_renavam_placa_analise.html', context)
 
 class AnalistaConfirmInstalledView(PermissionRequiredMixin, View):
     permission_required = 'vendas.change_status_analise'
@@ -3064,9 +3065,9 @@ class AnalistaConfirmInstalledView(PermissionRequiredMixin, View):
             messages.error(request, 'Apenas analistas podem confirmar a instalação.')
             return redirect('vendas:cliente_list')
         
-        # Verificar se o IMEI está informado
-        if not analise_credito.imei:
-            messages.error(request, 'IMEI deve estar informado para confirmar a instalação.')
+        # Verificar se o RENAVAM está informado
+        if not analise_credito.renavam:
+            messages.error(request, 'RENAVAM deve estar informado para confirmar a instalação.')
             return redirect('vendas:cliente_list')
         
         # Verificar se o status está correto
@@ -3086,7 +3087,7 @@ class AnalistaConfirmInstalledView(PermissionRequiredMixin, View):
         loja = cliente.loja
         
         verb = f'Analista confirmou instalação do app para cliente {cliente_nome.capitalize()}.'
-        description = f'IMEI {analise_credito.imei.imei} da loja {loja.nome.capitalize()}. Venda liberada para geração.'
+        description = f'RENAVAM {analise_credito.renavam.renavam} da loja {loja.nome.capitalize()}. Venda liberada para geração.'
         
         # Notificar vendedores e outros analistas
         usuarios_para_notificar = list(
@@ -3117,3 +3118,123 @@ class AnalistaConfirmInstalledView(PermissionRequiredMixin, View):
         
         messages.success(request, "✅ Instalação confirmada pelo analista! Venda liberada para geração.")
         return redirect('vendas:cliente_list')
+
+@permission_required('vendas.change_analisecreditocliente', raise_exception=True)
+def informar_renavam_placa_analise(request, pk):
+    """View para analista informar o RENAVAM e placa na análise de crédito"""
+    # Verificar se o usuário é analista
+    if not request.user.groups.filter(name='ANALISTA').exists():
+        messages.error(request, 'Apenas analistas podem informar o RENAVAM e placa.')
+        return redirect('vendas:cliente_list')
+    
+    analise = get_object_or_404(AnaliseCreditoCliente, pk=pk)
+    
+    # Verificar se o status está correto para informar RENAVAM e placa
+    if analise.status_aplicativo != 'A':
+        messages.error(request, 'Só é possível informar RENAVAM e placa após aprovação da análise de crédito.')
+        return redirect('vendas:cliente_list')
+    
+    if request.method == 'POST':
+        renavam_informado = request.POST.get('renavam_informado')
+        placa_veiculo = request.POST.get('placa_veiculo')
+        
+        if not renavam_informado:
+            messages.error(request, 'RENAVAM é obrigatório.')
+            return redirect('vendas:cliente_update', pk=analise.cliente.pk)
+        
+        if not placa_veiculo:
+            messages.error(request, 'Placa do veículo é obrigatória.')
+            return redirect('vendas:cliente_update', pk=analise.cliente.pk)
+        
+        # Verificar se o RENAVAM já existe no estoque
+        loja = get_object_or_404(Loja, id=request.session.get('loja_id'))
+        estoque_renavam_existente = EstoqueImei.objects.filter(
+            renavam=renavam_informado,
+            produto=analise.produto,
+            loja=loja,
+            vendido=False,
+            cancelado=False
+        ).first()
+        
+        if estoque_renavam_existente:
+            # RENAVAM já existe no estoque
+            analise.renavam = estoque_renavam_existente
+            analise.renavam_informado = renavam_informado
+            analise.placa_veiculo = placa_veiculo
+            analise.save()
+            messages.success(request, f'RENAVAM {renavam_informado} associado com sucesso à análise.')
+        else:
+            # RENAVAM não existe, criar novo registro no estoque
+            try:
+                # Criar novo registro no EstoqueImei
+                novo_estoque_renavam = EstoqueImei.objects.create(
+                    produto=analise.produto,
+                    renavam=renavam_informado,
+                    placa=placa_veiculo,
+                    loja=loja,
+                    vendido=False,
+                    cancelado=False
+                )
+                novo_estoque_renavam.save(user=request.user)
+                
+                # Associar à análise
+                analise.renavam = novo_estoque_renavam
+                analise.renavam_informado = renavam_informado
+                analise.placa_veiculo = placa_veiculo
+                analise.save()
+                
+                messages.success(request, f'RENAVAM {renavam_informado} criado e associado com sucesso à análise.')
+            except Exception as e:
+                messages.error(request, f'Erro ao criar RENAVAM: {str(e)}')
+                return redirect('vendas:cliente_update', pk=analise.cliente.pk)
+        
+        # Marcar como liberado para venda quando o analista informar o RENAVAM e placa
+        analise.status_aplicativo = 'L'
+        analise.save()
+        messages.success(request, 'RENAVAM e placa informados com sucesso! Venda liberada para geração pelo vendedor.')
+        
+        # Enviar notificação para analistas e administradores
+        from notifications.signals import notify
+        from notificacao.utils import enviar_ws_para_usuario
+        
+        cliente_nome = analise.cliente.nome if analise.cliente else "Cliente"
+        renavam_info = f'RENAVAM {renavam_informado}' if renavam_informado else 'RENAVAM não informado'
+        
+        verb = f'Analista informou RENAVAM e placa para cliente {cliente_nome.capitalize()}.'
+        description = f'{renavam_info} - Placa: {placa_veiculo} da loja {loja.nome.capitalize()}. Venda liberada para geração pelo vendedor.'
+        
+        # Notificar analistas e administradores
+        usuarios_para_notificar = list(
+            User.objects.filter(groups__name__in=['ADMINISTRADOR', 'ANALISTA']).exclude(id=request.user.id)
+        )
+        
+        for user in usuarios_para_notificar:
+            notify.send(
+                analise,
+                recipient=user,
+                verb=verb,
+                description=description,
+                target=analise.cliente,
+            )
+
+            # WebSocket
+            ultima_notificacao = user.notifications.unread().order_by('-timestamp').first()
+            if ultima_notificacao:
+                enviar_ws_para_usuario(
+                    usuario=user,
+                    instance=analise,
+                    notification_id=ultima_notificacao.id,
+                    verb=verb,
+                    description=description,
+                    target_url=analise.cliente.get_absolute_url(),
+                    type_notification='analise_credito_cliente',
+                )
+        
+        return redirect('vendas:cliente_list')
+    
+    # GET request - mostrar formulário
+    context = {
+        'analise': analise,
+        'cliente': analise.cliente,
+    }
+    return render(request, 'vendas/informar_renavam_placa_analise.html', context)

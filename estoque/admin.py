@@ -13,7 +13,7 @@ class AdminBase(admin.ModelAdmin):
     
     def save_model(self, request, obj, form, change):
         obj.save(user=request.user) 
-        super().save_model(request, obj, form, change)
+        super().save_model(self, request, obj, form, change)
 
 
 @admin.register(EntradaEstoque)
@@ -54,8 +54,8 @@ class FornecedorAdmin(AdminBase):
 
 @admin.register(ProdutoEntrada)
 class ProdutoEntradaAdmin(AdminBase):
-  list_display = ('entrada', 'produto', 'imei', 'custo_unitario', 'quantidade', 'custo_total') + AdminBase.list_display
-  search_fields = ('produto__nome', 'imei')
+  list_display = ('entrada', 'produto', 'renavam', 'custo_unitario', 'quantidade', 'custo_total') + AdminBase.list_display
+  search_fields = ('produto__nome', 'renavam')
   list_filter = ('entrada', 'produto')
   actions = ['trocar_para_credfacil']
 
@@ -78,8 +78,8 @@ class ProdutoEntradaAdmin(AdminBase):
   
 @admin.register(EstoqueImei)
 class EstoqueImeiAdmin(AdminBase):
-  list_display = ('produto', 'imei', 'vendido') + AdminBase.list_display
-  search_fields = ('produto__nome', 'imei')
+  list_display = ('produto', 'renavam', 'placa', 'vendido') + AdminBase.list_display
+  search_fields = ('produto__nome', 'renavam', 'placa')
   list_filter = ('produto', 'vendido')
   actions = ['trocar_para_credfacil']
   

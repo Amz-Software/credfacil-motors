@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inventário Estoque Imei</title>
+            <title>Inventário Estoque RENAVAM</title>
     <style>
         @page {
             margin: 20mm 15mm;
@@ -86,7 +86,7 @@
 </head>
 <body>
     <div class="header">
-        Inventário Estoque IMEI - {{ loja.nome }} - {{ data_hoje }}
+                    Inventário Estoque RENAVAM - {{ loja.nome }} - {{ data_hoje }}
     </div>
 
     <div class="content">
@@ -96,7 +96,7 @@
             <thead>
                 <tr>
                     <th>Nome</th>
-                    <th>IMEI</th>
+                    <th>RENAVAM</th>
                     <th>Vendido</th>
                     <th>App Instalado</th>
                     <th>Cancelado</th>
@@ -113,7 +113,7 @@
                 {% for produto in produtos %}
                     <tr>
                         <td>{{ produto.produto|title }}</td>
-                        <td>{{ produto.imei }}</td>
+                        <td>{{ produto.renavam }}</td>
                         <td>{% if produto.vendido %}Sim{% else %}Não{% endif %}</td>
                         <td>{% if produto.aplicativo_instalado %}Sim{% else %}Não{% endif %}</td>
                         <td>{% if produto.cancelado %}Sim{% else %}Não{% endif %}</td>

@@ -97,7 +97,7 @@
 
         .table-products th:nth-child(1), .table-products td:nth-child(1) { width: 10%; } /* Código */
         .table-products th:nth-child(2), .table-products td:nth-child(2) { width: 20%; } /* Produto */
-        .table-products th:nth-child(3), .table-products td:nth-child(3) { width: 20%; } /* IMEI */
+        .table-products th:nth-child(3), .table-products td:nth-child(3) { width: 20%; } /* RENAVAM */
         .table-products th:nth-child(4), .table-products td:nth-child(4) { width: 10%; } /* Quantidade */
         .table-products th:nth-child(5), .table-products td:nth-child(5) { width: 10%; } /* Valor Item */
         .table-products th:nth-child(6), .table-products td:nth-child(6) { width: 10%; } /* Desconto */
@@ -168,7 +168,7 @@
                 <tr>
                     <th>Código</th>
                     <th>Produto</th>
-                    <th>IMEI</th>
+                                            <th>RENAVAM</th>
                     <th class="text-center">Quantidade</th>
                     <th class="text-right">Valor Item</th>
                     <th class="text-right">Desconto</th>
@@ -180,7 +180,7 @@
                 <tr>
                     <td>{{ item.produto.codigo }}</td>
                     <td>{{ item.produto.nome }}</td>
-                    <td>{{ item.imei }}</td>
+                                            <td>{{ item.renavam }}</td>
                     <td class="text-center">{{ item.quantidade }}</td>
                     <td class="text-right">{{ item.valor_unitario|floatformat:2 }}</td>
                     <td class="text-right">{{ item.valor_desconto|floatformat:2 }}</td>

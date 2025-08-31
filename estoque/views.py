@@ -85,7 +85,7 @@ class EntradaListView(BaseView, PermissionRequiredMixin, ListView):
             else:
                 query = query.filter(venda_liberada=False)
         
-        if not self.request.user.has_perm('estoque.can_view_all_imei'):
+        if not self.request.user.has_perm('estoque.can_view_all_renavam'):
             query = query.filter(loja=loja)
             
         if search:
@@ -134,33 +134,33 @@ class EntradaUpdateView(PermissionRequiredMixin, UpdateView):
             for produto in formset.deleted_objects:
                 produto.delete()
 
-            # Verificar duplicações de IMEI antes de salvar
-            imeis_duplicados = []
+            # Verificar duplicações de RENAVAM antes de salvar
+            renavams_duplicados = []
             
-            # Primeiro, verificar todos os IMEIs antes de salvar qualquer coisa
+            # Primeiro, verificar todos os RENAVAMs antes de salvar qualquer coisa
             for produto in produtos:
-                # Se o produto for serializado, verificar os IMEIs na tabela EstoqueImei
-                if produto.imei:  # Presumindo que o IMEI é obrigatório
-                    # Verificar se já existe um IMEI igual para o mesmo produto e loja
-                    imei_existente = EstoqueImei.objects.filter(
-                        imei=produto.imei,
+                # Se o produto for serializado, verificar os RENAVAMs na tabela EstoqueImei
+                if produto.renavam:  # Presumindo que o RENAVAM é obrigatório
+                    # Verificar se já existe um RENAVAM igual para o mesmo produto e loja
+                    renavam_existente = EstoqueImei.objects.filter(
+                        renavam=produto.renavam,
                         produto=produto.produto,
                         loja=loja
                     ).first()
                     
-                    if imei_existente:
-                        imeis_duplicados.append({
-                            'imei': produto.imei,
+                    if renavam_existente:
+                        renavams_duplicados.append({
+                            'renavam': produto.renavam,
                             'produto': produto.produto.nome,
-                            'entrada_existente': imei_existente.produto_entrada.entrada.numero_nota if imei_existente.produto_entrada else 'N/A'
+                            'entrada_existente': renavam_existente.produto_entrada.entrada.numero_nota if renavam_existente.produto_entrada else 'N/A'
                         })
             
             # Se houver duplicações, bloquear a atualização e mostrar alerta
-            if imeis_duplicados:
-                duplicados_msg = "❌ Não foi possível atualizar a entrada devido a IMEIs duplicados:\n\n"
-                for dup in imeis_duplicados:
-                    duplicados_msg += f"• IMEI {dup['imei']} - Produto: {dup['produto']} (já existe na entrada {dup['entrada_existente']})\n"
-                duplicados_msg += "\nPor favor, corrija os IMEIs duplicados e tente novamente."
+            if renavams_duplicados:
+                duplicados_msg = "❌ Não foi possível atualizar a entrada devido a RENAVAMs duplicados:\n\n"
+                for dup in renavams_duplicados:
+                    duplicados_msg += f"• RENAVAM {dup['renavam']} - Produto: {dup['produto']} (já existe na entrada {dup['entrada_existente']})\n"
+                duplicados_msg += "\nPor favor, corrija os RENAVAMs duplicados e tente novamente."
                 messages.error(self.request, duplicados_msg)
                 return self.form_invalid(form)
             
@@ -170,11 +170,11 @@ class EntradaUpdateView(PermissionRequiredMixin, UpdateView):
                 produto.loja = loja
                 produto.save(user=self.request.user)
                 
-                # Se o produto for serializado, salve os IMEIs na tabela EstoqueImei
-                if produto.imei:  # Presumindo que o IMEI é obrigatório
+                # Se o produto for serializado, salve os RENAVAMs na tabela EstoqueImei
+                if produto.renavam:  # Presumindo que o RENAVAM é obrigatório
                     estoque_imei = EstoqueImei.objects.create(
                         produto=produto.produto,
-                        imei=produto.imei,
+                        renavam=produto.renavam,
                         produto_entrada=produto,
                         loja=loja
                     )
@@ -220,32 +220,32 @@ class AdicionarEntradaEstoqueView(PermissionRequiredMixin, CreateView):
             entrada_estoque.save(user=self.request.user)
             produtos = formset.save(commit=False)
 
-            # Verificar duplicações de IMEI antes de salvar
-            imeis_duplicados = []
+            # Verificar duplicações de RENAVAM antes de salvar
+            renavams_duplicados = []
             
-            # Primeiro, verificar todos os IMEIs antes de salvar qualquer coisa
+            # Primeiro, verificar todos os RENAVAMs antes de salvar qualquer coisa
             for produto in produtos:
-                if produto.imei:
-                    # Verificar se já existe um IMEI igual para o mesmo produto e loja
-                    imei_existente = EstoqueImei.objects.filter(
-                        imei=produto.imei,
+                if produto.renavam:
+                    # Verificar se já existe um RENAVAM igual para o mesmo produto e loja
+                    renavam_existente = EstoqueImei.objects.filter(
+                        renavam=produto.renavam,
                         produto=produto.produto,
                         loja=loja
                     ).first()
                     
-                    if imei_existente:
-                        imeis_duplicados.append({
-                            'imei': produto.imei,
+                    if renavam_existente:
+                        renavams_duplicados.append({
+                            'renavam': produto.renavam,
                             'produto': produto.produto.nome,
-                            'entrada_existente': imei_existente.produto_entrada.entrada.numero_nota if imei_existente.produto_entrada else 'N/A'
+                            'entrada_existente': renavam_existente.produto_entrada.entrada.numero_nota if renavam_existente.produto_entrada else 'N/A'
                         })
             
             # Se houver duplicações, bloquear a criação e mostrar alerta
-            if imeis_duplicados:
-                duplicados_msg = "❌ Não foi possível criar a entrada devido a IMEIs duplicados:\n\n"
-                for dup in imeis_duplicados:
-                    duplicados_msg += f"• IMEI {dup['imei']} - Produto: {dup['produto']} (já existe na entrada {dup['entrada_existente']})\n"
-                duplicados_msg += "\nPor favor, corrija os IMEIs duplicados e tente novamente."
+            if renavams_duplicados:
+                duplicados_msg = "❌ Não foi possível criar a entrada devido a RENAVAMs duplicados:\n\n"
+                for dup in renavams_duplicados:
+                    duplicados_msg += f"• RENAVAM {dup['renavam']} - Produto: {dup['produto']} (já existe na entrada {dup['entrada_existente']})\n"
+                duplicados_msg += "\nPor favor, corrija os RENAVAMs duplicados e tente novamente."
                 messages.error(self.request, duplicados_msg)
                 return self.form_invalid(form)
             
@@ -255,10 +255,10 @@ class AdicionarEntradaEstoqueView(PermissionRequiredMixin, CreateView):
                 produto.loja = loja
                 produto.save(user=self.request.user)
                 
-                if produto.imei:
+                if produto.renavam:
                     estoque_imei = EstoqueImei(
                         produto=produto.produto,
-                        imei=produto.imei,
+                        renavam=produto.renavam,
                         produto_entrada=produto,
                         loja=loja
                     )
@@ -300,7 +300,7 @@ class EstoqueImeiListView(BaseView, PermissionRequiredMixin, ListView):
         
         search = self.request.GET.get('search', None)
         if search:
-            query = query.filter(Q(imei__icontains=search)|Q(produto__nome__icontains=search))
+            query = query.filter(Q(renavam__icontains=search)|Q(produto__nome__icontains=search))
             
         return query
     
@@ -332,19 +332,19 @@ class FornecedorListView(PermissionRequiredMixin, ListView):
             query = query.filter(nome__icontains=search)
         return query
 
-def cancelar_imei(request, id):
-    imei = get_object_or_404(EstoqueImei, pk=id)
+def cancelar_renavam(request, id):
+    renavam = get_object_or_404(EstoqueImei, pk=id)
 
     if not request.user.has_perm('estoque.change_estoqueimei'):
-        messages.error(request, 'Você não tem permissão para cancelar este IMEI.')
+        messages.error(request, 'Você não tem permissão para cancelar este RENAVAM.')
         return redirect('estoque:estoque_imei_list')
     
-    if imei.cancelado:
-        messages.error(request, 'Este IMEI já está cancelado.')
+    if renavam.cancelado:
+        messages.error(request, 'Este RENAVAM já está cancelado.')
     else:
-        imei.cancelado = True
-        imei.save(user=request.user)
-        messages.success(request, 'IMEI cancelado com sucesso.')
+        renavam.cancelado = True
+        renavam.save(user=request.user)
+        messages.success(request, 'RENAVAM cancelado com sucesso.')
     return redirect('estoque:estoque_imei_list')
 
 @login_required
@@ -364,23 +364,23 @@ class EstoqueImeiSearchView(View):
         loja_id = self.request.session.get('loja_id')
         loja = get_object_or_404(Loja, pk=loja_id)
         queryset = EstoqueImei.objects.filter(vendido=False, produto_entrada__entrada__venda_liberada=True, cancelado=False).filter(
-            Q(imei__icontains=term) | Q(produto__nome__icontains=term) | Q(loja__nome__icontains=term)
+            Q(renavam__icontains=term) | Q(produto__nome__icontains=term) | Q(loja__nome__icontains=term)
         )
         
-        if not user.has_perm('estoque.can_view_all_imei'):
+        if not user.has_perm('estoque.can_view_all_renavam'):
             queryset = queryset.filter(loja=loja)
         
         if produto_id:
             queryset = queryset.filter(produto_id=produto_id)
         
         results = []
-        for imei in queryset:
-            if not user.has_perm('estoque.can_view_all_imei'):
-                text = f'{imei.imei} - {imei.produto.nome}'
+        for renavam in queryset:
+            if not user.has_perm('estoque.can_view_all_renavam'):
+                text = f'{renavam.renavam} - {renavam.produto.nome}'
             else:
-                text = f'{imei.imei} - {imei.produto.nome} | {imei.produto.loja.nome}'
+                text = f'{renavam.renavam} - {renavam.produto.nome} | {renavam.produto.loja.nome}'
             results.append({
-                'id': imei.id,
+                'id': renavam.id,
                 'text': text
             })
         return JsonResponse({'results': results})
@@ -393,24 +393,24 @@ class EstoqueImeiSearchEditView(View):
         venda_id = self.request.session.get('venda_id')
         loja = get_object_or_404(Loja, pk=loja_id)
         queryset = EstoqueImei.objects.filter(
-            Q(imei__icontains=term) | Q(produto__nome__icontains=term)
+            Q(renavam__icontains=term) | Q(produto__nome__icontains=term)
         ).filter(loja=loja).filter(vendido=False, cancelado=False)
         if produto_id:
             queryset = queryset.filter(produto_id=produto_id)
         results = []
-        for imei in queryset:
+        for renavam in queryset:
             results.append({
-                'id': imei.imei,
-                'text': f'{imei.imei} - {imei.produto.nome}'
+                'id': renavam.renavam,
+                'text': f'{renavam.renavam} - {renavam.produto.nome}'
             })
 
         if venda_id:
             venda = get_object_or_404(Venda, pk=venda_id)
             for item in venda.itens_venda.all():
-                if item.imei:
+                if item.renavam:
                     results.append({
-                        'id': item.imei,
-                        'text': f'{item.imei} - {item.produto.nome}'
+                        'id': item.renavam,
+                        'text': f'{item.renavam} - {item.produto.nome}'
                     })
         return JsonResponse({'results': results})
     
@@ -682,7 +682,7 @@ class FolhaNotaEntradaView(View):
 
         return render(request, "estoque/folha_entrada.html", context)
     
-def buscar_imei_por_produto(request):
+def buscar_renavam_por_produto(request):
     if request.method == 'GET':
         produto_id = request.GET.get('produto_id')
         imei_antigo = request.GET.get('imei')

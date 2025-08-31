@@ -23,7 +23,7 @@ urlpatterns = [
     path('estoque_imei/editar/<int:pk>/', EstoqueImeiUpdateView.as_view(), name='estoque_imei_update'),
     path('estoque_imei/inventario', inventario_estoque_imei_pdf, name='inventario_imei_pdf'),
     path('estoque_imei/inventario-excel', inventario_estoque_imei_excel, name='inventario_imei_excel'),
-    path('estoque_imei/cancelar/<int:id>/', cancelar_imei, name='cancelar_imei'),
+    path('estoque_imei/cancelar/<int:id>/', cancelar_renavam, name='cancelar_renavam'),
     
     #api
     path('produto/details/<int:produto_id>/', check_produtos, name='produto_details'),
@@ -40,5 +40,5 @@ urlpatterns = [
     
     path('estoque/entrada/liberar/<int:pk>/', liberar_entrada, name='liberar_entrada'),
 
-    path('estoque/imei/produto/', buscar_imei_por_produto, name='buscar_imei_por_produto'),
+    path('estoque/renavam/produto/', buscar_renavam_por_produto, name='buscar_renavam_por_produto'),
 ]

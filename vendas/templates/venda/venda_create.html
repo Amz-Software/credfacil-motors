@@ -48,7 +48,7 @@ Criar Venda
                   <template id="produto-empty-form">
                     <tr class="produto-form">
                       <td>{{ produto_venda_formset.empty_form.produto }}</td>
-                      <td>{{ produto_venda_formset.empty_form.imei }}</td>
+                                              <td>{{ produto_venda_formset.empty_form.renavam }}</td>
                       <td>{{ produto_venda_formset.empty_form.quantidade }}</td>
                       <td>{{ produto_venda_formset.empty_form.valor_unitario }}</td>
                       <td>{{ produto_venda_formset.empty_form.valor_desconto }}</td>
@@ -64,7 +64,7 @@ Criar Venda
                       <thead>
                         <tr>
                           <th style="width: 300px;">Produto</th>
-                          <th style="width: 300px;">IMEI</th>
+                          <th style="width: 300px;">RENAVAM</th>
                           <th style="width: 200px;">Quantidade</th>
                           <th style="width: 200px;">Valor Unitário</th>
                           <th style="width: 200px;">Desconto</th>
@@ -76,7 +76,7 @@ Criar Venda
                         {% for form in produto_venda_formset %}
                         <tr class="produto-form">
                           <td>{{ form.produto }}</td>
-                          <td>{{ form.imei }}</td>
+                          <td>{{ form.renavam }}</td>
                           <td>{{ form.quantidade }}</td>
                           <td>{{ form.valor_unitario }}</td>
                           <td>{{ form.valor_desconto }}</td>

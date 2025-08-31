@@ -22,8 +22,8 @@ def notificar_status_analise_credito(sender, instance, created, **kwargs):
     cliente_nome = instance.cliente.nome if instance.cliente else "Cliente"
     if created:
         verb = f'Nova análise de crédito criada para o cliente {cliente_nome.capitalize()}.'
-        imei_info = f'Imei {instance.imei.imei}' if instance.imei else 'IMEI não informado'
-        description = f'{imei_info} da loja {instance.loja.nome.capitalize()}.'
+        renavam_info = f'RENAVAM {instance.renavam.renavam}' if instance.renavam else 'RENAVAM não informado'
+        description = f'{renavam_info} da loja {instance.loja.nome.capitalize()}.'
         
         # Admins + analista que criou
         usuarios_para_notificar = list(
@@ -54,10 +54,10 @@ def notificar_status_analise_credito(sender, instance, created, **kwargs):
                     type_notification='analise_credito_cliente',
                 )
 
-    if instance.status_aplicativo == 'C':
-        verb = f'Instalação do cliente {cliente_nome.capitalize()} está aguardando confirmação.'
-        imei_info = f'Imei {instance.imei.imei}' if instance.imei else 'IMEI não informado'
-        description = f'{imei_info} da loja {instance.loja.nome.capitalize()}.'
+    if instance.status_aplicativo == 'A':
+        verb = f'Cliente {cliente_nome.capitalize()} aguarda informações de RENAVAM e placa.'
+        renavam_info = f'RENAVAM {instance.renavam.renavam}' if instance.renavam else 'RENAVAM não informado'
+        description = f'{renavam_info} da loja {instance.loja.nome.capitalize()}.'
 
         # Admins + analista que criou
         usuarios_para_notificar = list(
@@ -95,12 +95,12 @@ def notificar_status_analise_credito(sender, instance, created, **kwargs):
     if (instance.status != instance.status_anterior) and not created:
         if instance.status == 'A':
             verb = f'Análise de crédito do cliente {cliente_nome.capitalize()} foi aprovada.'
-            imei_info = f'Imei {instance.imei.imei}' if instance.imei else 'IMEI não informado'
-            description = f'{imei_info} da loja {instance.loja.nome.capitalize()}.'
+            renavam_info = f'RENAVAM {instance.renavam.renavam}' if instance.renavam else 'RENAVAM não informado'
+            description = f'{renavam_info} da loja {instance.loja.nome.capitalize()}.'
         elif instance.status == 'R':
             verb = f'Análise de crédito do cliente {cliente_nome.capitalize()} foi rejeitada.'
-            imei_info = f'Imei {instance.imei.imei}' if instance.imei else 'IMEI não informado'
-            description = f'{imei_info} da loja {instance.loja.nome.capitalize()}.'
+            renavam_info = f'RENAVAM {instance.renavam.renavam}' if instance.renavam else 'RENAVAM não informado'
+            description = f'{renavam_info} da loja {instance.loja.nome.capitalize()}.'
         else:
             return
         

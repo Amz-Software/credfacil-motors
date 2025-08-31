@@ -41,7 +41,7 @@
                         <thead>
                           <tr>
                             <th style="width: 20%;">Produto</th>
-                            <th style="width: 25%;">IMEI</th>
+                            <th style="width: 25%;">RENAVAM</th>
                             <th>Quantidade</th>
                             <th>Valor Unitário</th>
                             <th>Desconto</th>
@@ -56,7 +56,7 @@
                               {{ hidden }}
                             {% endfor %}
                             <td>{{ form.produto }}</td>
-                            <td>{{ form.imei }}</td>
+                            <td>{{ form.renavam }}</td>
                             <td>{{ form.quantidade }}</td>
                             <td>{{ form.valor_unitario }}</td>
                             <td>{{ form.valor_desconto }}</td>
@@ -162,22 +162,22 @@
   // -------------------------------------------------------------------------
   function configurarProdutoForm(form) {
     const produtoSelect = form.querySelector('select[name$="-produto"]');
-    const imeiField = form.querySelector('select[name$="-imei"]');
+            const renavamField = form.querySelector('select[name$="-renavam"]');
     const valorField = form.querySelector('input[name$="-valor_unitario"]');
     const quantidadeField = form.querySelector('input[name$="-quantidade"]');
     const valorTotalField = form.querySelector('input[name$="-valor_total"]');
     const valorDescontoField = form.querySelector('input[name$="-valor_desconto"]');
 
-    if (!produtoSelect || !imeiField || !valorField) return;
+            if (!produtoSelect || !renavamField || !valorField) return;
 
     // Inicializa valores
     valorDescontoField.value = "0.00";
 
     // Destruir Select2 existente se houver (pra evitar conflitos ao recriar form dinâmico)
-    if ($(imeiField).data('select2')) {
-      $(imeiField).select2('destroy');
-    }
-    imeiField.required = false;
+            if ($(renavamField).data('select2')) {
+            $(renavamField).select2('destroy');
+        }
+        renavamField.required = false;
     quantidadeField.readOnly = false;
 
     verificarProduto();
@@ -280,16 +280,16 @@
           console.log('Produto details API response:', data);
 
           if (data.serializado) {
-            // Se o produto exige IMEI
-            imeiField.disabled = false;
-            imeiField.required = true;
+            // Se o produto exige RENAVAM
+            renavamField.disabled = false;
+            renavamField.required = true;
             quantidadeField.value = 1;
             quantidadeField.readOnly = true;
 
-            // Configura Select2 para o campo IMEI
-            $(imeiField).select2({
+            // Configura Select2 para o campo RENAVAM
+            $(renavamField).select2({
               ajax: {
-                url: `/info-products/imei/${produtoId}/`,
+                url: `/info-products/renavam/${produtoId}/`,
                 dataType: 'json',
                 delay: 250,
                 data: function (params) {
@@ -305,17 +305,17 @@
                 },
                 cache: true
               },
-              placeholder: "Selecione o IMEI",
+              placeholder: "Selecione o RENAVAM",
               allowClear: true,
             });
 
-            // Ao selecionar IMEI
-            $(imeiField).on('select2:select', function (e) {
-              const imeiValue = e.params.data.id;
-              console.log('IMEI selecionado:', imeiValue);
+            // Ao selecionar RENAVAM
+            $(renavamField).on('select2:select', function (e) {
+              const renavamValue = e.params.data.id;
+              console.log('RENAVAM selecionado:', renavamValue);
 
-              if (imeiValue) {
-                fetch(`/info-products/?product_id=${produtoId}&imei=${imeiValue}`)
+              if (renavamValue) {
+                fetch(`/info-products/?product_id=${produtoId}&renavam=${renavamValue}`)
                   .then(response => response.json())
                   .then(info => {
                     console.log('Info products API response:', info);
@@ -326,17 +326,17 @@
                     } else {
                       alert(info.message);
                       valorField.value = "";
-                      $(imeiField).val(null).trigger('change'); // Reseta o campo IMEI no Select2
+                      $(renavamField).val(null).trigger('change'); // Reseta o campo RENAVAM no Select2
                     }
                   });
               }
             });
           } else {
-            // Produto não exige IMEI
-            imeiField.disabled = true;
-            imeiField.required = false;
+            // Produto não exige RENAVAM
+            renavamField.disabled = true;
+            renavamField.required = false;
             quantidadeField.readOnly = false;
-            $(imeiField).val(null).trigger('change');
+            $(renavamField).val(null).trigger('change');
 
             fetch(`/info-products/?product_id=${produtoId}`)
               .then(response => response.json())
@@ -372,8 +372,8 @@
           quantidadeField.readOnly = true;
         } else {
           quantidadeField.readOnly = false;
-          imeiField.disabled = true;
-          $(imeiField).val(null).trigger('change');
+          renavamField.disabled = true;
+          $(renavamField).val(null).trigger('change');
         }
         });
       }

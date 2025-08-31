@@ -74,7 +74,7 @@ class EntradaEstoque(Base):
 class ProdutoEntrada(Base):
     entrada = models.ForeignKey(EntradaEstoque, on_delete=models.CASCADE, related_name='produtos', verbose_name='Entrada de Estoque')
     produto = models.ForeignKey('produtos.Produto', on_delete=models.PROTECT, related_name='entradas_estoque', verbose_name='Produto')
-    imei = models.CharField(max_length=20, blank=True, null=True, verbose_name='IMEI')
+    renavam = models.CharField(max_length=20, blank=True, null=True, verbose_name='RENAVAM')
     custo_unitario = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Custo Unitário', blank=True, null=True)
     venda_unitaria = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Venda Unitária', blank=True, null=True)
     quantidade = models.PositiveIntegerField(verbose_name='Quantidade', default=1)
@@ -102,7 +102,8 @@ class ProdutoEntrada(Base):
 
 class EstoqueImei(Base):
     produto = models.ForeignKey('produtos.Produto', on_delete=models.CASCADE, related_name='estoque_imei')
-    imei = models.CharField(max_length=20, verbose_name='IMEI')
+    renavam = models.CharField(max_length=20, verbose_name='RENAVAM')
+    placa = models.CharField(max_length=10, verbose_name='Placa', blank=True, null=True)
     vendido = models.BooleanField(default=False, verbose_name='Vendido')
     data_venda = models.DateTimeField(blank=True, null=True, verbose_name='Data da Venda')
     produto_entrada = models.ForeignKey(ProdutoEntrada, on_delete=models.CASCADE, related_name='estoque_imei', blank=True, null=True)
@@ -111,30 +112,30 @@ class EstoqueImei(Base):
     
     @property
     def id_venda(self):
-        """Retorna o ID da venda relacionada ao IMEI"""
+        """Retorna o ID da venda relacionada ao RENAVAM"""
         if self.vendido:
-            # Busca a venda através do ProdutoVenda que contém este IMEI
+            # Busca a venda através do ProdutoVenda que contém este RENAVAM
             from vendas.models import ProdutoVenda
-            produto_venda = ProdutoVenda.objects.filter(imei=self.imei).first()
+            produto_venda = ProdutoVenda.objects.filter(renavam=self.renavam).first()
             return produto_venda.venda.id if produto_venda else None
         return None
     
     @property
     def numero_nota(self):
-        """Retorna o número da nota da entrada relacionada ao IMEI"""
+        """Retorna o número da nota da entrada relacionada ao RENAVAM"""
         if self.produto_entrada and self.produto_entrada.entrada:
             return self.produto_entrada.entrada.numero_nota
         return None
     
     def __str__(self):
-        return self.imei
+        return self.renavam
     
     class Meta:
-        unique_together = ['imei', 'produto', 'loja']
-        verbose_name = 'Estoque IMEI'
-        verbose_name_plural = 'Estoques IMEI'
+        unique_together = ['renavam', 'produto', 'loja']
+        verbose_name = 'Estoque RENAVAM'
+        verbose_name_plural = 'Estoques RENAVAM'
         permissions = (
-            ('can_view_all_imei', 'Pode visualizar todos os IMEI'),
+            ('can_view_all_renavam', 'Pode visualizar todos os RENAVAM'),
         )
 
 

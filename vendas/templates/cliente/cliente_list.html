@@ -144,17 +144,17 @@ Clientes
                 <div class="col-md-6">
                   <h6 class="text-success">👨‍💻 Vendedor:</h6>
                   <ol class="mb-0">
-                    <li><strong>Lê o QR Code</strong> para configurar o aparelho</li>
-                    <li><strong>Confirma a leitura</strong> do QR Code</li>
-                    <li><strong>Gera a venda</strong> após analista informar IMEI</li>
+                    <li><strong>Cria a solicitação</strong> de análise de crédito</li>
+                    <li><strong>Aguarda aprovação</strong> e informações do analista</li>
+                    <li><strong>Gera a venda</strong> após analista informar RENAVAM e placa</li>
                   </ol>
                 </div>
                 <div class="col-md-6">
                   <h6 class="text-primary">👨‍💼 Analista:</h6>
                   <ol class="mb-0">
-                    <li>Aprova a solicitação de crédito</li>
-                    <li><strong>Informa o IMEI</strong> após vendedor confirmar leitura</li>
-                    <li>Libera a venda para geração</li>
+                    <li><strong>Verifica e aprova</strong> a solicitação de crédito</li>
+                    <li><strong>Informa RENAVAM e placa</strong> do veículo</li>
+                    <li><strong>Libera a venda</strong> para geração pelo vendedor</li>
                   </ol>
                 </div>
               </div>
@@ -277,13 +277,13 @@ Clientes
                 <span class="badge bg-label-secondary">
                   <i class="bx bx-time me-1"></i>Pendente
                 </span>
-              {% elif cliente.analise_credito.status_aplicativo == 'C' %}
+              {% elif cliente.analise_credito.status_aplicativo == 'A' %}
                 <span class="badge bg-label-warning">
-                  <i class="bx bx-qr me-1"></i>Aguardando Confirmação
+                  <i class="bx bx-car me-1"></i>Aguardando RENAVAM e Placa
                 </span>
-              {% elif cliente.analise_credito.status_aplicativo == 'I' %}
+              {% elif cliente.analise_credito.status_aplicativo == 'L' %}
                 <span class="badge bg-label-success">
-                  <i class="bx bx-check-circle me-1"></i>Instalado
+                  <i class="bx bx-check-circle me-1"></i>Liberado para Venda
                 </span>
               {% endif %}
             </td>
@@ -293,21 +293,21 @@ Clientes
                 <span class="badge bg-label-success">
                   <i class="bx bx-check-double me-1"></i>Finalizado
                 </span>
-              {% elif cliente.analise_credito.status_aplicativo == 'I' and cliente.analise_credito.imei %}
+              {% elif cliente.analise_credito.status_aplicativo == 'L' and cliente.analise_credito.renavam %}
                 <span class="badge bg-label-info">
                   <i class="bx bx-cart me-1"></i>Pronto para Venda
                 </span>
-              {% elif cliente.analise_credito.status_aplicativo == 'C' and not cliente.analise_credito.imei %}
+              {% elif cliente.analise_credito.status_aplicativo == 'A' and not cliente.analise_credito.renavam %}
                 <span class="badge bg-label-warning">
-                  <i class="bx bx-mobile me-1"></i>Aguardando IMEI
+                  <i class="bx bx-car me-1"></i>Aguardando RENAVAM e Placa
                 </span>
-              {% elif cliente.analise_credito.status_aplicativo == 'C' and cliente.analise_credito.imei %}
+              {% elif cliente.analise_credito.status_aplicativo == 'A' and cliente.analise_credito.renavam %}
                 <span class="badge bg-label-primary">
-                  <i class="bx bx-check me-1"></i>Aguardando Confirmação
+                  <i class="bx bx-check me-1"></i>Pronto para Liberação
                 </span>
               {% elif cliente.analise_credito.status_aplicativo == 'P' %}
                 <span class="badge bg-label-secondary">
-                  <i class="bx bx-qr me-1"></i>Aguardando QR Code
+                  <i class="bx bx-time me-1"></i>Aguardando Aprovação
                 </span>
               {% else %}
                 <span class="badge bg-label-danger">
@@ -339,49 +339,26 @@ Clientes
                   {# Separador visual #}
                   <div class="dropdown-divider"></div>
                   
-                  {# FLUXO DE TRABALHO - Etapa 1: Ler QR Code #}
-                  {% if cliente.analise_credito.status == 'A' and cliente.analise_credito.status_aplicativo == 'P' %}
-                  <button type="button" 
-                          class="dropdown-item" 
-                          data-bs-toggle="modal" 
-                          data-bs-target="#installModal{{ cliente.pk }}">
-                    <i class="bx bx-qr me-1"></i>📱 1. Ler QR Code (Vendedor)
-                  </button>
-                  {% endif %}
-                  
-                  {# FLUXO DE TRABALHO - Etapa 2: Confirmar Leitura #}
-                  {% if cliente.analise_credito.status == 'A' and cliente.analise_credito.status_aplicativo == 'C' and not cliente.analise_credito.imei %}
-                  <form method="post" action="{% url 'vendas:cliente_confirm_installed' cliente.pk %}" class="d-inline">
-                    {% csrf_token %}
-                    <button type="submit" class="dropdown-item">
-                      <i class="bx bx-check-circle me-1"></i>✅ 2. Confirmar Leitura QR (Vendedor)
-                    </button>
-                  </form>
-                  {% endif %}
-                  
-                  {# FLUXO DE TRABALHO - Etapa 3: Informar IMEI #}
-                  {% if cliente.analise_credito.status == 'A' and not cliente.analise_credito.imei and cliente.analise_credito.status_aplicativo == 'C' and user|has_group:"ANALISTA" %}
-                  <a href="{% url 'vendas:informar_imei_analise' cliente.analise_credito.pk %}" class="dropdown-item">
-                    <i class="bx bx-mobile me-1"></i>📱 3. Informar IMEI (Analista)
+                  {# FLUXO DE TRABALHO - Etapa 1: Aprovar Análise #}
+                  {% if cliente.analise_credito.status == 'EA' and user|has_perm:"vendas.change_status_analise" %}
+                  <a href="{% url 'vendas:aprovar_analise' cliente.analise_credito.pk %}" class="dropdown-item">
+                    <i class="bx bx-check me-1"></i>✅ 1. Aprovar Análise (Analista)
                   </a>
                   {% endif %}
                   
-                  {# FLUXO DE TRABALHO - Etapa 2.5: Analista Confirmar Instalação #}
-                  {% if cliente.analise_credito.status == 'A' and cliente.analise_credito.status_aplicativo == 'C' and cliente.analise_credito.imei and user|has_group:"ANALISTA" %}
-                  <form method="post" action="{% url 'vendas:analista_confirm_installed' cliente.pk %}" class="d-inline">
-                    {% csrf_token %}
-                    <button type="submit" class="dropdown-item">
-                      <i class="bx bx-check-circle me-1"></i>✅ 2.5. Confirmar Instalação (Analista)
-                    </button>
-                  </form>
+                  {# FLUXO DE TRABALHO - Etapa 2: Informar RENAVAM e Placa #}
+                  {% if cliente.analise_credito.status == 'A' and cliente.analise_credito.status_aplicativo == 'A' and not cliente.analise_credito.renavam and user|has_group:"ANALISTA" %}
+                  <a href="{% url 'vendas:informar_renavam_placa_analise' cliente.analise_credito.pk %}" class="dropdown-item">
+                    <i class="bx bx-car me-1"></i>🚗 2. Informar RENAVAM e Placa (Analista)
+                  </a>
                   {% endif %}
                   
-                  {# FLUXO DE TRABALHO - Etapa 4: Gerar Venda #}
-                  {% if cliente.analise_credito.status_aplicativo == 'I' and cliente.analise_credito.imei and user|has_perm:"vendas.add_venda" and not cliente.analise_credito.venda_gerada %}
+                  {# FLUXO DE TRABALHO - Etapa 3: Gerar Venda #}
+                  {% if cliente.analise_credito.status_aplicativo == 'L' and cliente.analise_credito.renavam and user|has_perm:"vendas.add_venda" and not cliente.analise_credito.venda_gerada %}
                   <form method="post" action="{% url 'vendas:gerar_venda' cliente.pk %}" onsubmit="return confirm('Gerar venda para {{ cliente.nome }}?');" class="m-0">
                     {% csrf_token %}
                     <button type="submit" class="dropdown-item">
-                      <i class="bx bx-cart me-1"></i>🛒 4. Gerar Venda (Vendedor)
+                      <i class="bx bx-cart me-1"></i>🛒 3. Gerar Venda (Vendedor)
                     </button>
                   </form>
                   {% endif %}
@@ -437,53 +414,7 @@ Clientes
             </div>
             
           </td> -->
-          <div class="modal fade" id="installModal{{ cliente.pk }}" tabindex="-1"
-          aria-labelledby="installModalLabel{{ cliente.pk }}" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered modal-lg">
-              <div class="modal-content rounded-3">
-          
-                <!-- Header -->
-                <div class="modal-header border-0 justify-content-center">
-                  <h5 class="modal-title fs-5" id="installModalLabel{{ cliente.pk }}">
-                    Instalar Aplicativo
-                  </h5>
-                  <button type="button"
-                          class="btn-close position-absolute top-0 end-0 m-3"
-                          data-bs-dismiss="modal"
-                          aria-label="Fechar">
-                  </button>
-                </div>
-          
-                <!-- Body: QR → Código → Botão -->
-                <div class="modal-body d-flex flex-column align-items-center text-center p-3">
-          
-                  {# 1) QR Code #}
-                  {% if loja.qr_code_aplicativo %}
-                    <img src="{{ loja.qr_code_aplicativo.url }}"
-                          alt="QR Code"
-                          class="img-fluid mb-3"
-                          style="max-width: 250px;">
-                  {% endif %}
-          
-                  {# 2) Código em destaque #}
-                  <div class="fs-2 fw-bold mb-4">
-                    {{ loja.codigo_aplicativo|default:"Código não disponível" }}
-                  </div>
-          
-                  {# 3) Botão Operação Finalizada #}
-                  <form method="post"
-                        action="{% url 'vendas:cliente_instalar_app' cliente.pk %}"
-                        class="w-100 px-3">
-                    {% csrf_token %}
-                    <button type="submit"
-                            class="btn btn-primary btn-lg w-100">
-                      Operação Finalizada
-                    </button>
-                  </form>
-                </div>
-              </div>
-            </div>
-          </div>
+
      
           
           {% empty %}

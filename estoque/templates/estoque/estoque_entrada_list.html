@@ -35,7 +35,7 @@ Estoque
               <thead>
                 <tr>
                   <th scope="col">ID</th>
-                  {% if user|has_perm:"estoque.can_view_all_imei" %}
+                                          {% if user|has_perm:"estoque.can_view_all_renavam" %}
                     <th scope="col">Loja</th>
                   {% endif %}
                   <th scope="col" class="text-center">Número da Nota</th>
@@ -52,7 +52,7 @@ Estoque
                   {% for entrada in entradas %}
                     <tr>
                         <td>{{ entrada.id }}</td>
-                        {% if user|has_perm:"estoque.can_view_all_imei" %}
+                        {% if user|has_perm:"estoque.can_view_all_renavam" %}
                           <td>{{ entrada.loja.nome|title }}</td>
                         {% endif %}
                         <td class="text-center">{{ entrada.numero_nota }}</td>

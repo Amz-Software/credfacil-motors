@@ -75,10 +75,7 @@ CACHES = {
 ASGI_APPLICATION = 'core.asgi.application'
 CHANNEL_LAYERS = {
     "default": {
-        "BACKEND": "channels_redis.core.RedisChannelLayer",
-        "CONFIG": {
-            "hosts": [("redis", 6379)],
-        },
+        "BACKEND": "channels.layers.InMemoryChannelLayer",
     },
 }
 
@@ -126,11 +123,7 @@ CACHES = {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
     },
     "select2": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": f"redis://{os.environ.get('REDIS_HOST')}:{os.environ.get('REDIS_PORT')}/{os.environ.get('REDIS_DB')}",
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        }
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
     }
 }
 
@@ -157,7 +150,7 @@ DATABASES = {
     },
 }
 
-db_used = os.environ.get('DB_USED')
+db_used = os.environ.get('DB_USED', 'sqlite')
 
 # Set the default database to the one selected by DB_USED
 DATABASES['default'] = DATABASES[db_used]

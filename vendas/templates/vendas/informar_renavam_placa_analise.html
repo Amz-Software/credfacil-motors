@@ -9,7 +9,7 @@ Informar RENAVAM e Placa - Análise de Crédito
 <div class="container-xxl mt-4">
     <div class="card">
         <div class="card-header">
-            <h4 class="mb-0">🚗 Informar RENAVAM e Placa - Ação do Analista</h4>
+            <h4 class="mb-0">🚗 Informar RENAVAM e Placa - Ação do Analista/Super Admin</h4>
         </div>
         <div class="card-body">
             <div class="row mb-3">
@@ -44,56 +44,88 @@ Informar RENAVAM e Placa - Análise de Crédito
             </div>
 
             {% if analise.renavam %}
-            <div class="alert alert-info">
-                <strong>RENAVAM já informado:</strong> {{ analise.renavam.renavam }}
+            <div class="alert alert-success">
+                <h6><i class="bx bx-check-circle me-2"></i>RENAVAM e Placa já informados</h6>
+                <p class="mb-1"><strong>RENAVAM:</strong> {{ analise.renavam.renavam }}</p>
                 {% if analise.placa_veiculo %}
-                <br><strong>Placa já informada:</strong> {{ analise.placa_veiculo }}
+                <p class="mb-0"><strong>Placa:</strong> {{ analise.placa_veiculo }}</p>
                 {% endif %}
+                <hr>
+                <p class="mb-0 text-success">
+                    <i class="bx bx-info-circle me-1"></i>
+                    <strong>Status:</strong> Venda liberada para geração pelo vendedor
+                </p>
+            </div>
+            {% else %}
+            <div class="alert alert-warning">
+                <h6><i class="bx bx-time me-2"></i>Aguardando Informações</h6>
+                <p class="mb-0">Esta análise de crédito foi aprovada e está aguardando o analista informar o RENAVAM e a placa do veículo.</p>
             </div>
             {% endif %}
 
             <form method="post">
                 {% csrf_token %}
-                <div class="mb-3">
-                    <label for="renavam_informado" class="form-label">
-                        <strong>RENAVAM do Veículo *</strong>
-                    </label>
-                    <input type="text" 
-                           class="form-control" 
-                           id="renavam_informado" 
-                           name="renavam_informado" 
-                           value="{{ analise.renavam_informado|default:'' }}"
-                           placeholder="Digite o RENAVAM do veículo"
-                           required>
-                    <div class="form-text">
-                        <strong>Analista:</strong> Após aprovar a análise de crédito, informe o RENAVAM do veículo. 
-                        Se o RENAVAM não existir no estoque, ele será criado automaticamente.
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="renavam_informado" class="form-label">
+                                <strong>RENAVAM do Veículo *</strong>
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="renavam_informado" 
+                                   name="renavam_informado" 
+                                   value="{{ analise.renavam_informado|default:'' }}"
+                                   placeholder="Ex: 12345678901"
+                                   maxlength="11"
+                                   pattern="[0-9]{11}"
+                                   required>
+                            <div class="form-text">
+                                <i class="bx bx-info-circle me-1"></i>
+                                RENAVAM de 11 dígitos do veículo. Se não existir no estoque, será criado automaticamente.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="placa_veiculo" class="form-label">
+                                <strong>Placa do Veículo *</strong>
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="placa_veiculo" 
+                                   name="placa_veiculo" 
+                                   value="{{ analise.placa_veiculo|default:'' }}"
+                                   placeholder="Ex: ABC-1234"
+                                   maxlength="8"
+                                   pattern="[A-Z]{3}-[0-9]{4}"
+                                   required>
+                            <div class="form-text">
+                                <i class="bx bx-info-circle me-1"></i>
+                                Placa do veículo no formato ABC-1234 (letras maiúsculas).
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
-                <div class="mb-3">
-                    <label for="placa_veiculo" class="form-label">
-                        <strong>Placa do Veículo *</strong>
-                    </label>
-                    <input type="text" 
-                           class="form-control" 
-                           id="placa_veiculo" 
-                           name="placa_veiculo" 
-                           value="{{ analise.placa_veiculo|default:'' }}"
-                           placeholder="Digite a placa do veículo (ex: ABC-1234)"
-                           required>
-                    <div class="form-text">
-                        <strong>Analista:</strong> Informe a placa do veículo que será locado. 
-                        Após informar RENAVAM e placa, a venda será liberada para geração pelo vendedor.
-                    </div>
+                <div class="alert alert-info">
+                    <h6><i class="bx bx-info-circle me-2"></i>Informações Importantes</h6>
+                    <ul class="mb-0">
+                        <li><strong>Fluxo:</strong> Solicitação → Aprovação → Informar RENAVAM → Gerar Venda</li>
+                        <li>Após informar o RENAVAM e a placa, a venda será <strong>liberada para geração</strong> pelo vendedor</li>
+                        <li>Se o RENAVAM não existir no estoque, um novo registro será criado automaticamente</li>
+                        <li>Verifique se os dados estão corretos antes de salvar</li>
+                    </ul>
                 </div>
                 
                 <div class="d-flex justify-content-between">
                     <a href="{% url 'vendas:cliente_update' cliente.pk %}" class="btn btn-secondary">
-                        <i class="fas fa-arrow-left"></i> Voltar
+                        <i class="bx bx-arrow-back me-1"></i> Voltar
                     </a>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save"></i> Salvar RENAVAM e Placa
+                    <button type="submit" class="btn btn-primary" id="btnSalvar">
+                        <i class="bx bx-save me-1"></i> 
+                        {% if analise.renavam %}Atualizar{% else %}Salvar{% endif %} RENAVAM e Placa
                     </button>
                 </div>
             </form>
@@ -101,3 +133,63 @@ Informar RENAVAM e Placa - Análise de Crédito
     </div>
 </div>
 {% endblock content %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const renavamInput = document.getElementById('renavam_informado');
+    const placaInput = document.getElementById('placa_veiculo');
+    const form = document.querySelector('form');
+    const btnSalvar = document.getElementById('btnSalvar');
+    
+    // Máscara para RENAVAM (apenas números, 11 dígitos)
+    renavamInput.addEventListener('input', function(e) {
+        let value = e.target.value.replace(/\D/g, '');
+        if (value.length > 11) {
+            value = value.substring(0, 11);
+        }
+        e.target.value = value;
+    });
+    
+    // Máscara para placa (ABC-1234)
+    placaInput.addEventListener('input', function(e) {
+        let value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+        if (value.length > 3) {
+            value = value.substring(0, 3) + '-' + value.substring(3, 7);
+        }
+        e.target.value = value;
+    });
+    
+    // Validação do formulário
+    form.addEventListener('submit', function(e) {
+        const renavam = renavamInput.value.replace(/\D/g, '');
+        const placa = placaInput.value.replace(/[^A-Z0-9]/g, '');
+        
+        if (renavam.length !== 11) {
+            e.preventDefault();
+            alert('RENAVAM deve ter exatamente 11 dígitos.');
+            renavamInput.focus();
+            return false;
+        }
+        
+        if (placa.length !== 7) {
+            e.preventDefault();
+            alert('Placa deve ter o formato ABC-1234.');
+            placaInput.focus();
+            return false;
+        }
+        
+        // Confirmar ação
+        const acao = btnSalvar.textContent.includes('Atualizar') ? 'atualizar' : 'salvar';
+        if (!confirm(`Tem certeza que deseja ${acao} o RENAVAM e a placa?`)) {
+            e.preventDefault();
+            return false;
+        }
+        
+        // Desabilitar botão para evitar duplo clique
+        btnSalvar.disabled = true;
+        btnSalvar.innerHTML = '<i class="bx bx-loader-alt bx-spin me-1"></i> Salvando...';
+    });
+});
+</script>
+{% endblock %}

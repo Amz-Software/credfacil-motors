@@ -990,22 +990,7 @@ def gerar_venda(request, cliente_id):
         messages.error(request, "❌ RENAVAM já vendido. Altere o RENAVAM para continuar.")
         return redirect('vendas:cliente_list')
 
-    estoque = Estoque.objects.filter(produto__nome=produto.nome, loja=analise.loja)
-
-    if not estoque.exists():
-        messages.error(request, f"❌ Estoque não encontrado para o produto {produto.nome} na loja {analise.loja.nome}.")
-        return redirect('vendas:cliente_list')
-    
-    # verificar se em algum produto com o mesmo nome possui estoque
-    estoque_produto = None
-    for est in estoque:
-        if est.quantidade_disponivel > 0:
-            estoque_produto = est
-            break
-        
-    if not estoque_produto:
-        messages.error(request, f"❌ Estoque insuficiente para o produto {produto.nome} na loja {analise.loja.nome}.")
-        return redirect('vendas:cliente_list')
+    # Validação de estoque removida - o estoque será criado automaticamente com o RENAVAM informado
 
     # Cria venda
     venda = Venda.objects.create(
@@ -1050,11 +1035,10 @@ def gerar_venda(request, cliente_id):
         valor_desconto=0
     )
 
-    # Atualiza RENAVAM e estoque
+    # Atualiza RENAVAM
     renavam.vendido = True
     renavam.data_venda = timezone.now()
     renavam.save()
-    estoque_produto.remover_estoque(1)
 
     # Pagamentos
     tipo_entrada = TipoPagamento.objects.get(nome__iexact='ENTRADA')
@@ -3121,35 +3105,67 @@ class AnalistaConfirmInstalledView(PermissionRequiredMixin, View):
 
 @permission_required('vendas.change_analisecreditocliente', raise_exception=True)
 def informar_renavam_placa_analise(request, pk):
-    """View para analista informar o RENAVAM e placa na análise de crédito"""
-    # Verificar se o usuário é analista
-    if not request.user.groups.filter(name='ANALISTA').exists():
-        messages.error(request, 'Apenas analistas podem informar o RENAVAM e placa.')
+    """View para analista ou super admin informar o RENAVAM e placa na análise de crédito"""
+    # Verificar se o usuário é analista ou super admin
+    if not (request.user.groups.filter(name='ANALISTA').exists() or request.user.is_superuser):
+        messages.error(request, 'Apenas analistas ou super administradores podem informar o RENAVAM e placa.')
         return redirect('vendas:cliente_list')
     
     analise = get_object_or_404(AnaliseCreditoCliente, pk=pk)
     
     # Verificar se o status está correto para informar RENAVAM e placa
-    if analise.status_aplicativo != 'A':
+    if analise.status != 'A':
         messages.error(request, 'Só é possível informar RENAVAM e placa após aprovação da análise de crédito.')
+        return redirect('vendas:cliente_list')
+    
+    # Permitir acesso se:
+    # 1. Status aplicativo é 'A' (Aguardando RENAVAM e Placa) - primeira vez
+    # 2. Status aplicativo é 'L' (Liberado) e já tem RENAVAM - para alteração
+    if analise.status_aplicativo not in ['A', 'L']:
+        messages.error(request, 'Status do aplicativo deve estar como "Aguardando RENAVAM e Placa" ou "Liberado para Venda" para informar esses dados.')
         return redirect('vendas:cliente_list')
     
     if request.method == 'POST':
         renavam_informado = request.POST.get('renavam_informado')
         placa_veiculo = request.POST.get('placa_veiculo')
         
+        # Validações dos campos
         if not renavam_informado:
             messages.error(request, 'RENAVAM é obrigatório.')
-            return redirect('vendas:cliente_update', pk=analise.cliente.pk)
+            return render(request, 'vendas/informar_renavam_placa_analise.html', {
+                'analise': analise,
+                'cliente': analise.cliente
+            })
         
         if not placa_veiculo:
             messages.error(request, 'Placa do veículo é obrigatória.')
-            return redirect('vendas:cliente_update', pk=analise.cliente.pk)
+            return render(request, 'vendas/informar_renavam_placa_analise.html', {
+                'analise': analise,
+                'cliente': analise.cliente
+            })
+        
+        # Validação do formato do RENAVAM
+        renavam_limpo = re.sub(r'\D', '', renavam_informado)
+        if len(renavam_limpo) != 11:
+            messages.error(request, 'RENAVAM deve ter exatamente 11 dígitos.')
+            return render(request, 'vendas/informar_renavam_placa_analise.html', {
+                'analise': analise,
+                'cliente': analise.cliente
+            })
+        
+        # Validação do formato da placa
+        placa_limpa = re.sub(r'[^A-Z0-9]', '', placa_veiculo.upper())
+        if len(placa_limpa) != 7:
+            messages.error(request, 'Placa deve ter o formato ABC-1234.')
+            return render(request, 'vendas/informar_renavam_placa_analise.html', {
+                'analise': analise,
+                'cliente': analise.cliente
+            })
         
         # Verificar se o RENAVAM já existe no estoque
         loja = get_object_or_404(Loja, id=request.session.get('loja_id'))
         estoque_renavam_existente = EstoqueImei.objects.filter(
-            renavam=renavam_informado,
+            renavam=renavam_limpo,
             produto=analise.produto,
             loja=loja,
             vendido=False,
@@ -3159,18 +3175,18 @@ def informar_renavam_placa_analise(request, pk):
         if estoque_renavam_existente:
             # RENAVAM já existe no estoque
             analise.renavam = estoque_renavam_existente
-            analise.renavam_informado = renavam_informado
-            analise.placa_veiculo = placa_veiculo
+            analise.renavam_informado = renavam_limpo
+            analise.placa_veiculo = placa_veiculo.upper()
             analise.save()
-            messages.success(request, f'RENAVAM {renavam_informado} associado com sucesso à análise.')
+            messages.success(request, f'RENAVAM {renavam_limpo} associado com sucesso à análise.')
         else:
             # RENAVAM não existe, criar novo registro no estoque
             try:
                 # Criar novo registro no EstoqueImei
                 novo_estoque_renavam = EstoqueImei.objects.create(
                     produto=analise.produto,
-                    renavam=renavam_informado,
-                    placa=placa_veiculo,
+                    renavam=renavam_limpo,
+                    placa=placa_veiculo.upper(),
                     loja=loja,
                     vendido=False,
                     cancelado=False
@@ -3179,14 +3195,17 @@ def informar_renavam_placa_analise(request, pk):
                 
                 # Associar à análise
                 analise.renavam = novo_estoque_renavam
-                analise.renavam_informado = renavam_informado
-                analise.placa_veiculo = placa_veiculo
+                analise.renavam_informado = renavam_limpo
+                analise.placa_veiculo = placa_veiculo.upper()
                 analise.save()
                 
-                messages.success(request, f'RENAVAM {renavam_informado} criado e associado com sucesso à análise.')
+                messages.success(request, f'RENAVAM {renavam_limpo} criado e associado com sucesso à análise.')
             except Exception as e:
                 messages.error(request, f'Erro ao criar RENAVAM: {str(e)}')
-                return redirect('vendas:cliente_update', pk=analise.cliente.pk)
+                return render(request, 'vendas/informar_renavam_placa_analise.html', {
+                    'analise': analise,
+                    'cliente': analise.cliente
+                })
         
         # Marcar como liberado para venda quando o analista informar o RENAVAM e placa
         analise.status_aplicativo = 'L'
@@ -3198,10 +3217,10 @@ def informar_renavam_placa_analise(request, pk):
         from notificacao.utils import enviar_ws_para_usuario
         
         cliente_nome = analise.cliente.nome if analise.cliente else "Cliente"
-        renavam_info = f'RENAVAM {renavam_informado}' if renavam_informado else 'RENAVAM não informado'
+        renavam_info = f'RENAVAM {renavam_limpo}' if renavam_limpo else 'RENAVAM não informado'
         
         verb = f'Analista informou RENAVAM e placa para cliente {cliente_nome.capitalize()}.'
-        description = f'{renavam_info} - Placa: {placa_veiculo} da loja {loja.nome.capitalize()}. Venda liberada para geração pelo vendedor.'
+        description = f'{renavam_info} - Placa: {placa_veiculo.upper()} da loja {loja.nome.capitalize()}. Venda liberada para geração pelo vendedor.'
         
         # Notificar analistas e administradores
         usuarios_para_notificar = list(

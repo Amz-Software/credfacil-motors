@@ -15,6 +15,28 @@
           <h4 class="card-title">{% if loja.pk %}Editar Loja{% else %}Criar Loja{% endif %}</h4>
         </div>
         <div class="card-body">
+          {% if messages %}
+            {% for message in messages %}
+              <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+            {% endfor %}
+          {% endif %}
+          
+          {% if form.errors %}
+            <div class="alert alert-danger" role="alert">
+              <h6>Por favor, corrija os seguintes erros:</h6>
+              <ul class="mb-0">
+                {% for field, errors in form.errors.items %}
+                  {% for error in errors %}
+                    <li><strong>{{ field }}:</strong> {{ error }}</li>
+                  {% endfor %}
+                {% endfor %}
+              </ul>
+            </div>
+          {% endif %}
+          
           <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
             <div class="row">
@@ -25,6 +47,12 @@
               <div class="col-md-6 mb-3">
                 <label for="id_cnpj" class="form-label">CNPJ</label>
                 <input type="text" class="form-control" id="id_cnpj" name="cnpj" value="{{ form.cnpj.value|default_if_none:'' }}">
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="id_inscricao_estadual" class="form-label">Inscrição Estadual</label>
+                <input type="text" class="form-control" id="id_inscricao_estadual" name="inscricao_estadual" value="{{ form.inscricao_estadual.value|default_if_none:'' }}">
               </div>
             </div>
             <div class="row">
@@ -63,22 +91,22 @@
                 <input type="text" class="form-control" id="id_email" name="chave_pix" value="{{ form.chave_pix.value|default_if_none:'' }}">
               </div>
               <div class="col-md-6 mb-3">
-                <label for="id_porcentagem_desconto_4" class="form-label">Porcentual Desconto 4</label>
-                <input type="text" class="form-control" id="id_porcentagem_desconto_4"
-                  name="porcentagem_desconto_4"
-                  value="{{ form.porcentagem_desconto_4.value|default_if_none:'' }}">
+                <label for="id_porcentagem_desconto_10" class="form-label">Porcentual Desconto 10</label>
+                <input type="text" class="form-control" id="id_porcentagem_desconto_10"
+                  name="porcentagem_desconto_10"
+                  value="{{ form.porcentagem_desconto_10.value|default_if_none:'' }}">
               </div>
               <div class="col-md-6 mb-3">
-                <label for="id_porcentagem_desconto_6" class="form-label">Porcentual Desconto 6</label>
-                <input type="text" class="form-control" id="id_porcentagem_desconto_6"
-                  name="porcentagem_desconto_6"
-                  value="{{ form.porcentagem_desconto_6.value|default_if_none:'' }}">
+                <label for="id_porcentagem_desconto_12" class="form-label">Porcentual Desconto 12</label>
+                <input type="text" class="form-control" id="id_porcentagem_desconto_12"
+                  name="porcentagem_desconto_12"
+                  value="{{ form.porcentagem_desconto_12.value|default_if_none:'' }}">
               </div>
               <div class="col-md-6 mb-3">
-                <label for="id_porcentagem_desconto_8" class="form-label">Porcentual Desconto</label>
-                <input type="text" class="form-control" id="id_porcentagem_desconto_8"
-                  name="porcentagem_desconto_8"
-                  value="{{ form.porcentagem_desconto_8.value|default_if_none:'' }}">
+                <label for="id_porcentagem_desconto_14" class="form-label">Porcentual Desconto 14</label>
+                <input type="text" class="form-control" id="id_porcentagem_desconto_14"
+                  name="porcentagem_desconto_14"
+                  value="{{ form.porcentagem_desconto_14.value|default_if_none:'' }}">
               </div>
               <div class="col-md-6 mb-3">
                 <label for="id_qr_code_aplicativo" class="form-label">Qr Code Aplicativo</label>
@@ -87,6 +115,16 @@
               <div class="col-md-6 mb-3">
                 <label for="id_codigo_aplicativo" class="form-label">Código Aplicativo</label>
                 <input type="text" class="form-control" id="id_codigo_aplicativo" name="codigo_aplicativo" value="{{ form.codigo_aplicativo.value|default_if_none:'' }}">
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="id_credfacil" name="credfacil" {% if form.credfacil.value %}checked{% endif %}>
+                  <label class="form-check-label" for="id_credfacil">
+                    Credfacil
+                  </label>
+                </div>
               </div>
             </div>
             <div class="row">
@@ -154,6 +192,17 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Obtém o valor do atributo 'data-contrato'
   const contratoValue = scriptElement.getAttribute('data-contrato');
+  
+  // Verifica se o contrato tem valor válido, senão usa um objeto vazio
+  let contratoData = {};
+  try {
+    if (contratoValue && contratoValue !== 'None' && contratoValue !== 'null') {
+      contratoData = JSON.parse(contratoValue);
+    }
+  } catch (e) {
+    console.warn('Erro ao fazer parse do contrato:', e);
+    contratoData = {};
+  }
 
   const editor = new EditorJS({ 
     holder: 'editorjs', 
@@ -167,7 +216,7 @@ document.addEventListener('DOMContentLoaded', function() {
         },
       },
     }, 
-    data: JSON.parse(contratoValue),
+    data: contratoData,
     placeholder: 'Escreva seu contrato aqui...',
     onChange: (api, event) => {
       console.log('Now I know that Editor\'s content changed!', event)

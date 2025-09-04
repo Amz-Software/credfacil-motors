@@ -478,6 +478,7 @@ class AnaliseCreditoCliente(Base):
     
     def aprovar(self, user):
         self.status = 'A'
+        self.status_aplicativo = 'A'  # Automaticamente vai para "Aguardando RENAVAM e Placa"
         self.data_aprovacao = timezone.now()
         self.aprovado_por = user
         self.save()

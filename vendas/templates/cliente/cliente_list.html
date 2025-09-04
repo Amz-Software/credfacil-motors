@@ -260,11 +260,11 @@ Clientes
             {% endif %}
             <td>{{ cliente.telefone }}</td>
             <td>
-              {% if cliente.analise_credito.imei %}
+              {% if cliente.analise_credito.renavam %}
                 <span class="badge bg-label-success">
                   <i class="bx bx-check me-1"></i>Informado
                 </span>
-                <br><small class="text-muted">{{ cliente.analise_credito.imei.imei }}</small>
+                <br><small class="text-muted">{{ cliente.analise_credito.renavam.renavam }}</small>
               {% else %}
                 <span class="badge bg-label-warning">
                   <i class="bx bx-time me-1"></i>Pendente
@@ -347,10 +347,22 @@ Clientes
                   {% endif %}
                   
                   {# FLUXO DE TRABALHO - Etapa 2: Informar RENAVAM e Placa #}
-                  {% if cliente.analise_credito.status == 'A' and cliente.analise_credito.status_aplicativo == 'A' and not cliente.analise_credito.renavam and user|has_group:"ANALISTA" %}
-                  <a href="{% url 'vendas:informar_renavam_placa_analise' cliente.analise_credito.pk %}" class="dropdown-item">
-                    <i class="bx bx-car me-1"></i>🚗 2. Informar RENAVAM e Placa (Analista)
-                  </a>
+                  {% if cliente.analise_credito.status == 'A' and cliente.analise_credito.status_aplicativo == 'A' and not cliente.analise_credito.renavam %}
+                    {% if user|has_group:"ANALISTA" or user.is_superuser %}
+                    <a href="{% url 'vendas:informar_renavam_placa_analise' cliente.analise_credito.pk %}" class="dropdown-item">
+                      <i class="bx bx-car me-1"></i>🚗 2. Informar RENAVAM e Placa (Analista/Super Admin)
+                    </a>
+                    {% else %}
+                    <span class="dropdown-item text-warning disabled">
+                      <i class="bx bx-car me-1"></i>🚗 2. Aguardando Analista informar RENAVAM e Placa
+                    </span>
+                    {% endif %}
+                  {% elif cliente.analise_credito.status == 'A' and cliente.analise_credito.status_aplicativo == 'L' and cliente.analise_credito.renavam %}
+                    {% if user|has_group:"ANALISTA" or user.is_superuser %}
+                    <a href="{% url 'vendas:informar_renavam_placa_analise' cliente.analise_credito.pk %}" class="dropdown-item">
+                      <i class="bx bx-edit me-1"></i>✏️ Alterar RENAVAM e Placa (Analista/Super Admin)
+                    </a>
+                    {% endif %}
                   {% endif %}
                   
                   {# FLUXO DE TRABALHO - Etapa 3: Gerar Venda #}
@@ -361,6 +373,27 @@ Clientes
                       <i class="bx bx-cart me-1"></i>🛒 3. Gerar Venda (Vendedor)
                     </button>
                   </form>
+                  {% else %}
+                  {# Debug: Mostrar por que o botão não aparece #}
+                  {% if cliente.analise_credito.status == 'A' and not cliente.analise_credito.venda_gerada %}
+                    {% if cliente.analise_credito.status_aplicativo != 'L' %}
+                    <span class="dropdown-item text-warning disabled">
+                      <i class="bx bx-time me-1"></i>⏳ Aguardando RENAVAM e Placa (Status: {{ cliente.analise_credito.get_status_aplicativo_display }})
+                    </span>
+                    {% elif not cliente.analise_credito.renavam %}
+                    <span class="dropdown-item text-warning disabled">
+                      <i class="bx bx-car me-1"></i>🚗 RENAVAM não informado
+                    </span>
+                    {% elif not user|has_perm:"vendas.add_venda" %}
+                    <span class="dropdown-item text-danger disabled">
+                      <i class="bx bx-lock me-1"></i>🔒 Sem permissão para gerar venda
+                    </span>
+                    {% else %}
+                    <span class="dropdown-item text-info disabled">
+                      <i class="bx bx-info-circle me-1"></i>ℹ️ Condições não atendidas para gerar venda
+                    </span>
+                    {% endif %}
+                  {% endif %}
                   {% endif %}
                   
                   {# Venda já gerada #}

@@ -591,32 +591,35 @@
                 </div>
               {% endif %}
               
-              {# Seção de IMEI #}
+              {# Seção de RENAVAM #}
               {% if cliente.analise_credito %}
-              <div class="imei-section">
-                <h6 class="mb-3"><i class="bx bx-mobile me-2"></i>Informações do IMEI</h6>
+              <div class="renavam-section">
+                <h6 class="mb-3"><i class="bx bx-car me-2"></i>Informações do RENAVAM</h6>
                 
-                {% if cliente.analise_credito.imei %}
-                  <div class="imei-status success">
+                {% if cliente.analise_credito.renavam %}
+                  <div class="renavam-status success">
                     <div>
                       <i class="bi bi-check-circle me-2"></i>
-                      <strong>IMEI informado:</strong> {{ cliente.analise_credito.imei.imei }}
+                      <strong>RENAVAM informado:</strong> {{ cliente.analise_credito.renavam.renavam }}
+                      {% if cliente.analise_credito.placa_veiculo %}
+                        <br><strong>Placa:</strong> {{ cliente.analise_credito.placa_veiculo }}
+                      {% endif %}
                     </div>
-                    {% if user|has_perm:"vendas.change_analisecreditocliente" %}
+                    {% if user|has_perm:"vendas.change_analisecreditocliente" and user|has_group:"ANALISTA" or user.is_superuser %}
                     <a href="{% url 'vendas:informar_renavam_placa_analise' cliente.analise_credito.pk %}" class="btn btn-sm btn-outline-primary">
                       <i class="bi bi-pencil"></i> Alterar
                     </a>
                     {% endif %}
                   </div>
                 {% else %}
-                  <div class="imei-status warning">
+                  <div class="renavam-status warning">
                     <div>
                       <i class="bi bi-exclamation-triangle me-2"></i>
-                      <strong>IMEI não informado.</strong> 
+                      <strong>RENAVAM não informado.</strong> 
                     </div>
-                    {% if user|has_perm:"vendas.change_analisecreditocliente" %}
+                    {% if user|has_perm:"vendas.change_analisecreditocliente" and user|has_group:"ANALISTA" or user.is_superuser %}
                     <a href="{% url 'vendas:informar_renavam_placa_analise' cliente.analise_credito.pk %}" class="btn btn-sm btn-primary">
-                                              <i class="bi bi-plus-circle"></i> Informar RENAVAM e Placa
+                      <i class="bi bi-plus-circle"></i> Informar RENAVAM e Placa
                     </a>
                     {% endif %}
                   </div>

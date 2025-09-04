@@ -2514,9 +2514,14 @@ def contrato_view(request, pk):
     valor_total = venda.pagamentos_valor_total
     pagamento_carne = Pagamento.objects.filter(venda=venda, tipo_pagamento__carne=True).first()
     aparelho = venda.itens_venda.first()
-    imei = aparelho.imei if aparelho else None
+    renavam = aparelho.renavam if aparelho else None
     loja = Loja.objects.get(id=request.session.get('loja_id'))
     cliente = venda.cliente
+    
+    # Busca a placa do veículo da análise de crédito
+    placa_veiculo = None
+    if cliente.analise_credito:
+        placa_veiculo = cliente.analise_credito.placa_veiculo
     contrato = loja.contrato
     contrato = json.dumps(contrato)
     primeira_parcela = pagamento_carne.data_primeira_parcela if pagamento_carne else None
@@ -2544,7 +2549,8 @@ def contrato_view(request, pk):
         'loja': loja,
         'contrato': contrato,
         'aparelho': aparelho,
-        'imei': imei,
+        'renavam': renavam,
+        'placa_veiculo': placa_veiculo,
         'valor_parcela': pagamento_carne.valor_parcela if pagamento_carne else None,
         'quantidade_parcelas': parcelas,
         'parcelas_meses': parcelas_meses,

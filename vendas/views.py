@@ -623,9 +623,19 @@ class ClienteUpdateView(PermissionRequiredMixin, UpdateView):
         context['form_analise_credito'] = kwargs.get('form_analise_credito', AnaliseCreditoClienteForm(instance=cliente.analise_credito, user=self.request.user))
         context['cliente_id'] = cliente.id
         
-        analise = get_object_or_404(AnaliseCreditoCliente, cliente=self.object)
-        # expõe no template
-        context['analise_credito'] = analise
+        # Busca a análise de crédito de forma segura
+        try:
+            analise = AnaliseCreditoCliente.objects.get(cliente=self.object)
+            context['analise_credito'] = analise
+        except AnaliseCreditoCliente.DoesNotExist:
+            # Se não existe análise de crédito, cria uma nova
+            analise = AnaliseCreditoCliente.objects.create(
+                cliente=self.object,
+                produto=Produto.objects.first(),  # Produto padrão
+                criado_por=self.request.user,
+                modificado_por=self.request.user
+            )
+            context['analise_credito'] = analise
         
         context['status_app_choices'] = AnaliseCreditoCliente.STATUS_APP_CHOICES
 
@@ -638,11 +648,19 @@ class ClienteUpdateView(PermissionRequiredMixin, UpdateView):
         # Verifica se o usuário é analista
         is_analista = user.groups.filter(name='ANALISTA').exists()
         
-        # Verifica se a venda já foi gerada
-        venda_gerada = self.object.analise_credito.venda is not None
+        # Verifica se a venda já foi gerada (de forma segura)
+        try:
+            venda_gerada = self.object.analise_credito.venda is not None
+        except:
+            venda_gerada = False
 
         # Se não é analista e não tem permissão de mudar status, só pode editar se estiver em análise
-        if not is_analista and not user.has_perm('vendas.change_status_analise') and not self.object.analise_credito.status == 'EA':
+        try:
+            status_analise = self.object.analise_credito.status
+        except:
+            status_analise = 'EA'  # Status padrão se não existir análise
+            
+        if not is_analista and not user.has_perm('vendas.change_status_analise') and not status_analise == 'EA':
             messages.warning(request, "❌ Somente Solicitacao em análise de crédito em andamento podem ser editados.")
             return redirect(self.success_url)
         
@@ -652,11 +670,29 @@ class ClienteUpdateView(PermissionRequiredMixin, UpdateView):
                 messages.warning(request, "❌ Somente usuários com permissão específica podem editar solicitações após a venda ser gerada.")
                 return redirect(self.success_url)
 
-        form_cliente = ClienteForm(request.POST, instance=self.object, user=user)
-        form_adicional = ContatoAdicionalForm(request.POST, instance=self.object.contato_adicional, user=user)
-        form_informacao = InformacaoPessoalForm(request.POST, instance=self.object.informacao_pessoal, user=user)
-        form_comprovantes = ComprovantesClienteForm(request.POST, request.FILES, instance=self.object.comprovantes, user=user)
-        form_analise_credito = AnaliseCreditoClienteForm(request.POST, instance=self.object.analise_credito, user=request.user)
+        # Cria os formulários de forma segura
+        try:
+            form_cliente = ClienteForm(request.POST, instance=self.object, user=user)
+            form_adicional = ContatoAdicionalForm(request.POST, instance=self.object.contato_adicional, user=user)
+            form_informacao = InformacaoPessoalForm(request.POST, instance=self.object.informacao_pessoal, user=user)
+            form_comprovantes = ComprovantesClienteForm(request.POST, request.FILES, instance=self.object.comprovantes, user=user)
+            
+            # Busca análise de crédito de forma segura
+            try:
+                analise_credito = self.object.analise_credito
+            except:
+                # Se não existe, cria uma nova
+                analise_credito = AnaliseCreditoCliente.objects.create(
+                    cliente=self.object,
+                    produto=Produto.objects.first(),
+                    criado_por=user,
+                    modificado_por=user
+                )
+            
+            form_analise_credito = AnaliseCreditoClienteForm(request.POST, instance=analise_credito, user=request.user)
+        except Exception as e:
+            messages.error(request, f"❌ Erro ao criar formulários: {str(e)}")
+            return redirect(self.success_url)
 
         if all([
             form_cliente.is_valid(),

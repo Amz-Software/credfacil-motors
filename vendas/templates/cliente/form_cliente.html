@@ -310,8 +310,8 @@
       </h4>
 
       {# badge de análise de crédito continua igual… #}
-      {% if cliente.pk and cliente.analise_credito %}
-        {% with analise=cliente.analise_credito %}
+      {% if cliente.pk and analise_credito %}
+        {% with analise=analise_credito %}
           <span class="badge fs-5 p-2
             {% if analise.status == 'A' %}bg-success
             {% elif analise.status == 'R' %}bg-danger
@@ -349,12 +349,14 @@
 
       {% else %}
         {# só exibe badge se sem permissão #}
+        {% if analise_credito %}
         <span class="badge fs-6 p-2 ms-auto
-          {% if cliente.analise_credito.status_aplicativo == 'P' %}bg-warning text-dark
-          {% elif cliente.analise_credito.status_aplicativo == 'C' %}bg-info text-white
+          {% if analise_credito.status_aplicativo == 'P' %}bg-warning text-dark
+          {% elif analise_credito.status_aplicativo == 'C' %}bg-info text-white
           {% else %}bg-success{% endif %}">
-          {{ cliente.get_status_aplicativo_display }}
+          {{ analise_credito.get_status_aplicativo_display }}
         </span>
+        {% endif %}
       {% endif %}
     </div>
 
@@ -592,21 +594,21 @@
               {% endif %}
               
               {# Seção de RENAVAM #}
-              {% if cliente.analise_credito %}
+              {% if analise_credito %}
               <div class="renavam-section">
                 <h6 class="mb-3"><i class="bx bx-car me-2"></i>Informações do RENAVAM</h6>
                 
-                {% if cliente.analise_credito.renavam %}
+                {% if analise_credito.renavam %}
                   <div class="renavam-status success">
                     <div>
                       <i class="bi bi-check-circle me-2"></i>
-                      <strong>RENAVAM informado:</strong> {{ cliente.analise_credito.renavam.renavam }}
-                      {% if cliente.analise_credito.placa_veiculo %}
-                        <br><strong>Placa:</strong> {{ cliente.analise_credito.placa_veiculo }}
+                      <strong>RENAVAM informado:</strong> {{ analise_credito.renavam.renavam }}
+                      {% if analise_credito.placa_veiculo %}
+                        <br><strong>Placa:</strong> {{ analise_credito.placa_veiculo }}
                       {% endif %}
                     </div>
                     {% if user|has_perm:"vendas.change_analisecreditocliente" and user|has_group:"ANALISTA" or user.is_superuser %}
-                    <a href="{% url 'vendas:informar_renavam_placa_analise' cliente.analise_credito.pk %}" class="btn btn-sm btn-outline-primary">
+                    <a href="{% url 'vendas:informar_renavam_placa_analise' analise_credito.pk %}" class="btn btn-sm btn-outline-primary">
                       <i class="bi bi-pencil"></i> Alterar
                     </a>
                     {% endif %}
@@ -618,7 +620,7 @@
                       <strong>RENAVAM não informado.</strong> 
                     </div>
                     {% if user|has_perm:"vendas.change_analisecreditocliente" and user|has_group:"ANALISTA" or user.is_superuser %}
-                    <a href="{% url 'vendas:informar_renavam_placa_analise' cliente.analise_credito.pk %}" class="btn btn-sm btn-primary">
+                    <a href="{% url 'vendas:informar_renavam_placa_analise' analise_credito.pk %}" class="btn btn-sm btn-primary">
                       <i class="bi bi-plus-circle"></i> Informar RENAVAM e Placa
                     </a>
                     {% endif %}

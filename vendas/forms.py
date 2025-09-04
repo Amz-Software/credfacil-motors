@@ -569,12 +569,19 @@ class ComprovantesClienteForm(forms.ModelForm):
             
             if user and not user.has_perm('vendas.can_edit_finished_sale'):
                 if self.instance.cliente.analise_credito and  not self.instance.cliente.analise_credito.status == 'EA':
-                    self.fields['documento_identificacao_frente'].disabled = True
-                    self.fields['documento_identificacao_verso'].disabled = True
-                    self.fields['comprovante_residencia'].disabled = True
-                    self.fields['consulta_serasa'].disabled = True
-                    self.fields['foto_cliente'].disabled = True
-                    self.fields['foto_cnh'].disabled = True
+                    # Desabilita campos apenas se eles existirem
+                    if 'documento_identificacao_frente' in self.fields:
+                        self.fields['documento_identificacao_frente'].disabled = True
+                    if 'documento_identificacao_verso' in self.fields:
+                        self.fields['documento_identificacao_verso'].disabled = True
+                    if 'comprovante_residencia' in self.fields:
+                        self.fields['comprovante_residencia'].disabled = True
+                    if 'consulta_serasa' in self.fields:
+                        self.fields['consulta_serasa'].disabled = True
+                    if 'foto_cliente' in self.fields:
+                        self.fields['foto_cliente'].disabled = True
+                    if 'foto_cnh' in self.fields:
+                        self.fields['foto_cnh'].disabled = True
                     
                     
 class ComprovantesClienteEditForm(forms.ModelForm):
@@ -657,20 +664,33 @@ class ComprovantesClienteEditForm(forms.ModelForm):
         
         if self.instance and self.instance.pk:
             if user and not user.has_perm('vendas.change_status_analise'):
-                self.fields['documento_identificacao_frente'].disabled = True
-                self.fields['documento_identificacao_verso'].disabled = True
-                self.fields['comprovante_residencia'].disabled = True
-                self.fields['foto_cliente'].disabled = True
-                self.fields['foto_cnh'].disabled = True
+                # Desabilita campos apenas se eles existirem
+                if 'documento_identificacao_frente' in self.fields:
+                    self.fields['documento_identificacao_frente'].disabled = True
+                if 'documento_identificacao_verso' in self.fields:
+                    self.fields['documento_identificacao_verso'].disabled = True
+                if 'comprovante_residencia' in self.fields:
+                    self.fields['comprovante_residencia'].disabled = True
+                if 'foto_cliente' in self.fields:
+                    self.fields['foto_cliente'].disabled = True
+                if 'foto_cnh' in self.fields:
+                    self.fields['foto_cnh'].disabled = True
             
             if user and not user.has_perm('vendas.can_edit_finished_sale'):
                 if self.instance.cliente.analise_credito and not self.instance.cliente.analise_credito.status == 'EA':
-                    self.fields['documento_identificacao_frente'].disabled = True
-                    self.fields['documento_identificacao_verso'].disabled = True
-                    self.fields['comprovante_residencia'].disabled = True
-                    self.fields['consulta_serasa'].disabled = True
-                    self.fields['foto_cliente'].disabled = True
-                    self.fields['foto_cnh'].disabled = True
+                    # Desabilita campos apenas se eles existirem
+                    if 'documento_identificacao_frente' in self.fields:
+                        self.fields['documento_identificacao_frente'].disabled = True
+                    if 'documento_identificacao_verso' in self.fields:
+                        self.fields['documento_identificacao_verso'].disabled = True
+                    if 'comprovante_residencia' in self.fields:
+                        self.fields['comprovante_residencia'].disabled = True
+                    if 'consulta_serasa' in self.fields:
+                        self.fields['consulta_serasa'].disabled = True
+                    if 'foto_cliente' in self.fields:
+                        self.fields['foto_cliente'].disabled = True
+                    if 'foto_cnh' in self.fields:
+                        self.fields['foto_cnh'].disabled = True
                     
                     
 class EnderecoForm(forms.ModelForm):

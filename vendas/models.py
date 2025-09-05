@@ -165,6 +165,9 @@ class Loja(Base):
     gerentes = models.ManyToManyField('accounts.User', related_name='lojas_gerenciadas')
     chave_pix = models.CharField(max_length=100, null=True, blank=True)
     credfacil = models.BooleanField(default=False)
+    porcentagem_desconto_4 = models.DecimalField(max_digits=5, decimal_places=2, default=25.00)
+    porcentagem_desconto_6 = models.DecimalField(max_digits=5, decimal_places=2, default=25.00)
+    porcentagem_desconto_8 = models.DecimalField(max_digits=5, decimal_places=2, default=25.00)
     porcentagem_desconto_10 = models.DecimalField(max_digits=5, decimal_places=2, default=25.00)
     porcentagem_desconto_12 = models.DecimalField(max_digits=5, decimal_places=2, default=25.00)
     porcentagem_desconto_14 = models.DecimalField(max_digits=5, decimal_places=2, default=25.00)
@@ -458,6 +461,9 @@ class AnaliseCreditoCliente(Base):
         ('15', 'Dia 15'),
     ), verbose_name='Data de pagamento')
     numero_parcelas = models.CharField(max_length=20, choices=(
+        ('4', '4x'),
+        ('6', '6x'),
+        ('8', '8x'),
         ('10', '10x'),
         ('12', '12x'),
         ('14', '14x'),

@@ -38,41 +38,245 @@ Criar Produto
                     <div class="form-group mb-3">
                       {{ form.valor_repasse_logista.label_tag }}
                       {{ form.valor_repasse_logista }}
+                      <small class="form-text text-muted">
+                        <i class="bx bx-info-circle me-1"></i>
+                        Valor que será repassado para o logista
+                      </small>
                     </div>
 
                     <!-- Campo Entrada Cliente -->
-                    <div class="form-group mb-3">
+                    <div class="form-group mb-4">
                       {{ form.entrada_cliente.label_tag }}
                       {{ form.entrada_cliente }}
+                      <small class="form-text text-muted">Valor da entrada que o cliente deve pagar</small>
                     </div>
 
-                    <!-- Campo Valor 14 Vezes -->
-                    <div class="form-group mb-3">
-                      {{ form.valor_14_vezes.label_tag }}
-                      {{ form.valor_14_vezes }}
+                    <!-- Seção de Parcelamentos -->
+                    <div class="card mb-4">
+                      <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                          <i class="bx bx-credit-card me-2"></i>
+                          Configuração de Parcelamentos
+                        </h5>
+                        <small>Configure os valores totais para cada modalidade de parcelamento</small>
+                      </div>
+                      <div class="card-body">
+                        <div class="row">
+                          <!-- Parcelamento 4x -->
+                          <div class="col-12 col-sm-6 col-lg-4 mb-3">
+                            <div class="card h-100 border-primary" data-bs-toggle="tooltip" data-bs-placement="top" title="Parcelamento em 4 vezes - Ideal para valores menores">
+                              <div class="card-header bg-light text-center">
+                                <h6 class="mb-0 text-primary">
+                                  <i class="bx bx-credit-card me-1"></i>
+                                  4x Parcelas
+                                </h6>
+                                <small class="text-muted">Menor prazo</small>
+                              </div>
+                              <div class="card-body">
+                                <div class="form-group mb-2">
+                                  <label for="id_valor_4_vezes" class="form-label fw-bold">Valor Total</label>
+                                  {{ form.valor_4_vezes }}
+                                </div>
+                                <div class="form-group">
+                                  <label for="id_valor_4_vezes_calculado" class="form-label text-muted">Valor da Parcela</label>
+                                  <input type="text" id="id_valor_4_vezes_calculado" class="form-control bg-light" readonly>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
 
-                      <!-- Campo calculado 14 vezes -->
-                      <label for="id_valor_14_vezes_calculado" class="mt-2">Valor da parcela 14x</label>
-                      <input type="text" id="id_valor_14_vezes_calculado" class="form-control" readonly>
-                    </div>
-                    <!-- Campo Valor 12 Vezes -->
-                    <div class="form-group mb-3">
-                      {{ form.valor_12_vezes.label_tag }}
-                      {{ form.valor_12_vezes }}
+                          <!-- Parcelamento 6x -->
+                          <div class="col-12 col-sm-6 col-lg-4 mb-3">
+                            <div class="card h-100 border-success" data-bs-toggle="tooltip" data-bs-placement="top" title="Parcelamento em 6 vezes - Boa opção para valores médios">
+                              <div class="card-header bg-light text-center">
+                                <h6 class="mb-0 text-success">
+                                  <i class="bx bx-credit-card me-1"></i>
+                                  6x Parcelas
+                                </h6>
+                                <small class="text-muted">Prazo médio</small>
+                              </div>
+                              <div class="card-body">
+                                <div class="form-group mb-2">
+                                  <label for="id_valor_6_vezes" class="form-label fw-bold">Valor Total</label>
+                                  {{ form.valor_6_vezes }}
+                                </div>
+                                <div class="form-group">
+                                  <label for="id_valor_6_vezes_calculado" class="form-label text-muted">Valor da Parcela</label>
+                                  <input type="text" id="id_valor_6_vezes_calculado" class="form-control bg-light" readonly>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
 
-                      <!-- Campo calculado 12 vezes -->
-                      <label for="id_valor_12_vezes_calculado" class="mt-2">Valor da parcela 12x</label>
-                      <input type="text" id="id_valor_12_vezes_calculado" class="form-control" readonly>
-                    </div>
+                          <!-- Parcelamento 8x -->
+                          <div class="col-12 col-sm-6 col-lg-4 mb-3">
+                            <div class="card h-100 border-warning" data-bs-toggle="tooltip" data-bs-placement="top" title="Parcelamento em 8 vezes - Equilíbrio entre prazo e valor">
+                              <div class="card-header bg-light text-center">
+                                <h6 class="mb-0 text-warning">
+                                  <i class="bx bx-credit-card me-1"></i>
+                                  8x Parcelas
+                                </h6>
+                                <small class="text-muted">Equilibrado</small>
+                              </div>
+                              <div class="card-body">
+                                <div class="form-group mb-2">
+                                  <label for="id_valor_8_vezes" class="form-label fw-bold">Valor Total</label>
+                                  {{ form.valor_8_vezes }}
+                                </div>
+                                <div class="form-group">
+                                  <label for="id_valor_8_vezes_calculado" class="form-label text-muted">Valor da Parcela</label>
+                                  <input type="text" id="id_valor_8_vezes_calculado" class="form-control bg-light" readonly>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
 
-                    <!-- Campo Valor 10 Vezes -->
-                    <div class="form-group mb-3">
-                      {{ form.valor_10_vezes.label_tag }}
-                      {{ form.valor_10_vezes }}
+                          <!-- Parcelamento 10x -->
+                          <div class="col-12 col-sm-6 col-lg-4 mb-3">
+                            <div class="card h-100 border-info" data-bs-toggle="tooltip" data-bs-placement="top" title="Parcelamento em 10 vezes - Opção popular para valores maiores">
+                              <div class="card-header bg-light text-center">
+                                <h6 class="mb-0 text-info">
+                                  <i class="bx bx-credit-card me-1"></i>
+                                  10x Parcelas
+                                </h6>
+                                <small class="text-muted">Mais popular</small>
+                              </div>
+                              <div class="card-body">
+                                <div class="form-group mb-2">
+                                  <label for="id_valor_10_vezes" class="form-label fw-bold">Valor Total</label>
+                                  {{ form.valor_10_vezes }}
+                                </div>
+                                <div class="form-group">
+                                  <label for="id_valor_10_vezes_calculado" class="form-label text-muted">Valor da Parcela</label>
+                                  <input type="text" id="id_valor_10_vezes_calculado" class="form-control bg-light" readonly>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
 
-                      <!-- Campo calculado 10 vezes -->
-                      <label for="id_valor_10_vezes_calculado" class="mt-2">Valor da parcela 10x</label>
-                      <input type="text" id="id_valor_10_vezes_calculado" class="form-control" readonly>
+                          <!-- Parcelamento 12x -->
+                          <div class="col-12 col-sm-6 col-lg-4 mb-3">
+                            <div class="card h-100 border-secondary" data-bs-toggle="tooltip" data-bs-placement="top" title="Parcelamento em 12 vezes - Prazo estendido para valores altos">
+                              <div class="card-header bg-light text-center">
+                                <h6 class="mb-0 text-secondary">
+                                  <i class="bx bx-credit-card me-1"></i>
+                                  12x Parcelas
+                                </h6>
+                                <small class="text-muted">Prazo longo</small>
+                              </div>
+                              <div class="card-body">
+                                <div class="form-group mb-2">
+                                  <label for="id_valor_12_vezes" class="form-label fw-bold">Valor Total</label>
+                                  {{ form.valor_12_vezes }}
+                                </div>
+                                <div class="form-group">
+                                  <label for="id_valor_12_vezes_calculado" class="form-label text-muted">Valor da Parcela</label>
+                                  <input type="text" id="id_valor_12_vezes_calculado" class="form-control bg-light" readonly>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <!-- Parcelamento 14x -->
+                          <div class="col-12 col-sm-6 col-lg-4 mb-3">
+                            <div class="card h-100 border-dark" data-bs-toggle="tooltip" data-bs-placement="top" title="Parcelamento em 14 vezes - Maior prazo para valores muito altos">
+                              <div class="card-header bg-light text-center">
+                                <h6 class="mb-0 text-dark">
+                                  <i class="bx bx-credit-card me-1"></i>
+                                  14x Parcelas
+                                </h6>
+                                <small class="text-muted">Maior prazo</small>
+                              </div>
+                              <div class="card-body">
+                                <div class="form-group mb-2">
+                                  <label for="id_valor_14_vezes" class="form-label fw-bold">Valor Total</label>
+                                  {{ form.valor_14_vezes }}
+                                </div>
+                                <div class="form-group">
+                                  <label for="id_valor_14_vezes_calculado" class="form-label text-muted">Valor da Parcela</label>
+                                  <input type="text" id="id_valor_14_vezes_calculado" class="form-control bg-light" readonly>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <!-- Barra de Progresso -->
+                        <div class="row mt-3">
+                          <div class="col-12">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                              <span class="text-muted">Progresso de Preenchimento</span>
+                              <span class="badge bg-primary" id="progress-text">0/6</span>
+                            </div>
+                            <div class="progress mb-3" style="height: 8px;">
+                              <div class="progress-bar bg-primary" role="progressbar" id="progress-parcelamentos" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <!-- Resumo dos Valores -->
+                        <div class="row mt-3">
+                          <div class="col-12">
+                            <div class="alert alert-info">
+                              <h6 class="alert-heading">
+                                <i class="bx bx-info-circle me-2"></i>
+                                Resumo dos Parcelamentos
+                                <span class="badge bg-info ms-2" id="total-modalidades">0 modalidades</span>
+                              </h6>
+                              <div class="row" id="resumo-parcelamentos">
+                                <div class="col-md-2 text-center mb-2">
+                                  <div class="card border-primary h-100">
+                                    <div class="card-body p-2">
+                                      <small class="text-muted">4x</small><br>
+                                      <span class="fw-bold text-primary" id="resumo-4x">R$ 0,00</span>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div class="col-md-2 text-center mb-2">
+                                  <div class="card border-success h-100">
+                                    <div class="card-body p-2">
+                                      <small class="text-muted">6x</small><br>
+                                      <span class="fw-bold text-success" id="resumo-6x">R$ 0,00</span>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div class="col-md-2 text-center mb-2">
+                                  <div class="card border-warning h-100">
+                                    <div class="card-body p-2">
+                                      <small class="text-muted">8x</small><br>
+                                      <span class="fw-bold text-warning" id="resumo-8x">R$ 0,00</span>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div class="col-md-2 text-center mb-2">
+                                  <div class="card border-info h-100">
+                                    <div class="card-body p-2">
+                                      <small class="text-muted">10x</small><br>
+                                      <span class="fw-bold text-info" id="resumo-10x">R$ 0,00</span>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div class="col-md-2 text-center mb-2">
+                                  <div class="card border-secondary h-100">
+                                    <div class="card-body p-2">
+                                      <small class="text-muted">12x</small><br>
+                                      <span class="fw-bold text-secondary" id="resumo-12x">R$ 0,00</span>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div class="col-md-2 text-center mb-2">
+                                  <div class="card border-dark h-100">
+                                    <div class="card-body p-2">
+                                      <small class="text-muted">14x</small><br>
+                                      <span class="fw-bold text-dark" id="resumo-14x">R$ 0,00</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
 
                     <!-- Campo Tipo -->
@@ -115,25 +319,232 @@ Criar Produto
 </div>
 
 <script>
-function updateValues() {
-    const valor14Vezes = parseFloat(document.getElementById('id_valor_14_vezes').value) || 0;
-    const valor12Vezes = parseFloat(document.getElementById('id_valor_12_vezes').value) || 0;
-    const valor10Vezes = parseFloat(document.getElementById('id_valor_10_vezes').value) || 0;
-    
-    document.getElementById('id_valor_14_vezes_calculado').value = (valor14Vezes / 14).toFixed(2);
-    document.getElementById('id_valor_12_vezes_calculado').value = (valor12Vezes / 12).toFixed(2);
-    document.getElementById('id_valor_10_vezes_calculado').value = (valor10Vezes / 10).toFixed(2);
+// Configuração dos parcelamentos
+const parcelamentos = [
+    { id: '4', parcelas: 4, color: 'primary' },
+    { id: '6', parcelas: 6, color: 'success' },
+    { id: '8', parcelas: 8, color: 'warning' },
+    { id: '10', parcelas: 10, color: 'info' },
+    { id: '12', parcelas: 12, color: 'secondary' },
+    { id: '14', parcelas: 14, color: 'dark' }
+];
+
+// Função para formatar valor monetário
+function formatarMoeda(valor) {
+    return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+    }).format(valor);
 }
 
-// Ativa o update automático ao digitar
+// Função para calcular e atualizar valores
+function updateValues() {
+    let totalCalculado = 0;
+    let valoresPreenchidos = 0;
+    
+    parcelamentos.forEach(parc => {
+        const campoValor = document.getElementById(`id_valor_${parc.id}_vezes`);
+        const campoCalculado = document.getElementById(`id_valor_${parc.id}_vezes_calculado`);
+        const resumoElement = document.getElementById(`resumo-${parc.id}x`);
+        
+        if (campoValor && campoCalculado) {
+            const valor = parseFloat(campoValor.value) || 0;
+            const valorParcela = valor / parc.parcelas;
+            
+            // Atualiza o campo calculado
+            campoCalculado.value = valorParcela.toFixed(2);
+            
+            // Atualiza o resumo
+            if (resumoElement) {
+                resumoElement.textContent = formatarMoeda(valorParcela);
+            }
+            
+            // Adiciona efeito visual se valor foi preenchido
+            if (valor > 0) {
+                valoresPreenchidos++;
+                campoValor.classList.add('border-success');
+                campoValor.classList.remove('border-danger');
+            } else {
+                campoValor.classList.remove('border-success', 'border-danger');
+            }
+            
+            totalCalculado += valor;
+        }
+    });
+    
+    // Atualiza estatísticas gerais
+    updateEstatisticas(valoresPreenchidos, totalCalculado);
+}
+
+// Função para atualizar estatísticas
+function updateEstatisticas(valoresPreenchidos, totalCalculado) {
+    // Atualiza barra de progresso
+    const progressBar = document.getElementById('progress-parcelamentos');
+    const progressText = document.getElementById('progress-text');
+    const totalModalidades = document.getElementById('total-modalidades');
+    
+    if (progressBar) {
+        const progresso = (valoresPreenchidos / parcelamentos.length) * 100;
+        progressBar.style.width = `${progresso}%`;
+        progressBar.setAttribute('aria-valuenow', progresso);
+        
+        // Atualiza cor da barra baseada no progresso
+        progressBar.className = 'progress-bar';
+        if (progresso === 100) {
+            progressBar.classList.add('bg-success');
+        } else if (progresso >= 50) {
+            progressBar.classList.add('bg-warning');
+        } else {
+            progressBar.classList.add('bg-primary');
+        }
+    }
+    
+    if (progressText) {
+        progressText.textContent = `${valoresPreenchidos}/${parcelamentos.length}`;
+    }
+    
+    if (totalModalidades) {
+        totalModalidades.textContent = `${valoresPreenchidos} modalidades`;
+    }
+}
+
+// Função para validar valores
+function validarValores() {
+    let isValid = true;
+    const valores = [];
+    
+    parcelamentos.forEach(parc => {
+        const campo = document.getElementById(`id_valor_${parc.id}_vezes`);
+        if (campo) {
+            const valor = parseFloat(campo.value) || 0;
+            valores.push({ parcelas: parc.parcelas, valor: valor });
+            
+            // Validação básica
+            if (valor < 0) {
+                campo.classList.add('border-danger');
+                isValid = false;
+            }
+        }
+    });
+    
+    // Validação de consistência (valores devem crescer com o número de parcelas)
+    for (let i = 1; i < valores.length; i++) {
+        if (valores[i].valor > 0 && valores[i-1].valor > 0) {
+            if (valores[i].valor < valores[i-1].valor) {
+                // Adiciona aviso visual
+                const campoAtual = document.getElementById(`id_valor_${valores[i].parcelas}_vezes`);
+                const campoAnterior = document.getElementById(`id_valor_${valores[i-1].parcelas}_vezes`);
+                
+                if (campoAtual) campoAtual.classList.add('border-warning');
+                if (campoAnterior) campoAnterior.classList.add('border-warning');
+            }
+        }
+    }
+    
+    return isValid;
+}
+
+// Função para preenchimento automático baseado em um valor base
+function preencherAutomaticamente(valorBase, multiplicador = 1.1) {
+    parcelamentos.forEach((parc, index) => {
+        const campo = document.getElementById(`id_valor_${parc.id}_vezes`);
+        if (campo && !campo.value) {
+            const valorCalculado = valorBase * Math.pow(multiplicador, index);
+            campo.value = valorCalculado.toFixed(2);
+        }
+    });
+    updateValues();
+}
+
+// Função para limpar todos os valores
+function limparValores() {
+    parcelamentos.forEach(parc => {
+        const campo = document.getElementById(`id_valor_${parc.id}_vezes`);
+        if (campo) {
+            campo.value = '';
+            campo.classList.remove('border-success', 'border-danger', 'border-warning');
+        }
+    });
+    updateValues();
+}
+
+// Função para copiar valores de uma modalidade para outras
+function copiarValores(modalidadeOrigem) {
+    const campoOrigem = document.getElementById(`id_valor_${modalidadeOrigem}_vezes`);
+    if (campoOrigem && campoOrigem.value) {
+        const valor = parseFloat(campoOrigem.value);
+        parcelamentos.forEach(parc => {
+            if (parc.id !== modalidadeOrigem) {
+                const campo = document.getElementById(`id_valor_${parc.id}_vezes`);
+                if (campo) {
+                    campo.value = valor.toFixed(2);
+                }
+            }
+        });
+        updateValues();
+    }
+}
+
+// Inicialização quando o DOM estiver carregado
 document.addEventListener('DOMContentLoaded', function() {
-    const campo14 = document.getElementById('id_valor_14_vezes');
-    const campo12 = document.getElementById('id_valor_12_vezes');
-    const campo10 = document.getElementById('id_valor_10_vezes');
-    if (campo14) campo14.addEventListener('input', updateValues);
-    if (campo12) campo12.addEventListener('input', updateValues);
-    if (campo10) campo10.addEventListener('input', updateValues);
+    // Adiciona event listeners para todos os campos
+    parcelamentos.forEach(parc => {
+        const campo = document.getElementById(`id_valor_${parc.id}_vezes`);
+        if (campo) {
+            campo.addEventListener('input', updateValues);
+            campo.addEventListener('blur', validarValores);
+            
+            // Adiciona placeholder dinâmico
+            campo.placeholder = `Ex: 1000.00`;
+        }
+    });
+    
+    // Adiciona botões de ação
+    adicionarBotoesAcao();
+    
+    // Inicializa tooltips
+    inicializarTooltips();
+    
+    // Inicializa valores
+    updateValues();
 });
+
+// Função para inicializar tooltips
+function inicializarTooltips() {
+    // Inicializa todos os tooltips do Bootstrap
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+}
+
+// Função para adicionar botões de ação
+function adicionarBotoesAcao() {
+    const cardBody = document.querySelector('.card-body');
+    if (cardBody) {
+        const botoesContainer = document.createElement('div');
+        botoesContainer.className = 'row mt-3';
+        botoesContainer.innerHTML = `
+            <div class="col-12">
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="preencherAutomaticamente(1000)">
+                        <i class="bx bx-calculator me-1"></i>
+                        Preencher Automaticamente
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="limparValores()">
+                        <i class="bx bx-x me-1"></i>
+                        Limpar Todos
+                    </button>
+                    <button type="button" class="btn btn-outline-info btn-sm" onclick="copiarValores('10')">
+                        <i class="bx bx-copy me-1"></i>
+                        Copiar de 10x
+                    </button>
+                </div>
+            </div>
+        `;
+        cardBody.appendChild(botoesContainer);
+    }
+}
 </script>
 
 {% endblock %}

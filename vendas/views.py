@@ -1049,7 +1049,19 @@ def gerar_venda(request, cliente_id):
     porcentagem_desconto = 0
     
     # Define valores e número de parcelas
-    if analise.numero_parcelas == '10':
+    if analise.numero_parcelas == '4':
+        valor_credfacil = produto.valor_4_vezes
+        parcelas = 4
+        porcentagem_desconto = credfacil.porcentagem_desconto_4
+    elif analise.numero_parcelas == '6':
+        valor_credfacil = produto.valor_6_vezes
+        parcelas = 6
+        porcentagem_desconto = credfacil.porcentagem_desconto_6
+    elif analise.numero_parcelas == '8':
+        valor_credfacil = produto.valor_8_vezes
+        parcelas = 8
+        porcentagem_desconto = credfacil.porcentagem_desconto_8
+    elif analise.numero_parcelas == '10':
         valor_credfacil = produto.valor_10_vezes
         parcelas = 10
         porcentagem_desconto = credfacil.porcentagem_desconto_10

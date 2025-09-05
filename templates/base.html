@@ -21,7 +21,7 @@
   <meta name="viewport"
     content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
   <title>
-    {% block title %}{{ loja_atual|default:"CredFácil" }} - CredFácil{% endblock %}
+    {% block title %}{{ loja_atual|default:"CredMotors" }} - CredMotors{% endblock %}
   </title>
   <!-- Favicon -->
   <link rel="icon" type="image/x-icon" href="{% static '/images/logo.png' %}" />
@@ -99,14 +99,14 @@
             <img src="{% static 'images/logo.png' %}" style="max-width: 100px; height: auto; flex-shrink: 0;">
             <span class="app-brand-text text-truncate fw-medium text-capitalize ms-2"
               style="font-size: 18px; max-width: 160px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-              {{ loja_atual|title }}
+              <!-- {{ loja_atual|title }} -->
+              CredMotors
             </span>
           </a>
           <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto">
             <i class="bx bx-chevron-left bx-sm align-middle"></i>
           </a>
         </div>
-
 
         <ul class="menu-inner py-1">
           {% for section, items in menu_items.items %}

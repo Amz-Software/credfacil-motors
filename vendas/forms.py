@@ -1008,14 +1008,31 @@ class LojaForm(forms.ModelForm):
             'meta_vendas_diaria': forms.NumberInput(attrs={'class': 'form-control money'}),
             'meta_vendas_mensal': forms.NumberInput(attrs={'class': 'form-control money'}),
             'entrada_caixa_diaria': forms.NumberInput(attrs={'class': 'form-control money'}),
-            'porcentagem_desconto_10': forms.NumberInput(attrs={'class': 'form-control'}),
-            'porcentagem_desconto_12': forms.NumberInput(attrs={'class': 'form-control'}),
-            'porcentagem_desconto_14': forms.NumberInput(attrs={'class': 'form-control'}),
+            'porcentagem_desconto_4': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0', 'max': '100'}),
+            'porcentagem_desconto_6': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0', 'max': '100'}),
+            'porcentagem_desconto_8': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0', 'max': '100'}),
+            'porcentagem_desconto_10': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0', 'max': '100'}),
+            'porcentagem_desconto_12': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0', 'max': '100'}),
+            'porcentagem_desconto_14': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0', 'max': '100'}),
+        }
+        
+        labels = {
+            'porcentagem_desconto_4': 'Porcentagem de Desconto 4x',
+            'porcentagem_desconto_6': 'Porcentagem de Desconto 6x',
+            'porcentagem_desconto_8': 'Porcentagem de Desconto 8x',
+            'porcentagem_desconto_10': 'Porcentagem de Desconto 10x',
+            'porcentagem_desconto_12': 'Porcentagem de Desconto 12x',
+            'porcentagem_desconto_14': 'Porcentagem de Desconto 14x',
         }        
 
     def __init__(self, *args, **kwargs):
         user_loja_id = kwargs.pop('user_loja', None)
         super().__init__(*args, **kwargs)
+        
+        # Tornar os campos de porcentagem obrigatórios
+        self.fields['porcentagem_desconto_4'].required = True
+        self.fields['porcentagem_desconto_6'].required = True
+        self.fields['porcentagem_desconto_8'].required = True
 
         # Removido o código que tentava acessar um campo 'loja' inexistente
         # O campo user_loja é usado apenas para contexto, não para definir campos do formulário

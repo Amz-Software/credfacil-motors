@@ -90,23 +90,160 @@
                 <label for="id_email" class="form-label">Chave Pix</label>
                 <input type="text" class="form-control" id="id_email" name="chave_pix" value="{{ form.chave_pix.value|default_if_none:'' }}">
               </div>
-              <div class="col-md-6 mb-3">
-                <label for="id_porcentagem_desconto_10" class="form-label">Porcentual Desconto 10</label>
-                <input type="text" class="form-control" id="id_porcentagem_desconto_10"
-                  name="porcentagem_desconto_10"
-                  value="{{ form.porcentagem_desconto_10.value|default_if_none:'' }}">
-              </div>
-              <div class="col-md-6 mb-3">
-                <label for="id_porcentagem_desconto_12" class="form-label">Porcentual Desconto 12</label>
-                <input type="text" class="form-control" id="id_porcentagem_desconto_12"
-                  name="porcentagem_desconto_12"
-                  value="{{ form.porcentagem_desconto_12.value|default_if_none:'' }}">
-              </div>
-              <div class="col-md-6 mb-3">
-                <label for="id_porcentagem_desconto_14" class="form-label">Porcentual Desconto 14</label>
-                <input type="text" class="form-control" id="id_porcentagem_desconto_14"
-                  name="porcentagem_desconto_14"
-                  value="{{ form.porcentagem_desconto_14.value|default_if_none:'' }}">
+              <!-- Seção de Porcentagens de Desconto -->
+              <div class="col-12 mb-4">
+                <div class="card">
+                  <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                      <i class="bx bx-percentage me-2"></i>
+                      Porcentagens de Desconto por Parcelamento
+                    </h5>
+                    <small>Configure as porcentagens de desconto para cada modalidade de parcelamento</small>
+                  </div>
+                  <div class="card-body">
+                    <div class="row">
+                      <div class="col-md-6 col-lg-4 mb-3">
+                        <label for="id_porcentagem_desconto_4" class="form-label fw-bold">
+                          <span class="text-primary">4x Parcelas</span> <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group">
+                          <input type="number" class="form-control" id="id_porcentagem_desconto_4"
+                            name="porcentagem_desconto_4" step="0.01" min="0" max="100"
+                            value="{{ form.porcentagem_desconto_4.value|default_if_none:'25.00' }}" required>
+                          <span class="input-group-text">%</span>
+                        </div>
+                        <small class="form-text text-muted">Porcentagem de desconto para parcelamento em 4 vezes</small>
+                      </div>
+                      
+                      <div class="col-md-6 col-lg-4 mb-3">
+                        <label for="id_porcentagem_desconto_6" class="form-label fw-bold">
+                          <span class="text-success">6x Parcelas</span> <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group">
+                          <input type="number" class="form-control" id="id_porcentagem_desconto_6"
+                            name="porcentagem_desconto_6" step="0.01" min="0" max="100"
+                            value="{{ form.porcentagem_desconto_6.value|default_if_none:'25.00' }}" required>
+                          <span class="input-group-text">%</span>
+                        </div>
+                        <small class="form-text text-muted">Porcentagem de desconto para parcelamento em 6 vezes</small>
+                      </div>
+                      
+                      <div class="col-md-6 col-lg-4 mb-3">
+                        <label for="id_porcentagem_desconto_8" class="form-label fw-bold">
+                          <span class="text-warning">8x Parcelas</span> <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group">
+                          <input type="number" class="form-control" id="id_porcentagem_desconto_8"
+                            name="porcentagem_desconto_8" step="0.01" min="0" max="100"
+                            value="{{ form.porcentagem_desconto_8.value|default_if_none:'25.00' }}" required>
+                          <span class="input-group-text">%</span>
+                        </div>
+                        <small class="form-text text-muted">Porcentagem de desconto para parcelamento em 8 vezes</small>
+                      </div>
+                      
+                      <div class="col-md-6 col-lg-4 mb-3">
+                        <label for="id_porcentagem_desconto_10" class="form-label fw-bold">
+                          <span class="text-info">10x Parcelas</span>
+                        </label>
+                        <div class="input-group">
+                          <input type="number" class="form-control" id="id_porcentagem_desconto_10"
+                            name="porcentagem_desconto_10" step="0.01" min="0" max="100"
+                            value="{{ form.porcentagem_desconto_10.value|default_if_none:'25.00' }}">
+                          <span class="input-group-text">%</span>
+                        </div>
+                        <small class="form-text text-muted">Porcentagem de desconto para parcelamento em 10 vezes</small>
+                      </div>
+                      
+                      <div class="col-md-6 col-lg-4 mb-3">
+                        <label for="id_porcentagem_desconto_12" class="form-label fw-bold">
+                          <span class="text-secondary">12x Parcelas</span>
+                        </label>
+                        <div class="input-group">
+                          <input type="number" class="form-control" id="id_porcentagem_desconto_12"
+                            name="porcentagem_desconto_12" step="0.01" min="0" max="100"
+                            value="{{ form.porcentagem_desconto_12.value|default_if_none:'25.00' }}">
+                          <span class="input-group-text">%</span>
+                        </div>
+                        <small class="form-text text-muted">Porcentagem de desconto para parcelamento em 12 vezes</small>
+                      </div>
+                      
+                      <div class="col-md-6 col-lg-4 mb-3">
+                        <label for="id_porcentagem_desconto_14" class="form-label fw-bold">
+                          <span class="text-dark">14x Parcelas</span>
+                        </label>
+                        <div class="input-group">
+                          <input type="number" class="form-control" id="id_porcentagem_desconto_14"
+                            name="porcentagem_desconto_14" step="0.01" min="0" max="100"
+                            value="{{ form.porcentagem_desconto_14.value|default_if_none:'25.00' }}">
+                          <span class="input-group-text">%</span>
+                        </div>
+                        <small class="form-text text-muted">Porcentagem de desconto para parcelamento em 14 vezes</small>
+                      </div>
+                    </div>
+                    
+                    <!-- Resumo das Porcentagens -->
+                    <div class="row mt-3">
+                      <div class="col-12">
+                        <div class="alert alert-info">
+                          <h6 class="alert-heading">
+                            <i class="bx bx-info-circle me-2"></i>
+                            Resumo das Porcentagens Configuradas
+                          </h6>
+                          <div class="row" id="resumo-porcentagens">
+                            <div class="col-md-2 text-center">
+                              <div class="card border-primary h-100">
+                                <div class="card-body p-2">
+                                  <small class="text-muted">4x</small><br>
+                                  <span class="fw-bold text-primary" id="resumo-4x">25%</span>
+                                </div>
+                              </div>
+                            </div>
+                            <div class="col-md-2 text-center">
+                              <div class="card border-success h-100">
+                                <div class="card-body p-2">
+                                  <small class="text-muted">6x</small><br>
+                                  <span class="fw-bold text-success" id="resumo-6x">25%</span>
+                                </div>
+                              </div>
+                            </div>
+                            <div class="col-md-2 text-center">
+                              <div class="card border-warning h-100">
+                                <div class="card-body p-2">
+                                  <small class="text-muted">8x</small><br>
+                                  <span class="fw-bold text-warning" id="resumo-8x">25%</span>
+                                </div>
+                              </div>
+                            </div>
+                            <div class="col-md-2 text-center">
+                              <div class="card border-info h-100">
+                                <div class="card-body p-2">
+                                  <small class="text-muted">10x</small><br>
+                                  <span class="fw-bold text-info" id="resumo-10x">25%</span>
+                                </div>
+                              </div>
+                            </div>
+                            <div class="col-md-2 text-center">
+                              <div class="card border-secondary h-100">
+                                <div class="card-body p-2">
+                                  <small class="text-muted">12x</small><br>
+                                  <span class="fw-bold text-secondary" id="resumo-12x">25%</span>
+                                </div>
+                              </div>
+                            </div>
+                            <div class="col-md-2 text-center">
+                              <div class="card border-dark h-100">
+                                <div class="card-body p-2">
+                                  <small class="text-muted">14x</small><br>
+                                  <span class="fw-bold text-dark" id="resumo-14x">25%</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
               <div class="col-md-6 mb-3">
                 <label for="id_qr_code_aplicativo" class="form-label">Qr Code Aplicativo</label>
@@ -170,6 +307,35 @@
 <script>
     $('.money').mask('000.000.000,00', { reverse: true });
     $('.tel').mask('00 00000-0000');
+    
+    // Função para atualizar resumo das porcentagens
+    function updatePorcentagensResumo() {
+        const porcentagens = ['4', '6', '8', '10', '12', '14'];
+        porcentagens.forEach(parc => {
+            const campo = document.getElementById(`id_porcentagem_desconto_${parc}`);
+            const resumo = document.getElementById(`resumo-${parc}x`);
+            if (campo && resumo) {
+                const valor = campo.value || '25.00';
+                resumo.textContent = valor + '%';
+            }
+        });
+    }
+    
+    // Adicionar event listeners para os campos de porcentagem
+    document.addEventListener('DOMContentLoaded', function() {
+        const porcentagens = ['4', '6', '8', '10', '12', '14'];
+        porcentagens.forEach(parc => {
+            const campo = document.getElementById(`id_porcentagem_desconto_${parc}`);
+            if (campo) {
+                campo.addEventListener('input', updatePorcentagensResumo);
+                campo.addEventListener('blur', updatePorcentagensResumo);
+            }
+        });
+        
+        // Inicializar resumo
+        updatePorcentagensResumo();
+    });
+    
     $('form').submit(function () {
       $('.money').each(function () {
         var rawValue = $(this).cleanVal();

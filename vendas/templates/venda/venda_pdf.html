@@ -25,10 +25,11 @@
 
         th, td {
             border: 1px solid black;
-            padding: 5px;
+            padding: 8px 6px; /* Aumentado padding vertical e horizontal */
             text-align: left;
             word-wrap: break-word; /* Quebra o texto para evitar overflow */
             overflow-wrap: break-word; /* Compatibilidade com navegadores modernos */
+            vertical-align: top; /* Alinha conteúdo no topo da célula */
         }
 
         th {
@@ -85,23 +86,84 @@
             margin-top: 20px;
         }
 
-        /* Definir tamanhos relativos para colunas */
-        .table-client th:nth-child(1), .table-client td:nth-child(1) { width: 20%; } /* Nome/Razão Social */
-        .table-client th:nth-child(2), .table-client td:nth-child(2) { width: 15%; } /* Telefone */
+        /* Definir tamanhos otimizados para colunas */
+        .table-client th:nth-child(1), .table-client td:nth-child(1) { width: 25%; } /* Nome/Razão Social */
+        .table-client th:nth-child(2), .table-client td:nth-child(2) { width: 12%; } /* Telefone */
         .table-client th:nth-child(3), .table-client td:nth-child(3) { width: 15%; } /* CNPJ/CPF */
-        .table-client th:nth-child(4), .table-client td:nth-child(4) { width: 20%; } /* Email */
+        .table-client th:nth-child(4), .table-client td:nth-child(4) { width: 18%; } /* Email */
         .table-client th:nth-child(5), .table-client td:nth-child(5) { width: 20%; } /* Endereço */
-        .table-client th:nth-child(6), .table-client td:nth-child(6) { width: 10%; } /* CEP */
-        .table-client th:nth-child(7), .table-client td:nth-child(7) { width: 10%; } /* Cidade */
+        .table-client th:nth-child(6), .table-client td:nth-child(6) { width: 8%; }  /* CEP */
+        .table-client th:nth-child(7), .table-client td:nth-child(7) { width: 12%; } /* Cidade */
         .table-client th:nth-child(8), .table-client td:nth-child(8) { width: 5%; }  /* UF */
 
-        .table-products th:nth-child(1), .table-products td:nth-child(1) { width: 10%; } /* Código */
-        .table-products th:nth-child(2), .table-products td:nth-child(2) { width: 20%; } /* Produto */
-        .table-products th:nth-child(3), .table-products td:nth-child(3) { width: 20%; } /* RENAVAM */
-        .table-products th:nth-child(4), .table-products td:nth-child(4) { width: 10%; } /* Quantidade */
-        .table-products th:nth-child(5), .table-products td:nth-child(5) { width: 10%; } /* Valor Item */
+        .table-products th:nth-child(1), .table-products td:nth-child(1) { width: 8%; }  /* Código */
+        .table-products th:nth-child(2), .table-products td:nth-child(2) { width: 25%; } /* Produto */
+        .table-products th:nth-child(3), .table-products td:nth-child(3) { width: 18%; } /* RENAVAM */
+        .table-products th:nth-child(4), .table-products td:nth-child(4) { width: 8%; }  /* Quantidade */
+        .table-products th:nth-child(5), .table-products td:nth-child(5) { width: 12%; } /* Valor Item */
         .table-products th:nth-child(6), .table-products td:nth-child(6) { width: 10%; } /* Desconto */
-        .table-products th:nth-child(7), .table-products td:nth-child(7) { width: 20%; } /* Valor Total */
+        .table-products th:nth-child(7), .table-products td:nth-child(7) { width: 19%; } /* Valor Total */
+
+        /* Estilos específicos para tabelas de pagamento */
+        .table-payment th:nth-child(1), .table-payment td:nth-child(1) { width: 20%; } /* Forma de Pagamento */
+        .table-payment th:nth-child(2), .table-payment td:nth-child(2) { width: 30%; } /* Detalhes */
+        .table-payment th:nth-child(3), .table-payment td:nth-child(3) { width: 15%; } /* Valor */
+        .table-payment th:nth-child(4), .table-payment td:nth-child(4) { width: 15%; } /* Parcelas */
+        .table-payment th:nth-child(5), .table-payment td:nth-child(5) { width: 20%; } /* Primeiro Vencimento */
+
+        /* Melhorias de responsividade e legibilidade */
+        .table-client td, .table-products td, .table-payment td {
+            font-size: 8.5pt; /* Ligeiramente menor para melhor ajuste */
+            line-height: 1.3; /* Reduzido para economizar espaço */
+        }
+
+        .table-client th, .table-products th, .table-payment th {
+            font-size: 8.5pt;
+            font-weight: bold;
+            background-color: #f0f0f0; /* Cor mais suave para o cabeçalho */
+        }
+
+        /* Estilos específicos para colunas numéricas */
+        .text-right {
+            font-family: 'Courier New', monospace; /* Fonte monoespaçada para números */
+        }
+
+        /* Melhorar apresentação de valores monetários */
+        .valor-monetario {
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+        }
+
+        /* Melhorias gerais de apresentação */
+        .section-title {
+            border-bottom: 2px solid #333;
+            padding-bottom: 5px;
+            margin-bottom: 10px;
+        }
+
+        /* Melhorar a tabela de informações da loja */
+        .table-info-loja {
+            margin-bottom: 20px;
+        }
+
+        .table-info-loja td {
+            border: none;
+            padding: 5px 10px;
+            vertical-align: middle;
+        }
+
+        .table-info-loja td:first-child {
+            width: 15%;
+        }
+
+        .table-info-loja td:nth-child(2) {
+            width: 50%;
+        }
+
+        .table-info-loja td:last-child {
+            width: 35%;
+            text-align: right;
+        }
     </style>
 </head>
 <body>
@@ -115,7 +177,7 @@
 
     <div class="content">
         <!-- Loja -->
-        <table>
+        <table class="table-info-loja">
             <tr>
                 <td>
                     <img src="{{ loja.imagemlogo }}" style="height: 50px;">
@@ -134,7 +196,7 @@
 
         <!-- Cliente -->
         <div class="section-title">Destinatário/Remetente</div>
-        <table>
+        <table class="table-client">
             <thead>
                 <tr>
                     <th>Nome/Razão Social</th>
@@ -163,7 +225,7 @@
 
         <!-- Produtos -->
         <div class="section-title">Dados dos Produtos/Serviços</div>
-        <table>
+        <table class="table-products">
             <thead>
                 <tr>
                     <th>Código</th>
@@ -182,23 +244,23 @@
                     <td>{{ item.produto.nome }}</td>
                                             <td>{{ item.renavam }}</td>
                     <td class="text-center">{{ item.quantidade }}</td>
-                    <td class="text-right">{{ item.valor_unitario|floatformat:2 }}</td>
-                    <td class="text-right">{{ item.valor_desconto|floatformat:2 }}</td>
-                    <td class="text-right">{{ item.calcular_valor_total|floatformat:2 }}</td>
+                    <td class="text-right valor-monetario">{{ item.valor_unitario|floatformat:2 }}</td>
+                    <td class="text-right valor-monetario">{{ item.valor_desconto|floatformat:2 }}</td>
+                    <td class="text-right valor-monetario">{{ item.calcular_valor_total|floatformat:2 }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
             <tfoot>
                 <tr>
                     <td colspan="6" class="text-right"><strong>Total:</strong></td>
-                    <td class="text-right"><strong>{{ venda.calcular_valor_total }}</strong></td>
+                    <td class="text-right valor-monetario"><strong>{{ venda.calcular_valor_total }}</strong></td>
                 </tr>
             </tfoot>
         </table>
 
         <!-- Pagamentos -->
         <div class="section-title">Pagamento</div>
-        <table>
+        <table class="table-payment">
             <thead>
                 <tr>
                     <th>Forma de Pagamento</th>
@@ -213,7 +275,7 @@
                 <tr>
                     <td>{{ item.tipo_pagamento }}</td>
                     <td>{{ item.detalhes }}</td>
-                    <td class="text-right">{{ item.valor }}</td>
+                    <td class="text-right valor-monetario">{{ item.valor }}</td>
                     <td class="text-center">{{ item.parcelas }}</td>
                     <td class="text-center">{{ item.data_primeira_parcela }}</td>
                 </tr>

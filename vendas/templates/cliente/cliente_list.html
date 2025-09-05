@@ -214,7 +214,7 @@ Clientes
         </div>
         
       <div class="table-responsive">
-        <table class="table table-hover">
+        <table class="table table-hover table-compact">
         <thead>
           <tr>
           <th scope="col">Status Solicitação</th>
@@ -239,13 +239,13 @@ Clientes
           <tr>
             <td>
                 {% if cliente.analise_credito.status == 'A' %}
-                <span class="badge bg-label-success">Aprovado</span>
+                <span class="badge bg-label-success status-badge">Aprovado</span>
               {% elif cliente.analise_credito.status == 'R' %}
-                <span class="badge bg-label-danger">Reprovado</span>
+                <span class="badge bg-label-danger status-badge">Reprovado</span>
                 {% elif cliente.analise_credito.status == 'C' %}
-                <span class="badge bg-label-secondary">Cancelado</span>
+                <span class="badge bg-label-secondary status-badge">Cancelado</span>
               {% else %}
-                <span class="badge bg-label-warning">Em Análise</span>
+                <span class="badge bg-label-warning status-badge">Em Análise</span>
               {% endif %}
             </td>
             <td>{{ cliente.analise_credito.produto.nome|capfirst }}</td>
@@ -261,12 +261,12 @@ Clientes
             <td>{{ cliente.telefone }}</td>
             <td>
               {% if cliente.analise_credito.renavam %}
-                <span class="badge bg-label-success">
+                <span class="badge bg-label-success status-badge">
                   <i class="bx bx-check me-1"></i>Informado
                 </span>
                 <br><small class="text-muted">{{ cliente.analise_credito.renavam.renavam }}</small>
               {% else %}
-                <span class="badge bg-label-warning">
+                <span class="badge bg-label-warning status-badge">
                   <i class="bx bx-time me-1"></i>Pendente
                 </span>
                 <br><small class="text-muted">Aguardando analista</small>
@@ -274,43 +274,43 @@ Clientes
             </td>
             <td>
               {% if cliente.analise_credito.status_aplicativo == 'P' %}
-                <span class="badge bg-label-secondary">
+                <span class="badge bg-label-secondary status-badge">
                   <i class="bx bx-time me-1"></i>Pendente
                 </span>
               {% elif cliente.analise_credito.status_aplicativo == 'A' %}
-                <span class="badge bg-label-warning">
-                  <i class="bx bx-car me-1"></i>Aguardando RENAVAM e Placa
+                <span class="badge bg-label-warning status-badge">
+                  <i class="bx bx-car me-1"></i>Aguardando RENAVAM
                 </span>
               {% elif cliente.analise_credito.status_aplicativo == 'L' %}
-                <span class="badge bg-label-success">
-                  <i class="bx bx-check-circle me-1"></i>Liberado para Venda
+                <span class="badge bg-label-success status-badge">
+                  <i class="bx bx-check-circle me-1"></i>Liberado
                 </span>
               {% endif %}
             </td>
             
             <td>
               {% if cliente.analise_credito.venda_gerada %}
-                <span class="badge bg-label-success">
+                <span class="badge bg-label-success status-badge">
                   <i class="bx bx-check-double me-1"></i>Finalizado
                 </span>
               {% elif cliente.analise_credito.status_aplicativo == 'L' and cliente.analise_credito.renavam %}
-                <span class="badge bg-label-info">
-                  <i class="bx bx-cart me-1"></i>Pronto para Venda
+                <span class="badge bg-label-info status-badge">
+                  <i class="bx bx-cart me-1"></i>Pronto
                 </span>
               {% elif cliente.analise_credito.status_aplicativo == 'A' and not cliente.analise_credito.renavam %}
-                <span class="badge bg-label-warning">
-                  <i class="bx bx-car me-1"></i>Aguardando RENAVAM e Placa
+                <span class="badge bg-label-warning status-badge">
+                  <i class="bx bx-car me-1"></i>Aguardando RENAVAM
                 </span>
               {% elif cliente.analise_credito.status_aplicativo == 'A' and cliente.analise_credito.renavam %}
-                <span class="badge bg-label-primary">
-                  <i class="bx bx-check me-1"></i>Pronto para Liberação
+                <span class="badge bg-label-primary status-badge">
+                  <i class="bx bx-check me-1"></i>Pronto
                 </span>
               {% elif cliente.analise_credito.status_aplicativo == 'P' %}
-                <span class="badge bg-label-secondary">
-                  <i class="bx bx-time me-1"></i>Aguardando Aprovação
+                <span class="badge bg-label-secondary status-badge">
+                  <i class="bx bx-time me-1"></i>Aguardando
                 </span>
               {% else %}
-                <span class="badge bg-label-danger">
+                <span class="badge bg-label-danger status-badge">
                   <i class="bx bx-time me-1"></i>Pendente
                 </span>
               {% endif %}

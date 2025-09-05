@@ -20,8 +20,8 @@ Produtos Vendidos
                                 <input type="text" name="nome" id="nome" class="form-control" value="{{ request.GET.nome }}" placeholder="Nome do Produto">
                             </div>
                             <div class="col-md-6">
-                                <label for="imei" class="form-label">Imei</label>
-                                <input type="text" name="imei" id="imei" class="form-control" value="{{ request.GET.imei }}" placeholder="Imei">
+                                <label for="renavam" class="form-label">RENAVAM</label>
+                                <input type="text" name="renavam" id="renavam" class="form-control" value="{{ request.GET.renavam }}" placeholder="RENAVAM">
                             </div>
                             <div class="col-md-6">
                                 <label for="cpf" class="form-label">CPF do Cliente</label>
@@ -53,12 +53,12 @@ Produtos Vendidos
                         </div>
                     </form>
                     <div class="table-responsive">
-                        <table class="table table-hover">
+                        <table class="table table-hover table-compact">
                             <thead>
                                 <tr>
                                     <th scope="col">ID</th>
                                     <th scope="col">Produto</th>
-                                    <th scope="col">Imei</th>
+                                    <th scope="col">RENAVAM</th>
                                     <th scope="col">CPF do Cliente</th>
                                     <th scope="col">Venda</th>
                                     {% if user|has_perm:"venda.can_view_all_products_sold" %}
@@ -73,7 +73,7 @@ Produtos Vendidos
                                 <tr>
                                     <td>{{ item.pk }}</td>
                                     <td>{{ item.produto|title }}</td>
-                                    <td>{{ item.imei|default:"-" }}</td>
+                                    <td>{{ item.renavam|default:"-" }}</td>
                                     <td>{{ item.venda.cliente.cpf|default:"-" }}</td>
                                     <td>{{ item.venda }}</td>
                                     {% if user|has_perm:"venda.can_view_all_products_sold" %}

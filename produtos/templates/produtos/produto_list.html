@@ -25,16 +25,16 @@ Produtos
       </div>
       <div class="card-body">
       <div class="table-responsive">
-        <table class="table table-hover">
+        <table class="table table-hover table-compact">
         <thead>
           <tr>
           <th scope="col">Código</th>
           <th scope="col">Nome</th>
           <th scope="col">Valor Repasse Logista</th>
           <th scope="col">Entrada Cliente</th>
-          <th scope="col">Valor 8 Vezes</th>
-          <th scope="col">Valor 6 Vezes</th>
-          <th scope="col">Valor 4 Vezes</th>
+          <th scope="col">Valor 10 Vezes</th>
+          <th scope="col">Valor 12 Vezes</th>
+          <th scope="col">Valor 14 Vezes</th>
           <th scope="col">Ações</th>
           </tr>
         </thead>
@@ -45,9 +45,9 @@ Produtos
           <td>{{ produto.nome }}</td>
           <td>{{ produto.valor_repasse_logista|floatformat:2 }}</td>
           <td>{{ produto.entrada_cliente|floatformat:2 }}</td>
-          <td>{{ produto.valor_8_vezes|floatformat:2 }}</td>
-          <td>{{ produto.valor_6_vezes|floatformat:2 }}</td>
-          <td>{{ produto.valor_4_vezes|floatformat:2 }}</td>
+          <td>{{ produto.valor_10_vezes|floatformat:2 }}</td>
+          <td>{{ produto.valor_12_vezes|floatformat:2 }}</td>
+          <td>{{ produto.valor_14_vezes|floatformat:2 }}</td>
           <td>
             <div class="dropdown">
             <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
@@ -68,7 +68,7 @@ Produtos
             </div>
           </td>
           {% empty %}
-          <td colspan="4">Nenhum registro encontrado</td>
+          <td colspan="8">Nenhum registro encontrado</td>
           </tr>
           {% endfor %}
         </tbody>

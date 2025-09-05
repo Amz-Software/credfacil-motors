@@ -883,7 +883,7 @@ class ClienteStatusAppUpdateView(PermissionRequiredMixin, View):
 
 def calcular_data_primeira_parcela(data_pagamento_str):
     """
-    Retorna a data com o dia escolhido (01, 10 ou 20) mais distante possível,
+    Retorna a data com o dia escolhido (05 ou 15) mais distante possível,
     mas ainda dentro de até 40 dias após a data da compra.
     """
     hoje = timezone.now().date()
@@ -918,7 +918,8 @@ def calcular_data_primeira_parcela(data_pagamento_str):
 
 def criar_parcelas(pagamento, loja):
     """
-    Gera cada vencimento mantendo o dia fixo (ou último do mês se faltar).
+    Gera cada vencimento mantendo o dia fixo (5 ou 15) sempre.
+    Se o dia não existir no mês, usa o último dia do mês.
     """
     Parcela.objects.filter(pagamento=pagamento).delete()
     dia = pagamento.data_primeira_parcela.day
@@ -929,6 +930,7 @@ def criar_parcelas(pagamento, loja):
         ano = pagamento.data_primeira_parcela.year + month_offset // 12
         mes = month_offset % 12 + 1
 
+        # Sempre usa o dia escolhido (5 ou 15), ou o último dia se não existir
         ultimo = calendar.monthrange(ano, mes)[1]
         venc_dia = min(dia, ultimo)
         data_venc = date(ano, mes, venc_dia)
@@ -2110,6 +2112,28 @@ class FolhaProdutoPDFView(PermissionRequiredMixin, View):
         return render(request, 'caixa/folha_produtos.html', context)
 
 
+def gerar_qrcode_simples(texto):
+    """Gera um QR code simples com texto quando não há chave PIX configurada"""
+    import qrcode
+    import base64
+    from io import BytesIO
+    
+    qr = qrcode.QRCode(
+        version=None,
+        error_correction=qrcode.constants.ERROR_CORRECT_M,
+        box_size=10,
+        border=4
+    )
+    qr.add_data(texto)
+    qr.make(fit=True)
+    img = qr.make_image()
+    
+    buffer = BytesIO()
+    img.save(buffer, format='PNG')
+    buffer.seek(0)
+    img_base64 = base64.b64encode(buffer.getvalue()).decode()
+    return img_base64
+
 def gerar_qrcode_pix(chave, valor, txid, nome_loja, cidade_loja, descricao=None):
     pix = Pix()
     pix.set_pixkey(chave)
@@ -2158,14 +2182,20 @@ def folha_carne_view(request, pk, tipo):
         valor = f"{parcela.valor:.2f}"
         txid = f"{pagamento_carne.pk:04d}{i+1:02d}"
         descricao = f"{cliente.nome} - Parcela {i+1} de {len(parcelas)}"
-        qr_base64 = gerar_qrcode_pix(
-            chave=loja.chave_pix,
-            valor=valor,
-            txid=txid,
-            nome_loja="CredFacil",
-            cidade_loja="Belem",
-            descricao=descricao
-        )
+        
+        # Verifica se a chave PIX está configurada
+        if loja.chave_pix:
+            qr_base64 = gerar_qrcode_pix(
+                chave=loja.chave_pix,
+                valor=valor,
+                txid=txid,
+                nome_loja="CredFacil",
+                cidade_loja="Belem",
+                descricao=descricao
+            )
+        else:
+            # Se não há chave PIX configurada, gera um QR code com mensagem
+            qr_base64 = gerar_qrcode_simples("Chave PIX não configurada")
 
 
         parcelas_info.append({
@@ -2465,7 +2495,7 @@ class ProdutoVendidoListView(PermissionRequiredMixin, ListView):
         query = super().get_queryset()
         user = self.request.user
         nome = self.request.GET.get('nome')
-        imei = self.request.GET.get('imei')
+        renavam = self.request.GET.get('renavam')
         cpf = self.request.GET.get('cpf')
         data = self.request.GET.get('data')
         data_fim = self.request.GET.get('data_fim')
@@ -2483,8 +2513,8 @@ class ProdutoVendidoListView(PermissionRequiredMixin, ListView):
 
         if nome:
             query = query.filter(produto__nome__icontains=nome)
-        if imei:
-            query = query.filter(imei__icontains=imei)
+        if renavam:
+            query = query.filter(renavam__icontains=renavam)
         if cpf:
             query = query.filter(venda__cliente__cpf__icontains=cpf)
         if data and data_fim:
@@ -2497,7 +2527,7 @@ class ProdutoVendidoListView(PermissionRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['nome'] = self.request.GET.get('nome')
-        context['imei'] = self.request.GET.get('imei')
+        context['renavam'] = self.request.GET.get('renavam')
         context['cpf'] = self.request.GET.get('cpf')
         context['data'] = self.request.GET.get('data')
         context['data_fim'] = self.request.GET.get('data_fim')
@@ -2635,14 +2665,18 @@ class PagamentoDetailView(DetailView):
                 valor  = f"{parcela.valor:.2f}"
                 descricao = f"Parcela {parcela.numero_parcela} - Pagamento {pagamento.pk}"
 
-                qr_b64 = gerar_qrcode_pix(
-                    chave=chave,
-                    valor=valor,
-                    txid=txid,
-                    nome_loja='credfacil',
-                    cidade_loja=cidade,
-                    descricao=descricao
-                )
+                # Verifica se a chave PIX está configurada
+                if chave:
+                    qr_b64 = gerar_qrcode_pix(
+                        chave=chave,
+                        valor=valor,
+                        txid=txid,
+                        nome_loja='credfacil',
+                        cidade_loja=cidade,
+                        descricao=descricao
+                    )
+                else:
+                    qr_b64 = gerar_qrcode_simples("Chave PIX não configurada")
             else:
                 qr_b64 = None
 
@@ -2657,14 +2691,18 @@ class PagamentoDetailView(DetailView):
             valor_qt = f"{total_com_desconto:.2f}"
             descricao_qt = f"Quitacao total - Pagamento {pagamento.pk}"
 
-            discount_qr_b64 = gerar_qrcode_pix(
-                chave=chave,
-                valor=valor_qt,
-                txid=txid_qt,
-                nome_loja='credfacil',
-                cidade_loja=cidade,
-                descricao=descricao_qt
-            )
+            # Verifica se a chave PIX está configurada
+            if chave:
+                discount_qr_b64 = gerar_qrcode_pix(
+                    chave=chave,
+                    valor=valor_qt,
+                    txid=txid_qt,
+                    nome_loja='credfacil',
+                    cidade_loja=cidade,
+                    descricao=descricao_qt
+                )
+            else:
+                discount_qr_b64 = gerar_qrcode_simples("Chave PIX não configurada")
         else:
             discount_qr_b64 = None
 
@@ -3179,30 +3217,32 @@ def informar_renavam_placa_analise(request, pk):
                 'cliente': analise.cliente
             })
         
-        if not placa_veiculo:
-            messages.error(request, 'Placa do veículo é obrigatória.')
-            return render(request, 'vendas/informar_renavam_placa_analise.html', {
-                'analise': analise,
-                'cliente': analise.cliente
-            })
+        # Placa do veículo não é mais obrigatória
+        # if not placa_veiculo:
+        #     messages.error(request, 'Placa do veículo é obrigatória.')
+        #     return render(request, 'vendas/informar_renavam_placa_analise.html', {
+        #         'analise': analise,
+        #         'cliente': analise.cliente
+        #     })
         
-        # Validação do formato do RENAVAM
+        # Validação do formato do RENAVAM (removida obrigatoriedade de 11 dígitos)
         renavam_limpo = re.sub(r'\D', '', renavam_informado)
-        if len(renavam_limpo) != 11:
-            messages.error(request, 'RENAVAM deve ter exatamente 11 dígitos.')
+        if len(renavam_limpo) < 9:
+            messages.error(request, 'RENAVAM deve ter pelo menos 9 dígitos.')
             return render(request, 'vendas/informar_renavam_placa_analise.html', {
                 'analise': analise,
                 'cliente': analise.cliente
             })
         
-        # Validação do formato da placa
-        placa_limpa = re.sub(r'[^A-Z0-9]', '', placa_veiculo.upper())
-        if len(placa_limpa) != 7:
-            messages.error(request, 'Placa deve ter o formato ABC-1234.')
-            return render(request, 'vendas/informar_renavam_placa_analise.html', {
-                'analise': analise,
-                'cliente': analise.cliente
-            })
+        # Validação do formato da placa (opcional)
+        if placa_veiculo:
+            placa_limpa = re.sub(r'[^A-Z0-9]', '', placa_veiculo.upper())
+            if len(placa_limpa) != 7:
+                messages.error(request, 'Placa deve ter o formato ABC-1234.')
+                return render(request, 'vendas/informar_renavam_placa_analise.html', {
+                    'analise': analise,
+                    'cliente': analise.cliente
+                })
         
         # Verificar se o RENAVAM já existe no estoque
         loja = get_object_or_404(Loja, id=request.session.get('loja_id'))
@@ -3218,7 +3258,7 @@ def informar_renavam_placa_analise(request, pk):
             # RENAVAM já existe no estoque
             analise.renavam = estoque_renavam_existente
             analise.renavam_informado = renavam_limpo
-            analise.placa_veiculo = placa_veiculo.upper()
+            analise.placa_veiculo = placa_veiculo.upper() if placa_veiculo else None
             analise.save()
             messages.success(request, f'RENAVAM {renavam_limpo} associado com sucesso à análise.')
         else:
@@ -3228,7 +3268,7 @@ def informar_renavam_placa_analise(request, pk):
                 novo_estoque_renavam = EstoqueImei.objects.create(
                     produto=analise.produto,
                     renavam=renavam_limpo,
-                    placa=placa_veiculo.upper(),
+                    placa=placa_veiculo.upper() if placa_veiculo else '',
                     loja=loja,
                     vendido=False,
                     cancelado=False
@@ -3238,7 +3278,7 @@ def informar_renavam_placa_analise(request, pk):
                 # Associar à análise
                 analise.renavam = novo_estoque_renavam
                 analise.renavam_informado = renavam_limpo
-                analise.placa_veiculo = placa_veiculo.upper()
+                analise.placa_veiculo = placa_veiculo.upper() if placa_veiculo else None
                 analise.save()
                 
                 messages.success(request, f'RENAVAM {renavam_limpo} criado e associado com sucesso à análise.')

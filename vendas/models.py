@@ -173,7 +173,7 @@ class Loja(Base):
     objects = LojaQuerySet.as_manager()
 
 
-    REPASSES_DIAS = (1, 15)
+    REPASSES_DIAS = (5, 15)
 
     def get_repasses_status(self, meses_atras=0, limite_meses=6):
         hoje = date.today()
@@ -454,9 +454,8 @@ class AnaliseCreditoCliente(Base):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='EA')
     status_aplicativo = models.CharField(max_length=20, choices=STATUS_APP_CHOICES, default='P', verbose_name='Status do aplicativo')
     data_pagamento = models.CharField(max_length=20, null=True, blank=True, choices=(
-        ('1', 'Dia 1'),
-        ('10', 'Dia 10'),
-        ('20', 'Dia 20'),
+        ('5', 'Dia 5'),
+        ('15', 'Dia 15'),
     ), verbose_name='Data de pagamento')
     numero_parcelas = models.CharField(max_length=20, choices=(
         ('10', '10x'),

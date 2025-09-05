@@ -516,7 +516,7 @@ class ComprovantesClienteForm(forms.ModelForm):
             'consulta_serasa_analise': 'Análise Consulta Serasa',
             'restricao': 'Restrição',
             'foto_cliente': 'Foto do Cliente*',
-            'foto_cnh': 'Foto da CNH*',
+            'foto_cnh': 'Foto da CNH',
             'foto_cnh_analise': 'Análise da Foto da CNH',
         }
 
@@ -620,7 +620,7 @@ class ComprovantesClienteEditForm(forms.ModelForm):
             'consulta_serasa_analise': 'Análise Consulta Serasa',
             'restricao': 'Restrição',
             'foto_cliente': 'Foto do Cliente*',
-            'foto_cnh': 'Foto da CNH*',
+            'foto_cnh': 'Foto da CNH',
             'foto_cnh_analise': 'Análise da Foto da CNH',
         }
 

@@ -2,7 +2,7 @@ from datetime import date
 
 def calcular_data_primeira_parcela(dia_str: str) -> date:
     """
-    Recebe dia_str em '1', '10' ou '20' e retorna um date
+    Recebe dia_str em '5' ou '15' e retorna um date
     correspondente ao próximo dia de pagamento.
     
     - Se hoje for <= dia, retorna esse mês no dia indicado.

@@ -61,7 +61,7 @@ def menu_items(request):
                     "permission": "estoque.view_estoque"
                 },
                 {
-                    "label": "Estoque IMEI",
+                    "label": "Estoque",
                     "url_name": "estoque:estoque_imei_list",
                     "permission": "estoque.view_estoqueimei"  
                 },

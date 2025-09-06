@@ -6,13 +6,14 @@
     <title>Nota de Venda</title>
     <style>
         @page {
-            margin: 20mm 15mm;
+            margin: 12mm 10mm; /* Reduzido margens para economia de espaço */
+            size: A4;
         }
 
         body {
             font-family: Arial, Helvetica, sans-serif;
-            font-size: 9pt; /* Diminuído de 10pt para 9pt */
-            line-height: 1.5;
+            font-size: 8pt; /* Reduzido para 8pt */
+            line-height: 1.3; /* Reduzido espaçamento entre linhas */
             margin: 0;
         }
 
@@ -25,11 +26,12 @@
 
         th, td {
             border: 1px solid black;
-            padding: 8px 6px; /* Aumentado padding vertical e horizontal */
+            padding: 4px 3px; /* Reduzido para economia de espaço */
             text-align: left;
-            word-wrap: break-word; /* Quebra o texto para evitar overflow */
-            overflow-wrap: break-word; /* Compatibilidade com navegadores modernos */
-            vertical-align: top; /* Alinha conteúdo no topo da célula */
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            vertical-align: top;
+            font-size: 7pt; /* Fonte menor para tabelas */
         }
 
         th {
@@ -45,10 +47,10 @@
 
         .header {
             top: 0;
-            height: 50px;
+            height: 35px; /* Reduzido altura */
             text-align: center;
             font-weight: bold;
-            font-size: 11pt; /* Diminuído de 12pt para 11pt */
+            font-size: 10pt; /* Reduzido */
         }
 
         .footer {
@@ -64,14 +66,16 @@
         }
 
         .content {
-            margin: 70px 0; /* Espaço para header e footer */
+            margin: 45px 0 35px 0; /* Reduzido espaço para header e footer */
         }
 
         .section-title {
             font-weight: bold;
-            margin: 15px 0 10px;
+            margin: 8px 0 4px; /* Reduzido espaçamento */
             text-transform: uppercase;
-            font-size: 9pt; /* Diminuído de 10pt para 9pt */
+            font-size: 8pt; /* Reduzido */
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 2px;
         }
 
         .text-center {
@@ -83,7 +87,7 @@
         }
 
         .spacer {
-            margin-top: 20px;
+            margin-top: 10px; /* Reduzido */
         }
 
         /* Definir tamanhos otimizados para colunas */
@@ -96,13 +100,13 @@
         .table-client th:nth-child(7), .table-client td:nth-child(7) { width: 12%; } /* Cidade */
         .table-client th:nth-child(8), .table-client td:nth-child(8) { width: 5%; }  /* UF */
 
-        .table-products th:nth-child(1), .table-products td:nth-child(1) { width: 8%; }  /* Código */
-        .table-products th:nth-child(2), .table-products td:nth-child(2) { width: 25%; } /* Produto */
-        .table-products th:nth-child(3), .table-products td:nth-child(3) { width: 18%; } /* RENAVAM */
+        .table-products th:nth-child(1), .table-products td:nth-child(1) { width: 6%; }  /* Código */
+        .table-products th:nth-child(2), .table-products td:nth-child(2) { width: 28%; } /* Produto */
+        .table-products th:nth-child(3), .table-products td:nth-child(3) { width: 12%; } /* RENAVAM */
         .table-products th:nth-child(4), .table-products td:nth-child(4) { width: 8%; }  /* Quantidade */
-        .table-products th:nth-child(5), .table-products td:nth-child(5) { width: 12%; } /* Valor Item */
-        .table-products th:nth-child(6), .table-products td:nth-child(6) { width: 10%; } /* Desconto */
-        .table-products th:nth-child(7), .table-products td:nth-child(7) { width: 19%; } /* Valor Total */
+        .table-products th:nth-child(5), .table-products td:nth-child(5) { width: 15%; } /* Valor Item */
+        .table-products th:nth-child(6), .table-products td:nth-child(6) { width: 15%; } /* Desconto */
+        .table-products th:nth-child(7), .table-products td:nth-child(7) { width: 16%; } /* Valor Total */
 
         /* Estilos específicos para tabelas de pagamento */
         .table-payment th:nth-child(1), .table-payment td:nth-child(1) { width: 20%; } /* Forma de Pagamento */
@@ -164,6 +168,53 @@
             width: 35%;
             text-align: right;
         }
+        
+        /* Formatação específica para termo de garantia */
+        .termo-garantia {
+            font-size: 6pt; /* Reduzido para economia de espaço */
+            line-height: 1.2; /* Reduzido */
+            margin: 5px 0; /* Reduzido */
+            text-align: justify;
+            hyphens: auto;
+            white-space: pre-wrap;
+        }
+        
+        /* Estilizar títulos que aparecem no termo */
+        .termo-garantia strong {
+            font-weight: bold;
+            font-size: 7pt; /* Reduzido */
+            display: block;
+            margin: 4px 0 2px; /* Reduzido */
+        }
+        
+        /* Simular bullets (•) para listas */
+        .termo-garantia br + br {
+            margin-bottom: 3px;
+        }
+        
+        /* Melhorar espaçamento entre parágrafos */
+        .termo-garantia {
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+        
+        /* Compactar tabelas ainda mais */
+        table {
+            margin-bottom: 6px; /* Reduzido de 10px */
+        }
+        
+        /* Área de assinatura mais compacta */
+        .assinatura {
+            margin-top: 8px;
+            font-size: 7pt;
+        }
+        
+        /* Observações compactas */
+        .observacoes-extras {
+            font-size: 6pt;
+            margin: 4px 0;
+            line-height: 1.1;
+        }
     </style>
 </head>
 <body>
@@ -196,29 +247,24 @@
 
         <!-- Cliente -->
         <div class="section-title">Destinatário/Remetente</div>
-        <table class="table-client">
-            <thead>
-                <tr>
-                    <th>Nome/Razão Social</th>
-                    <th>Telefone</th>
-                    <th>CNPJ/CPF</th>
-                    <th>Email</th>
-                    <th>Endereço</th>
-                    <th>CEP</th>
-                    <th>Cidade</th>
-                    <th>UF</th>
-                </tr>
-            </thead>
+        <table class="table-client-compact">
             <tbody>
                 <tr>
-                    <td>{{ venda.cliente }}</td>
-                    <td class="text-center">{{ venda.cliente.telefone }}</td>
-                    <td class="text-center">{{ venda.cliente.cpf }}</td>
-                    <td class="text-center">{{ venda.cliente.email }}</td>
-                    <td>{{ venda.cliente.endereco }}</td>
-                    <td class="text-center">{{ venda.cliente.cep }}</td>
-                    <td class="text-center">{{ venda.cliente.cidade }}</td>
-                    <td class="text-center">{{ venda.cliente.uf|default:'Sem UF' }}</td>
+                    <td style="width: 25%; font-weight: bold;">Nome:</td>
+                    <td style="width: 35%;">{{ venda.cliente }}</td>
+                    <td style="width: 15%; font-weight: bold;">CNPJ/CPF:</td>
+                    <td style="width: 25%;">{{ venda.cliente.cpf }}</td>
+                </tr>
+                <tr>
+                    <td style="font-weight: bold;">Telefone:</td>
+                    <td>{{ venda.cliente.telefone }}</td>
+                    <td style="font-weight: bold;">Email:</td>
+                    <td>{{ venda.cliente.email }}</td>
+                </tr>
+                <tr>
+                    <td style="font-weight: bold;">Endereço:</td>
+                    <td colspan="2">{{ venda.cliente.endereco }}</td>
+                    <td>{{ venda.cliente.cep }} - {{ venda.cliente.cidade }}/{{ venda.cliente.uf|default:'--' }}</td>
                 </tr>
             </tbody>
         </table>
@@ -285,10 +331,9 @@
 
         <!-- Observações -->
         <div class="section-title">Observações</div>
-        <p>{{ venda.loja.mensagem_garantia }}</p>
-        <p>A empresa não é responsável por perda de dados armazenados nos produtos. Certifique-se de fazer a cópia de segurança necessária.</p>
-        <div class="spacer"></div>
-        <div class="text-center">
+        <div class="termo-garantia">{{ venda.loja.mensagem_garantia|linebreaksbr|safe }}</div>
+        <div class="observacoes-extras">A empresa não é responsável por perda de dados armazenados nos produtos. Certifique-se de fazer a cópia de segurança necessária.</div>
+        <div class="assinatura text-center">
             ___________________________________<br>
             Assinatura do Cliente
         </div>

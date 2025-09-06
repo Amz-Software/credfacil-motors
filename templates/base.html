@@ -70,7 +70,31 @@
       border-radius: 12px;
       box-shadow: 0 2px 12px rgba(0,0,0,0.08);
       transition: all 0.3s ease;
-      overflow: hidden;
+      overflow: visible; /* Permitir que dropdowns sejam visíveis */
+    }
+    
+    /* Overflow hidden apenas para o card-body quando necessário */
+    .card-body.table-responsive {
+      overflow-x: auto;
+      overflow-y: visible;
+    }
+    
+    /* Ajustar table-responsive para não cortar dropdowns */
+    .table-responsive {
+      overflow-x: auto;
+      overflow-y: visible;
+    }
+    
+    /* Para tabelas com dropdowns, garantir espaço suficiente */
+    .table-responsive .table {
+      margin-bottom: 1rem;
+    }
+    
+    /* Última linha da tabela precisa de espaço extra para dropdown */
+    .table tbody tr:last-child .dropdown-menu {
+      top: auto;
+      bottom: 100%;
+      margin-bottom: 2px;
     }
     
     .card:hover {
@@ -318,6 +342,79 @@
       background: linear-gradient(135deg, rgba(3, 195, 236, 0.15) 0%, rgba(3, 195, 236, 0.1) 100%);
       color: #03c3ec;
       border: 1px solid rgba(3, 195, 236, 0.3);
+    }
+    
+    /* Melhorias específicas para dropdowns em tabelas */
+    .table .dropdown {
+      position: relative;
+    }
+    
+    .table .dropdown-menu {
+      z-index: 1050; /* Garantir que apareça acima de outros elementos */
+      min-width: 160px;
+      border: none;
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      padding: 8px 0;
+    }
+    
+    .table .dropdown-item {
+      padding: 8px 16px;
+      border-radius: 6px;
+      margin: 2px 8px;
+      transition: all 0.2s ease;
+    }
+    
+    .table .dropdown-item:hover {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      transform: translateX(4px);
+    }
+    
+    /* Dropdown no modo dark */
+    [data-theme="dark"] .table .dropdown-menu,
+    .dark-style .table .dropdown-menu {
+      background: #2b2c40;
+      border: 1px solid #444564;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+    
+    [data-theme="dark"] .table .dropdown-item,
+    .dark-style .table .dropdown-item {
+      color: #a3a4cc;
+    }
+    
+    [data-theme="dark"] .table .dropdown-item:hover,
+    .dark-style .table .dropdown-item:hover {
+      background: linear-gradient(135deg, #5a67d8 0%, #6b5b95 100%);
+      color: #fff;
+    }
+    
+    /* Botão de dropdown mais elegante */
+    .table .btn.dropdown-toggle {
+      border: none;
+      background: transparent;
+      color: #6c757d;
+      padding: 4px 8px;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+    }
+    
+    .table .btn.dropdown-toggle:hover {
+      background: rgba(102, 126, 234, 0.1);
+      color: #667eea;
+      transform: scale(1.1);
+    }
+    
+    [data-theme="dark"] .table .btn.dropdown-toggle,
+    .dark-style .table .btn.dropdown-toggle {
+      color: #a3a4cc;
+    }
+    
+    [data-theme="dark"] .table .btn.dropdown-toggle:hover,
+    .dark-style .table .btn.dropdown-toggle:hover {
+      background: rgba(90, 103, 216, 0.1);
+      color: #5a67d8;
     }
   </style>
 

@@ -2010,10 +2010,21 @@ class VendaPDFView(PermissionRequiredMixin, View):
     
     def get(self, request, pk):
         venda = get_object_or_404(Venda, id=pk)
+        # Buscar a loja CredFácil para a mensagem de garantia
+        try:
+            loja_credfacil = Loja.objects.get(credfacil=True)
+        except Loja.DoesNotExist:
+            # Se não existir loja com credfacil=True, usar a loja da venda
+            loja_credfacil = venda.loja
+        except Loja.MultipleObjectsReturned:
+            # Se existir mais de uma, pegar a primeira
+            loja_credfacil = Loja.objects.filter(credfacil=True).first()
+            
         context = {
             'venda': venda,
             'produtos': venda.itens_venda.all(),
             'pagamentos': venda.pagamentos.all(),
+            'loja_credfacil': loja_credfacil,
         }
         return render(request, 'venda/venda_pdf.html', context)
     

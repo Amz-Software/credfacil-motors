@@ -21,10 +21,10 @@
   <meta name="viewport"
     content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
   <title>
-    {% block title %}{{ loja_atual|default:"CredMotors" }} - CredMotors{% endblock %}
+    {% block title %}{{ loja_atual|default:"CredMotors" }} - Sistema CredMotors{% endblock %}
   </title>
   <!-- Favicon -->
-  <link rel="icon" type="image/x-icon" href="{% static '/images/logo.png' %}" />
+  <link rel="icon" type="image/x-icon" href="{% static '/images/credmoto2.png' %}" />
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -51,6 +51,275 @@
   <link rel="stylesheet" href="{% static 'sneat-template/assets/vendor/css/rtl/theme-default.css' %}"
     class="template-customizer-theme-css" />
   <link rel="stylesheet" href="{% static 'sneat-template/assets/css/demo.css' %}" />
+  
+  <!-- Custom CSS for clean interface -->
+  <style>
+    /* Layout limpo e moderno - responsivo ao modo dark */
+    .content-wrapper {
+      background: var(--bs-body-bg, #fff);
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      margin: 0.5rem;
+      overflow: hidden;
+    }
+    
+    /* Cards com design mais elegante - responsivo ao modo dark */
+    .card {
+      background: var(--bs-card-bg, #fff) !important;
+      border: none;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      transition: all 0.3s ease;
+      overflow: hidden;
+    }
+    
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+    }
+    
+    /* Modo dark específico - sobrescrever fundo branco forçado */
+    [data-theme="dark"] .card,
+    .dark-style .card {
+      background: #2b2c40 !important;
+      border-color: #444564;
+      color: #a3a4cc;
+    }
+    
+    [data-theme="dark"] .content-wrapper,
+    .dark-style .content-wrapper {
+      background: #232333 !important;
+    }
+    
+    /* Header do layout com gradiente sutil - responsivo ao modo dark */
+    .layout-navbar {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+      border-bottom: none;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    /* Modo dark para navbar */
+    [data-theme="dark"] .layout-navbar,
+    .dark-style .layout-navbar {
+      background: linear-gradient(135deg, #4a4d7a 0%, #5a4a6b 100%) !important;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    }
+    
+    /* Sidebar com design mais moderno - responsivo ao modo dark */
+    .layout-menu {
+      background: linear-gradient(180deg, #2c3e50 0%, #34495e 100%) !important;
+      border-right: none;
+      box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+    }
+    
+    /* Modo dark para sidebar */
+    [data-theme="dark"] .layout-menu,
+    .dark-style .layout-menu {
+      background: linear-gradient(180deg, #1f2029 0%, #2b2c40 100%) !important;
+      box-shadow: 2px 0 10px rgba(0,0,0,0.3);
+    }
+    
+    /* Botões com design mais moderno - responsivo ao modo dark */
+    .btn {
+      border-radius: 8px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: none;
+      color: #fff;
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+      background: linear-gradient(135deg, #5a67d8 0%, #6b5b95 100%);
+    }
+    
+    /* Botões no modo dark */
+    [data-theme="dark"] .btn-primary,
+    .dark-style .btn-primary {
+      background: linear-gradient(135deg, #5a67d8 0%, #6b5b95 100%);
+      color: #fff;
+    }
+    
+    [data-theme="dark"] .btn-primary:hover,
+    .dark-style .btn-primary:hover {
+      background: linear-gradient(135deg, #4a55c7 0%, #5a4a7a 100%);
+    }
+    
+    /* Tabelas com design mais limpo - responsivo ao modo dark */
+    .table {
+      border-radius: 8px;
+      overflow: hidden;
+      background: var(--bs-card-bg, #fff);
+    }
+    
+    .table thead th {
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      border: none;
+      font-weight: 600;
+      color: #495057;
+    }
+    
+    /* Tabelas no modo dark */
+    [data-theme="dark"] .table,
+    .dark-style .table {
+      background: #2b2c40;
+      color: #a3a4cc;
+    }
+    
+    [data-theme="dark"] .table thead th,
+    .dark-style .table thead th {
+      background: linear-gradient(135deg, #353654 0%, #3a3b58 100%);
+      color: #cbcbe2;
+      border-bottom-color: #444564;
+    }
+    
+    [data-theme="dark"] .table tbody tr:hover,
+    .dark-style .table tbody tr:hover {
+      background-color: rgba(68, 69, 100, 0.3);
+    }
+    
+    /* Formulários com inputs mais elegantes - responsivo ao modo dark */
+    .form-control {
+      border-radius: 8px;
+      border: 1px solid #e0e6ed;
+      transition: all 0.3s ease;
+      background: var(--bs-body-bg, #fff);
+      color: var(--bs-body-color, #212529);
+    }
+    
+    .form-control:focus {
+      border-color: #667eea;
+      box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+    
+    /* Formulários no modo dark */
+    [data-theme="dark"] .form-control,
+    .dark-style .form-control {
+      background-color: #2b2c40;
+      border-color: #444564;
+      color: #a3a4cc;
+    }
+    
+    [data-theme="dark"] .form-control:focus,
+    .dark-style .form-control:focus {
+      background-color: #2b2c40;
+      border-color: #667eea;
+      color: #a3a4cc;
+    }
+    
+    /* Animações suaves para transições */
+    * {
+      transition: box-shadow 0.3s ease, transform 0.3s ease;
+    }
+    
+    /* Logo no sidebar com efeito hover */
+    .app-brand-link img {
+      transition: all 0.3s ease;
+      border-radius: 8px;
+    }
+    
+    .app-brand-link:hover img {
+      transform: scale(1.05);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    /* Melhorias na navegação */
+    .menu-link {
+      border-radius: 8px;
+      margin: 2px 8px;
+      transition: all 0.3s ease;
+    }
+    
+    .menu-link:hover {
+      background: rgba(255,255,255,0.1) !important;
+      transform: translateX(4px);
+    }
+    
+    .menu-link.active {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    }
+    
+    /* Navbar melhorada */
+    .navbar-nav .nav-link {
+      border-radius: 6px;
+      transition: all 0.3s ease;
+      margin: 0 4px;
+    }
+    
+    .navbar-nav .nav-link:hover {
+      background: rgba(255,255,255,0.1);
+      transform: translateY(-1px);
+    }
+    
+    /* Badges e notificações */
+    .badge {
+      border-radius: 12px;
+      padding: 4px 8px;
+      font-weight: 500;
+    }
+    
+    /* Melhorias nos alerts - responsivo ao modo dark */
+    .alert {
+      border: none;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+    
+    .alert-success {
+      background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+      color: #155724;
+    }
+    
+    .alert-danger {
+      background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+      color: #721c24;
+    }
+    
+    .alert-warning {
+      background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+      color: #856404;
+    }
+    
+    .alert-info {
+      background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+      color: #0c5460;
+    }
+    
+    /* Alerts no modo dark */
+    [data-theme="dark"] .alert-success,
+    .dark-style .alert-success {
+      background: linear-gradient(135deg, rgba(113, 221, 55, 0.15) 0%, rgba(113, 221, 55, 0.1) 100%);
+      color: #71dd37;
+      border: 1px solid rgba(113, 221, 55, 0.3);
+    }
+    
+    [data-theme="dark"] .alert-danger,
+    .dark-style .alert-danger {
+      background: linear-gradient(135deg, rgba(255, 62, 29, 0.15) 0%, rgba(255, 62, 29, 0.1) 100%);
+      color: #ff3e1d;
+      border: 1px solid rgba(255, 62, 29, 0.3);
+    }
+    
+    [data-theme="dark"] .alert-warning,
+    .dark-style .alert-warning {
+      background: linear-gradient(135deg, rgba(255, 171, 0, 0.15) 0%, rgba(255, 171, 0, 0.1) 100%);
+      color: #ffab00;
+      border: 1px solid rgba(255, 171, 0, 0.3);
+    }
+    
+    [data-theme="dark"] .alert-info,
+    .dark-style .alert-info {
+      background: linear-gradient(135deg, rgba(3, 195, 236, 0.15) 0%, rgba(3, 195, 236, 0.1) 100%);
+      color: #03c3ec;
+      border: 1px solid rgba(3, 195, 236, 0.3);
+    }
+  </style>
 
   <!-- Vendors CSS -->
   <link rel="stylesheet"
@@ -96,7 +365,7 @@
           style="padding: 0.5rem 1rem;">
           <a href="{% url 'vendas:index' %}" class="app-brand-link d-flex align-items-center flex-nowrap"
             style="text-decoration: none;">
-            <img src="{% static 'images/logo.png' %}" style="max-width: 100px; height: auto; flex-shrink: 0;">
+            <img src="{% static 'images/credmoto2.png' %}" style="max-width: 100px; height: auto; flex-shrink: 0;">
             <span class="app-brand-text text-truncate fw-medium text-capitalize ms-2"
               style="font-size: 18px; max-width: 160px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
               <!-- {{ loja_atual|title }} -->

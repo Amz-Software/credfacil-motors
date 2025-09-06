@@ -18,10 +18,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
     <title>
-    {% block title %}{{ loja_atual|default:"CredFácil" }} - CredFácil{% endblock %}
+    {% block title %}{{ loja_atual|default:"CredMotors" }} - Sistema CredMotors{% endblock %}
     </title>
     <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="{% static '/images/logo.png' %}" />
+    <link rel="icon" type="image/x-icon" href="{% static '/images/credmoto2.png' %}" />
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -41,6 +41,135 @@
     <link rel="stylesheet" href="{% static 'sneat-template/assets/vendor/css/rtl/core.css' %}" class="template-customizer-core-css" />
     <link rel="stylesheet" href="{% static 'sneat-template/assets/vendor/css/rtl/theme-default.css' %}" class="template-customizer-theme-css" />
     <link rel="stylesheet" href="{% static 'sneat-template/assets/css/demo.css' %}" />
+    
+    <!-- Custom CSS for clean public pages -->
+    <style>
+      /* Design limpo para páginas públicas - responsivo ao modo dark */
+      body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+      }
+      
+      /* Modo dark para páginas públicas */
+      [data-theme="dark"] body,
+      .dark-style body {
+        background: linear-gradient(135deg, #1f2029 0%, #2b2c40 100%);
+      }
+      
+      .container-fluid {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 12px;
+        margin: 1rem;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        backdrop-filter: blur(10px);
+      }
+      
+      /* Container no modo dark */
+      [data-theme="dark"] .container-fluid,
+      .dark-style .container-fluid {
+        background: rgba(43, 44, 64, 0.95);
+        border: 1px solid #444564;
+      }
+      
+      .card {
+        background: var(--bs-card-bg, #fff) !important;
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+      }
+      
+      .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+      }
+      
+      /* Cards no modo dark */
+      [data-theme="dark"] .card,
+      .dark-style .card {
+        background: #2b2c40 !important;
+        border-color: #444564;
+        color: #a3a4cc;
+      }
+      
+      .btn {
+        border-radius: 8px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+      }
+      
+      .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        color: #fff;
+      }
+      
+      .btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        background: linear-gradient(135deg, #5a67d8 0%, #6b5b95 100%);
+      }
+      
+      /* Botões no modo dark */
+      [data-theme="dark"] .btn-primary,
+      .dark-style .btn-primary {
+        background: linear-gradient(135deg, #5a67d8 0%, #6b5b95 100%);
+      }
+      
+      .form-control {
+        border-radius: 8px;
+        border: 1px solid #e0e6ed;
+        transition: all 0.3s ease;
+        background: var(--bs-body-bg, #fff);
+        color: var(--bs-body-color, #212529);
+      }
+      
+      .form-control:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+      }
+      
+      /* Formulários no modo dark */
+      [data-theme="dark"] .form-control,
+      .dark-style .form-control {
+        background-color: #2b2c40;
+        border-color: #444564;
+        color: #a3a4cc;
+      }
+      
+      [data-theme="dark"] .form-control:focus,
+      .dark-style .form-control:focus {
+        background-color: #2b2c40;
+        border-color: #667eea;
+        color: #a3a4cc;
+      }
+      
+      .table {
+        border-radius: 8px;
+        overflow: hidden;
+        background: var(--bs-card-bg, #fff);
+      }
+      
+      .table thead th {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border: none;
+        font-weight: 600;
+        color: #495057;
+      }
+      
+      /* Tabelas no modo dark */
+      [data-theme="dark"] .table,
+      .dark-style .table {
+        background: #2b2c40;
+        color: #a3a4cc;
+      }
+      
+      [data-theme="dark"] .table thead th,
+      .dark-style .table thead th {
+        background: linear-gradient(135deg, #353654 0%, #3a3b58 100%);
+        color: #cbcbe2;
+      }
+    </style>
 
     <!-- Vendors CSS -->
     <link rel="stylesheet" href="{% static 'sneat-template/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css' %}" />

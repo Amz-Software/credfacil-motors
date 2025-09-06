@@ -555,6 +555,7 @@ class ComprovantesClienteForm(forms.ModelForm):
             'documento_identificacao_frente_analise',
             'documento_identificacao_verso_analise',
             'comprovante_residencia_analise',
+            'foto_cnh',
             'foto_cnh_analise',
         }
         for name, field in self.fields.items():
@@ -658,6 +659,7 @@ class ComprovantesClienteEditForm(forms.ModelForm):
             'documento_identificacao_frente_analise',
             'documento_identificacao_verso_analise',
             'comprovante_residencia_analise',
+            'foto_cnh',
             'foto_cnh_analise',
         }
         for name, field in self.fields.items():

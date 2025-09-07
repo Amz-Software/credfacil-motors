@@ -1023,9 +1023,7 @@ class LojaForm(forms.ModelForm):
 
         widgets = {
             'telefone': forms.TextInput(attrs={'class': 'form-control tel'}),
-            'meta_vendas_diaria': forms.NumberInput(attrs={'class': 'form-control money'}),
             'meta_vendas_mensal': forms.NumberInput(attrs={'class': 'form-control money'}),
-            'entrada_caixa_diaria': forms.NumberInput(attrs={'class': 'form-control money'}),
             'porcentagem_desconto_4': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0', 'max': '100'}),
             'porcentagem_desconto_6': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0', 'max': '100'}),
             'porcentagem_desconto_8': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0', 'max': '100'}),

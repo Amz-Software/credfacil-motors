@@ -134,10 +134,6 @@
                 <div class="info-icon">
                   <i class="bx bx-receipt text-warning"></i>
                 </div>
-                <div class="info-content">
-                  <label>Inscrição Estadual</label>
-                  <span>{{ loja.inscricao_estadual|default:"N/A" }}</span>
-                </div>
               </div>
             </div>
             <div class="col-md-6 col-lg-3">
@@ -167,13 +163,6 @@
           <div class="row g-4">
             <div class="col-md-6 col-lg-3">
               <div class="metric-card bg-info">
-                <div class="metric-icon">
-                  <i class="bx bx-line-chart"></i>
-                </div>
-                <div class="metric-content">
-                  <h3>R$ {{ loja.meta_vendas_diaria|default:"0"|floatformat:2 }}</h3>
-                  <p>Meta Diária</p>
-                </div>
               </div>
             </div>
             <div class="col-md-6 col-lg-3">
@@ -189,13 +178,6 @@
             </div>
             <div class="col-md-6 col-lg-3">
               <div class="metric-card bg-warning">
-                <div class="metric-icon">
-                  <i class="bx bx-wallet"></i>
-                </div>
-                <div class="metric-content">
-                  <h3>R$ {{ loja.entrada_caixa_diaria|default:"0"|floatformat:2 }}</h3>
-                  <p>Entrada Caixa</p>
-                </div>
               </div>
             </div>
             <div class="col-md-6 col-lg-3">

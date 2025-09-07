@@ -52,12 +52,6 @@
             </div>
             <div class="row">
               <div class="col-md-6 mb-3">
-                <label for="id_inscricao_estadual" class="form-label">Inscrição Estadual</label>
-                <input type="text" class="form-control" id="id_inscricao_estadual" name="inscricao_estadual" value="{{ form.inscricao_estadual.value|default_if_none:'' }}">
-              </div>
-            </div>
-            <div class="row">
-              <div class="col-md-6 mb-3">
                 <label for="id_telefone" class="form-label">Telefone</label>
                 <input type="text" class="form-control tel" id="id_telefone" name="telefone" value="{{ form.telefone.value|default_if_none:'' }}">
               </div>
@@ -69,20 +63,12 @@
             <div class="row">
               {% localize on %}
               <div class="col-md-6 mb-3">
-                <label for="id_meta_vendas_diaria" class="form-label">Meta de Vendas Diária</label>
-                <input type="text" class="form-control money" id="id_meta_vendas_diaria" name="meta_vendas_diaria" value="{{ form.meta_vendas_diaria.value|default_if_none:'' }}">
-              </div>
-              {% endlocalize %}
-              <div class="col-md-6 mb-3">
                 <label for="id_meta_vendas_mensal" class="form-label">Meta de Vendas Mensal</label>
                 <input type="text" class="form-control money" id="id_meta_vendas_mensal" name="meta_vendas_mensal" value="{{ form.meta_vendas_mensal.value|default_if_none:'' }}">
               </div>
+              {% endlocalize %}
             </div>
             <div class="row">
-              <div class="col-md-6 mb-3">
-                <label for="id_entrada_caixa_diaria" class="form-label">Entrada de Caixa Diária</label>
-                <input type="text" class="form-control money" id="id_entrada_caixa_diaria" name="entrada_caixa_diaria" value="{{ form.entrada_caixa_diaria.value|default_if_none:'' }}">
-              </div>
               <div class="col-md-6 mb-3">
                 <label for="id_logo_loja" class="form-label">Logo da Loja</label>
                 <input type="file" class="form-control" id="id_logo_loja" name="logo_loja">

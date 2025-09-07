@@ -563,6 +563,9 @@ class ComprovantesCliente(Base):
     
     class Meta:
         verbose_name_plural = 'Comprovantes Clientes'
+        permissions = (
+            ('view_consulta_serasa', 'Pode visualizar consulta Serasa'),
+        )
 
     def __str__(self):
         return f"Comprovantes para {self.cliente.nome if self.cliente else 'Cliente'}"

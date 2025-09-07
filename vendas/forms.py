@@ -524,14 +524,22 @@ class ComprovantesClienteForm(forms.ModelForm):
         user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
         
-        if not (user and user.has_perm('vendas.change_status_analise')):
-            self.fields.pop('consulta_serasa', None)
+        # Verificar permissões do usuário
+        has_view_serasa = user and user.has_perm('vendas.view_consulta_serasa')
+        has_change_status = user and user.has_perm('vendas.change_status_analise')
+        has_view_all = user and user.has_perm('vendas.view_all_analise_credito')
+        
+        # Lógica de campos baseada nas permissões
+        if not has_change_status:
+            # Remove consulta_serasa apenas se NÃO tiver a permissão específica
+            if not has_view_serasa:
+                self.fields.pop('consulta_serasa', None)
             self.fields.pop('consulta_serasa_analise', None)
             self.fields.pop('restricao', None)
             self.fields.pop('foto_cnh_analise', None)
 
-        # 1) Se não tiver permissão, remove todos os campos que terminam em "_analise"
-        if not (user and user.has_perm('vendas.view_all_analise_credito')):
+        # Se não tiver permissão, remove todos os campos que terminam em "_analise"
+        if not has_view_all:
             for name in list(self.fields):
                 if name.endswith('_analise'):
                     self.fields.pop(name)
@@ -549,18 +557,18 @@ class ComprovantesClienteForm(forms.ModelForm):
                 self.fields[analise_field].initial = False
 
         # 3) Torna obrigatórios todos os outros campos (mesmo lógica que você já tinha)
-        exceptions = {
-            'consulta_serasa',
-            'consulta_serasa_analise',
-            'documento_identificacao_frente_analise',
-            'documento_identificacao_verso_analise',
-            'comprovante_residencia_analise',
-            'foto_cnh',
-            'foto_cnh_analise',
-        }
-        for name, field in self.fields.items():
-            if name not in exceptions:
-                field.required = True
+            exceptions = {
+                'consulta_serasa',
+                'consulta_serasa_analise',
+                'documento_identificacao_frente_analise',
+                'documento_identificacao_verso_analise',
+                'comprovante_residencia_analise',
+                'foto_cnh',
+                'foto_cnh_analise',
+            }
+            for name, field in self.fields.items():
+                if name not in exceptions:
+                    field.required = True
         
         if self.instance and self.instance.pk:
             if user and not user.has_perm('vendas.change_status_analise'):
@@ -629,13 +637,21 @@ class ComprovantesClienteEditForm(forms.ModelForm):
         user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
         
-        if not (user and user.has_perm('vendas.change_status_analise')):
-            self.fields.pop('consulta_serasa', None)
+        # Verificar permissões do usuário
+        has_view_serasa = user and user.has_perm('vendas.view_consulta_serasa')
+        has_change_status = user and user.has_perm('vendas.change_status_analise')
+        has_view_all = user and user.has_perm('vendas.view_all_analise_credito')
+        
+        # Lógica de campos baseada nas permissões
+        if not has_change_status:
+            # Remove consulta_serasa apenas se NÃO tiver a permissão específica
+            if not has_view_serasa:
+                self.fields.pop('consulta_serasa', None)
             self.fields.pop('consulta_serasa_analise', None)
             self.fields.pop('restricao', None)
 
-        # 1) Se não tiver permissão, remove todos os campos que terminam em "_analise"
-        if not (user and user.has_perm('vendas.view_all_analise_credito')):
+        # Se não tiver permissão, remove todos os campos que terminam em "_analise"
+        if not has_view_all:
             for name in list(self.fields):
                 if name.endswith('_analise'):
                     self.fields.pop(name)
@@ -653,18 +669,18 @@ class ComprovantesClienteEditForm(forms.ModelForm):
                 self.fields[analise_field].initial = False
 
         # 3) Torna obrigatórios todos os outros campos (mesmo lógica que você já tinha)
-        exceptions = {
-            'consulta_serasa',
-            'consulta_serasa_analise',
-            'documento_identificacao_frente_analise',
-            'documento_identificacao_verso_analise',
-            'comprovante_residencia_analise',
-            'foto_cnh',
-            'foto_cnh_analise',
-        }
-        for name, field in self.fields.items():
-            if name not in exceptions:
-                field.required = True
+            exceptions = {
+                'consulta_serasa',
+                'consulta_serasa_analise',
+                'documento_identificacao_frente_analise',
+                'documento_identificacao_verso_analise',
+                'comprovante_residencia_analise',
+                'foto_cnh',
+                'foto_cnh_analise',
+            }
+            for name, field in self.fields.items():
+                if name not in exceptions:
+                    field.required = True
         
         if self.instance and self.instance.pk:
             if user and not user.has_perm('vendas.change_status_analise'):

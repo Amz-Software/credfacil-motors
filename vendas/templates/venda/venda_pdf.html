@@ -69,14 +69,6 @@
             margin: 45px 0 35px 0; /* Reduzido espaço para header e footer */
         }
 
-        .section-title {
-            font-weight: bold;
-            margin: 8px 0 4px; /* Reduzido espaçamento */
-            text-transform: uppercase;
-            font-size: 8pt; /* Reduzido */
-            border-bottom: 1px solid #ddd;
-            padding-bottom: 2px;
-        }
 
         .text-center {
             text-align: center;
@@ -179,12 +171,34 @@
             white-space: pre-wrap;
         }
         
+        /* Formatação específica para termo de garantia principal - OTIMIZADA */
+        .termo-garantia-principal {
+            font-size: 8pt; /* Reduzido para melhor aproveitamento */
+            line-height: 1.2; 
+            margin: 8px 0; /* Reduzido */
+            text-align: justify;
+            hyphens: auto;
+            white-space: pre-wrap;
+            border: 1px solid #333;
+            padding: 8px; /* Reduzido */
+            background-color: #f5f5f5;
+        }
+        
         /* Estilizar títulos que aparecem no termo */
         .termo-garantia strong {
             font-weight: bold;
             font-size: 7pt; /* Reduzido */
             display: block;
             margin: 4px 0 2px; /* Reduzido */
+        }
+        
+        /* Estilizar títulos que aparecem no termo principal - OTIMIZADO */
+        .termo-garantia-principal strong {
+            font-weight: bold;
+            font-size: 9pt; /* Reduzido */
+            display: block;
+            margin: 4px 0 3px; /* Reduzido */
+            color: #333;
         }
         
         /* Simular bullets (•) para listas */
@@ -203,17 +217,39 @@
             margin-bottom: 6px; /* Reduzido de 10px */
         }
         
-        /* Área de assinatura mais compacta */
+        /* Área de assinatura posicionada no final - COMPACTA */
         .assinatura {
-            margin-top: 8px;
-            font-size: 7pt;
+            position: fixed;
+            bottom: 30px; /* Reduzido */
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 7pt; /* Reduzido */
+            background: white;
+            padding: 5px 0; /* Reduzido */
+        }
+        
+        /* Ajustar conteúdo para deixar espaço para assinatura - OTIMIZADO */
+        .content {
+            margin: 35px 0 60px 0; /* Reduzido margens */
+            padding-bottom: 10px; /* Reduzido */
         }
         
         /* Observações compactas */
         .observacoes-extras {
             font-size: 6pt;
-            margin: 4px 0;
-            line-height: 1.1;
+            margin: 2px 0; /* Reduzido ainda mais */
+            line-height: 1.0; /* Reduzido */
+        }
+        
+        /* Compactar ainda mais as seções */
+        .section-title {
+            font-weight: bold;
+            margin: 4px 0 2px; /* Reduzido ainda mais */
+            text-transform: uppercase;
+            font-size: 8pt;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 1px; /* Reduzido */
         }
     </style>
 </head>
@@ -330,14 +366,27 @@
         </table>
 
         <!-- Observações -->
-        <div class="section-title">Observações</div>
-        <div class="termo-garantia">{{ loja_credfacil.mensagem_garantia|linebreaksbr|safe }}</div>
-        <div class="observacoes-extras">A empresa não é responsável por perda de dados armazenados nos produtos. Certifique-se de fazer a cópia de segurança necessária.</div>
-        <div class="assinatura text-center">
-            ___________________________________<br>
-            Assinatura do Cliente
+        <div class="section-title">Termos de Garantia</div>
+        <div class="termo-garantia-principal">
+            <strong>GARANTIA:</strong> {{ loja_credfacil.mensagem_garantia|default:""|linebreaksbr|safe }}
         </div>
-        <!-- mensagem -->
+        <div class="observacoes-extras">A empresa não é responsável por perda de dados armazenados nos produtos. Certifique-se de fazer a cópia de segurança necessária. Este documento comprova a locação do veículo especificado.</div>
+    </div>
+    
+    <!-- Seção de Assinatura Fixa -->
+    <div class="assinatura">
+        <table style="width: 100%; border: none; margin: 0;">
+            <tr>
+                <td style="width: 100%; text-align: center; border: none; padding: 8px;">
+                    <div style="border-bottom: 1px solid #000; width: 200px; height: 25px; margin: 0 auto;"></div>
+                    <strong style="font-size: 8pt; margin-top: 5px; display: block;">ASSINATURA DO CLIENTE</strong><br>
+                    <span style="font-size: 7pt;">{{ venda.cliente.nome }}</span>
+                </td>
+            </tr>
+        </table>
+        <div style="margin-top: 3px; font-size: 6pt; color: #666; text-align: center;">
+            <strong>Data:</strong> {{ venda.data_venda }} | <strong>Local:</strong> {{ venda.loja.endereco|default:"________________" }}
+        </div>
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.2/html2pdf.bundle.min.js"></script>
     <script data-venda="{{ venda.id }}">

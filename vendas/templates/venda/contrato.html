@@ -16,13 +16,13 @@
             margin: 0;
             padding: 0;
             font-size: 12px;
-            line-height: 1.5;
+            line-height: 1.3;
             background: none !important;
         }
 
         h2, p {
             margin: 0;
-            padding: 5px 0;
+            padding: 3px 0;
         }
 
         table {
@@ -62,6 +62,35 @@
 
         .via:last-child {
             page-break-after: auto;
+        }
+
+        .assinaturas {
+            margin-top: 10px !important;
+            max-height: 250px !important;
+        }
+
+        .assinatura-bloco {
+            margin: 5px 0 !important;
+        }
+
+        .assinatura-linha {
+            height: 15px !important;
+            margin: 3px auto !important;
+        }
+
+        .assinatura-info {
+            font-size: 8px !important;
+            line-height: 1.1 !important;
+            margin-top: 2px !important;
+        }
+
+        .data-local {
+            margin: 8px 0 !important;
+            font-size: 10px !important;
+        }
+
+        .assinaturas-row {
+            margin: 3px 0 !important;
         }
     }
 
@@ -151,60 +180,205 @@
         margin-bottom: 20px;
         border: 2px solid #ffd700;
     }
+
+    .assinaturas {
+        margin-top: 15px;
+        page-break-inside: avoid;
+        max-height: 300px;
+    }
+
+    .assinatura-bloco {
+        margin: 8px 0;
+        text-align: center;
+        display: inline-block;
+        width: 45%;
+        vertical-align: top;
+    }
+
+    .assinatura-linha {
+        border-bottom: 1px solid #000;
+        width: 200px;
+        margin: 5px auto;
+        height: 20px;
+        display: block;
+    }
+
+    .assinatura-label {
+        font-weight: bold;
+        margin-bottom: 2px;
+        text-align: center;
+        font-size: 10px;
+    }
+
+    .data-local {
+        margin: 10px 0;
+        text-align: center;
+        font-size: 11px;
+    }
+
+    .assinatura-info {
+        font-size: 9px;
+        margin-top: 3px;
+        line-height: 1.2;
+    }
+
+    .assinaturas-row {
+        display: flex;
+        justify-content: space-between;
+        margin: 5px 0;
+    }
 </style>
 </head>
 <body>
 
 <div class="via">
     <div class="destaque-via">VIA DO CLIENTE</div>
-    <h2>CONTRATO DE LOCAÇÃO DE CELULAR</h2>
-    <p>Este Contrato de Locação de Celular ("Contrato") é celebrado entre: {{loja.nome|title}}, inscrito no CNPJ {{loja.cnpj|default:"-"}}, com endereço registrado em {{loja.endereco}} referido como "Locador", {{cliente.nome|title}}, inscrito no CPF {{cliente.cpf}}, REGISTRO GERAL {{cliente.rg}}, com endereço registrado em {{cliente.endereco}} referido como "Locatário".</p>
+    <h2>CONTRATO DE LOCAÇÃO DE VEÍCULO</h2>
+    
+    <p><strong>Pelo presente instrumento particular de contrato de locação de bem móvel, de um lado:</strong></p>
+    
+    <p><strong>I – LOJA PARCEIRA / LOCADORA / PROPRIETÁRIA DO BEM:</strong> {{loja.nome|title}}, inscrita no CNPJ sob nº {{loja.cnpj|default:"-"}}, com sede em {{loja.endereco}}, neste ato denominada simplesmente LOCADORA, responsável pela entrega física do produto, garantia de origem e propriedade do bem locado;</p>
+    
+    <p><strong>II – CREDIFÁCIL FINANCEIRA LTDA:</strong> inscrita no CNPJ nº 60.280.529/0001-38, com sede na Avenida Dom Pedro II, Centro, Abaetetuba – PA, doravante denominada OPERADORA e GARANTIDORA, responsável pela análise de crédito, gestão financeira, monitoramento, cobrança e suporte técnico da locação;</p>
+    
+    <p><strong>III – LOCATÁRIO / CLIENTE:</strong> {{cliente.nome|title}}, inscrito no CPF nº {{cliente.cpf}}, RG nº {{cliente.rg}}, residente e domiciliado em {{cliente.endereco}}, doravante denominado LOCATÁRIO, usuário do bem objeto deste contrato;</p>
+    
+    <p><strong>Têm entre si, justo e contratado, o seguinte:</strong></p>
+    
     <p><strong>1. Objeto do Contrato</strong></p>
-    <p>O Locador concorda em alugar ao Locatário o seguinte celular:</p>
-    <ul>
-        <li>Modelo: {{aparelho.produto.nome|title}}</li>
-        <li>Número de Série/RENAVAM: {{renavam}}</li>
-        {% if placa_veiculo %}
-        <li>Placa do Veículo: {{placa_veiculo}}</li>
-        {% endif %}
-    </ul>
+    <p>O Locador concorda em alugar ao Locatário o seguinte veículo:</p>
+    
+    <p><strong>Modelo:</strong> {{aparelho.produto.nome|title}}<br>
+    <strong>Número de Série/RENAVAM:</strong> {{renavam}}
+    {% if placa_veiculo %}<br><strong>Placa do Veículo:</strong> {{placa_veiculo}}{% endif %}</p>
+    
     <p><strong>2. Período de Locação</strong></p>
     <p>O período de locação começará em {{primeira_parcela}} e terminará em {{ultima_parcela}}.</p>
+    
     <p><strong>3. Taxa de Locação</strong></p>
-    <p>O Locatário concorda em pagar uma taxa de locação de R$ {{valor_parcela|floatformat:2}} por {{quantidade_parcelas}} MESES durante o período de locação.</p>
+    <p>O LOCATÁRIO concorda em pagar, no ato da assinatura do contrato, a importância de R$ {{valor_entrada|floatformat:2|default:"0,00"}} ({{valor_entrada_extenso|default:"zero reais"}}) a título de entrada, que integra o valor total da locação do veículo. O saldo restante será quitado em {{quantidade_parcelas}} ({{quantidade_parcelas_extenso}}) parcelas mensais de R$ {{valor_parcela|floatformat:2}} ({{valor_parcela_extenso}}) cada.</p>
     <div id="texto_contrato_cliente" data-texto="{{contrato}}"></div>
-    <p>Locador: {{loja.nome|title}}<br>
-    CNPJ: {{loja.cnpj}}<br>
-    Locatário: ____________________________________<br>
-    CPF: ____________________________________<br>
-    Vendedor: ____________________________________<br>
-    CPF: ____________________________________</p>
+    
+    <div class="assinaturas">
+        <div class="data-local">
+            <strong>Local e Data:</strong> _____________________, _____ de ________ de ____
+        </div>
+        
+        <div class="assinaturas-row">
+            <div class="assinatura-bloco">
+                <div class="assinatura-label">LOCADORA</div>
+                <div class="assinatura-linha"></div>
+                <div class="assinatura-info">
+                    <strong>{{loja.nome|title}}</strong><br>
+                    CNPJ: {{loja.cnpj|default:"-"}}
+                </div>
+            </div>
+            
+            <div class="assinatura-bloco">
+                <div class="assinatura-label">LOCATÁRIO</div>
+                <div class="assinatura-linha"></div>
+                <div class="assinatura-info">
+                    <strong>{{cliente.nome|title}}</strong><br>
+                    CPF: {{cliente.cpf}}
+                </div>
+            </div>
+        </div>
+        
+        <div class="assinaturas-row">
+            <div class="assinatura-bloco">
+                <div class="assinatura-label">VENDEDOR/REPRESENTANTE</div>
+                <div class="assinatura-linha"></div>
+                <div class="assinatura-info">
+                    Nome: ____________________________<br>
+                    CPF: _____________________________
+                </div>
+            </div>
+            
+            <div class="assinatura-bloco">
+                <div class="assinatura-label">TESTEMUNHA</div>
+                <div class="assinatura-linha"></div>
+                <div class="assinatura-info">
+                    Nome: ____________________________<br>
+                    CPF: _____________________________
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div class="via">
     <div class="destaque-via">VIA DO LOJISTA</div>
-    <h2>CONTRATO DE LOCAÇÃO DE CELULAR</h2>
-    <p>Este Contrato de Locação de Celular ("Contrato") é celebrado entre: {{loja.nome|title}}, inscrito no CNPJ {{loja.cnpj|default:"-"}}, com endereço registrado em {{loja.endereco}} referido como "Locador", {{cliente.nome|title}}, inscrito no CPF {{cliente.cpf}}, REGISTRO GERAL {{cliente.rg}}, com endereço registrado em {{cliente.endereco}} referido como "Locatário".</p>
+    <h2>CONTRATO DE LOCAÇÃO DE VEÍCULO</h2>
+    
+    <p><strong>Pelo presente instrumento particular de contrato de locação de bem móvel, de um lado:</strong></p>
+    
+    <p><strong>I – LOJA PARCEIRA / LOCADORA / PROPRIETÁRIA DO BEM:</strong> {{loja.nome|title}}, inscrita no CNPJ sob nº {{loja.cnpj|default:"-"}}, com sede em {{loja.endereco}}, neste ato denominada simplesmente LOCADORA, responsável pela entrega física do produto, garantia de origem e propriedade do bem locado;</p>
+    
+    <p><strong>II – CREDIFÁCIL FINANCEIRA LTDA:</strong> inscrita no CNPJ nº 60.280.529/0001-38, com sede na Avenida Dom Pedro II, Centro, Abaetetuba – PA, doravante denominada OPERADORA e GARANTIDORA, responsável pela análise de crédito, gestão financeira, monitoramento, cobrança e suporte técnico da locação;</p>
+    
+    <p><strong>III – LOCATÁRIO / CLIENTE:</strong> {{cliente.nome|title}}, inscrito no CPF nº {{cliente.cpf}}, RG nº {{cliente.rg}}, residente e domiciliado em {{cliente.endereco}}, doravante denominado LOCATÁRIO, usuário do bem objeto deste contrato;</p>
+    
+    <p><strong>Têm entre si, justo e contratado, o seguinte:</strong></p>
+    
     <p><strong>1. Objeto do Contrato</strong></p>
-    <p>O Locador concorda em alugar ao Locatário o seguinte celular:</p>
-    <ul>
-        <li>Modelo de Celular: {{aparelho.produto.nome|title}}</li>
-        <li>Número de Série/RENAVAM: {{renavam}}</li>
-        {% if placa_veiculo %}
-        <li>Placa do Veículo: {{placa_veiculo}}</li>
-        {% endif %}
-    </ul>
+    <p>O Locador concorda em alugar ao Locatário o seguinte veículo:</p>
+    
+    <p><strong>Modelo:</strong> {{aparelho.produto.nome|title}}<br>
+    <strong>Número de Série/RENAVAM:</strong> {{renavam}}
+    {% if placa_veiculo %}<br><strong>Placa do Veículo:</strong> {{placa_veiculo}}{% endif %}</p>
+    
     <p><strong>2. Período de Locação</strong></p>
     <p>O período de locação começará em {{primeira_parcela}} e terminará em {{ultima_parcela}}.</p>
+    
     <p><strong>3. Taxa de Locação</strong></p>
-    <p>O Locatário concorda em pagar uma taxa de locação de R$ {{valor_parcela}} por {{quantidade_parcelas}} MESES durante o período de locação.</p>
+    <p>O LOCATÁRIO concorda em pagar, no ato da assinatura do contrato, a importância de R$ {{valor_entrada|floatformat:2|default:"0,00"}} ({{valor_entrada_extenso|default:"zero reais"}}) a título de entrada, que integra o valor total da locação do veículo. O saldo restante será quitado em {{quantidade_parcelas}} ({{quantidade_parcelas_extenso}}) parcelas mensais de R$ {{valor_parcela|floatformat:2}} ({{valor_parcela_extenso}}) cada.</p>
     <div id="texto_contrato_vendedor" data-texto="{{contrato}}"></div>
-    <p>Locador: {{loja.nome|title}}<br>
-    CNPJ: {{loja.cnpj}}<br>
-    Locatário: ____________________________________<br>
-    CPF: ____________________________________<br>
-    Vendedor: ____________________________________<br>
-    CPF: ____________________________________</p>
+    
+    <div class="assinaturas">
+        <div class="data-local">
+            <strong>Local e Data:</strong> _____________________, _____ de ________ de ____
+        </div>
+        
+        <div class="assinaturas-row">
+            <div class="assinatura-bloco">
+                <div class="assinatura-label">LOCADORA</div>
+                <div class="assinatura-linha"></div>
+                <div class="assinatura-info">
+                    <strong>{{loja.nome|title}}</strong><br>
+                    CNPJ: {{loja.cnpj|default:"-"}}
+                </div>
+            </div>
+            
+            <div class="assinatura-bloco">
+                <div class="assinatura-label">LOCATÁRIO</div>
+                <div class="assinatura-linha"></div>
+                <div class="assinatura-info">
+                    <strong>{{cliente.nome|title}}</strong><br>
+                    CPF: {{cliente.cpf}}
+                </div>
+            </div>
+        </div>
+        
+        <div class="assinaturas-row">
+            <div class="assinatura-bloco">
+                <div class="assinatura-label">VENDEDOR/REPRESENTANTE</div>
+                <div class="assinatura-linha"></div>
+                <div class="assinatura-info">
+                    Nome: ____________________________<br>
+                    CPF: _____________________________
+                </div>
+            </div>
+            
+            <div class="assinatura-bloco">
+                <div class="assinatura-label">TESTEMUNHA</div>
+                <div class="assinatura-linha"></div>
+                <div class="assinatura-info">
+                    Nome: ____________________________<br>
+                    CPF: _____________________________
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script src="{% static 'js/formatarTextoEditor.js' %}"></script>

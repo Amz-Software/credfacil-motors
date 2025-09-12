@@ -50,7 +50,7 @@
             height: 35px; /* Reduzido altura */
             text-align: center;
             font-weight: bold;
-            font-size: 10pt; /* Reduzido */
+            font-size: 18pt; /* Reduzido */
         }
 
         .footer {
@@ -255,14 +255,17 @@
 </head>
 <body>
     <div class="header">
-        Recibo de Locação
+        DECLARAÇÃO DE ENTREGA
     </div>
 
     <div class="footer">
         Data e Hora da Impressão: {% now "d/m/Y H:i" %} | Página <span class="page"></span>
     </div>
 
-    <div class="content">
+    <!-- ================== VIA DA LOJA ================== -->
+    <div class="content copia">
+        <div style="text-align:center; font-size:9pt; font-weight:bold; margin:0 0 6px;">VIA DA LOJA</div>
+
         <!-- Loja -->
         <table class="table-info-loja">
             <tr>
@@ -312,7 +315,7 @@
                 <tr>
                     <th>Código</th>
                     <th>Produto</th>
-                                            <th>RENAVAM</th>
+                    <th>RENAVAM</th>
                     <th class="text-center">Quantidade</th>
                     <th class="text-right">Valor Item</th>
                     <th class="text-right">Desconto</th>
@@ -324,7 +327,7 @@
                 <tr>
                     <td>{{ item.produto.codigo }}</td>
                     <td>{{ item.produto.nome }}</td>
-                                            <td>{{ item.renavam }}</td>
+                    <td>{{ item.renavam }}</td>
                     <td class="text-center">{{ item.quantidade }}</td>
                     <td class="text-right valor-monetario">{{ item.valor_unitario|floatformat:2 }}</td>
                     <td class="text-right valor-monetario">{{ item.valor_desconto|floatformat:2 }}</td>
@@ -370,24 +373,161 @@
         <div class="termo-garantia-principal">
             <strong>GARANTIA:</strong> {{ loja_credfacil.mensagem_garantia|default:""|linebreaksbr|safe }}
         </div>
-        <div class="observacoes-extras">A empresa não é responsável por perda de dados armazenados nos produtos. Certifique-se de fazer a cópia de segurança necessária. Este documento comprova a locação do veículo especificado.</div>
+        <div class="observacoes-extras"></div>
+            A empresa não é responsável por perda de dados armazenados nos produtos. Certifique-se de fazer a cópia de segurança necessária. Este documento comprova a locação do veículo especificado.
+        </div>
+
+        <!-- Assinatura -->
+        <div class="assinatura" style="position: static; bottom: auto; padding-top:15px;">
+            <table style="width: 100%; border: none; margin: 0;">
+                <tr>
+                    <td style="width: 100%; text-align: center; border: none; padding: 8px;"></td>
+                        <div style="border-bottom: 1px solid #000; width: 200px; height: 25px; margin: 0 auto;"></div>
+                        <strong style="font-size: 8pt; margin-top: 5px; display: block;">ASSINATURA DO CLIENTE</strong><br>
+                        <span style="font-size: 7pt;">{{ venda.cliente.nome }}</span>
+                    </td>
+                </tr>
+            </table>
+            <div style="margin-top: 3px; font-size: 6pt; color: #666; text-align: center;">
+                <strong>Data:</strong> {{ venda.data_venda }} | <strong>Local:</strong> {{ venda.loja.endereco|default:"________________" }}
+            </div>
+        </div>
     </div>
-    
-    <!-- Seção de Assinatura Fixa -->
-    <div class="assinatura">
-        <table style="width: 100%; border: none; margin: 0;">
+
+    <div style="page-break-after: always;"></div>
+
+    <!-- ================== VIA DO CLIENTE ================== -->
+    <div class="content copia"></div>
+        <div style="text-align:center; font-size:9pt; font-weight:bold; margin:0 0 6px;">VIA DO CLIENTE</div>
+
+        <!-- Loja -->
+        <table class="table-info-loja">
             <tr>
-                <td style="width: 100%; text-align: center; border: none; padding: 8px;">
-                    <div style="border-bottom: 1px solid #000; width: 200px; height: 25px; margin: 0 auto;"></div>
-                    <strong style="font-size: 8pt; margin-top: 5px; display: block;">ASSINATURA DO CLIENTE</strong><br>
-                    <span style="font-size: 7pt;">{{ venda.cliente.nome }}</span>
+                <td>
+                    <img src="{{ loja.imagemlogo }}" style="height: 50px;">
+                </td>
+                <td>
+                    <strong>{{ venda.loja.nome }}</strong><br>
+                    {{ venda.loja.endereco|default:'Sem endereço' }}<br>
+                    CNPJ: {{ venda.loja.cnpj|default:'Sem CNPJ' }}
+                </td>
+                <td>
+                    <strong>Data:</strong> {{ venda.data_venda }}<br>
+                    <strong>Vendedor:</strong> {{ venda.vendedor }}
                 </td>
             </tr>
         </table>
-        <div style="margin-top: 3px; font-size: 6pt; color: #666; text-align: center;">
-            <strong>Data:</strong> {{ venda.data_venda }} | <strong>Local:</strong> {{ venda.loja.endereco|default:"________________" }}
+
+        <!-- Cliente -->
+        <div class="section-title">Destinatário/Remetente</div>
+        <table class="table-client-compact">
+            <tbody>
+                <tr>
+                    <td style="width: 25%; font-weight: bold;">Nome:</td>
+                    <td style="width: 35%;">{{ venda.cliente }}</td>
+                    <td style="width: 15%; font-weight: bold;">CNPJ/CPF:</td>
+                    <td style="width: 25%;">{{ venda.cliente.cpf }}</td>
+                </tr>
+                <tr>
+                    <td style="font-weight: bold;">Telefone:</td>
+                    <td>{{ venda.cliente.telefone }}</td>
+                    <td style="font-weight: bold;">Email:</td>
+                    <td>{{ venda.cliente.email }}</td>
+                </tr>
+                <tr>
+                    <td style="font-weight: bold;">Endereço:</td>
+                    <td colspan="2">{{ venda.cliente.endereco }}</td>
+                    <td>{{ venda.cliente.cep }} - {{ venda.cliente.cidade }}/{{ venda.cliente.uf|default:'--' }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Produtos -->
+        <div class="section-title">Dados dos Produtos/Serviços</div>
+        <table class="table-products">
+            <thead>
+                <tr>
+                    <th>Código</th>
+                    <th>Produto</th>
+                    <th>RENAVAM</th>
+                    <th class="text-center">Quantidade</th>
+                    <th class="text-right">Valor Item</th>
+                    <th class="text-right">Desconto</th>
+                    <th class="text-right">Valor Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in produtos %}
+                <tr>
+                    <td>{{ item.produto.codigo }}</td>
+                    <td>{{ item.produto.nome }}</td>
+                    <td>{{ item.renavam }}</td>
+                    <td class="text-center">{{ item.quantidade }}</td>
+                    <td class="text-right valor-monetario">{{ item.valor_unitario|floatformat:2 }}</td>
+                    <td class="text-right valor-monetario">{{ item.valor_desconto|floatformat:2 }}</td>
+                    <td class="text-right valor-monetario">{{ item.calcular_valor_total|floatformat:2 }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="6" class="text-right"><strong>Total:</strong></td>
+                    <td class="text-right valor-monetario"><strong>{{ venda.calcular_valor_total }}</strong></td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <!-- Pagamentos -->
+        <div class="section-title">Pagamento</div>
+        <table class="table-payment">
+            <thead>
+                <tr>
+                    <th>Forma de Pagamento</th>
+                    <th>Detalhes</th>
+                    <th class="text-right">Valor</th>
+                    <th class="text-center">Parcelas</th>
+                    <th class="text-center">Primeiro Vencimento</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in pagamentos %}
+                <tr>
+                    <td>{{ item.tipo_pagamento }}</td>
+                    <td>{{ item.detalhes }}</td>
+                    <td class="text-right valor-monetario">{{ item.valor }}</td>
+                    <td class="text-center">{{ item.parcelas }}</td>
+                    <td class="text-center">{{ item.data_primeira_parcela }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Observações -->
+        <div class="section-title">Termos de Garantia</div>
+        <div class="termo-garantia-principal">
+            <strong>GARANTIA:</strong> {{ loja_credfacil.mensagem_garantia|default:""|linebreaksbr|safe }}
+        </div>
+        <div class="observacoes-extras">
+            A empresa não é responsável por perda de dados armazenados nos produtos. Certifique-se de fazer a cópia de segurança necessária. Este documento comprova a locação do veículo especificado.
+        </div>
+
+        <!-- Assinatura -->
+        <div class="assinatura" style="position: static; bottom: auto; padding-top:15px;">
+            <table style="width: 100%; border: none; margin: 0;">
+                <tr>
+                    <td style="width: 100%; text-align: center; border: none; padding: 8px;">
+                        <div style="border-bottom: 1px solid #000; width: 200px; height: 25px; margin: 0 auto;"></div>
+                        <strong style="font-size: 8pt; margin-top: 5px; display: block;">ASSINATURA DO CLIENTE</strong><br>
+                        <span style="font-size: 7pt;">{{ venda.cliente.nome }}</span>
+                    </td>
+                </tr>
+            </table>
+            <div style="margin-top: 3px; font-size: 6pt; color: #666; text-align: center;">
+                <strong>Data:</strong> {{ venda.data_venda }} | <strong>Local:</strong> {{ venda.loja.endereco|default:"________________" }}
+            </div>
         </div>
     </div>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.2/html2pdf.bundle.min.js"></script>
     <script data-venda="{{ venda.id }}">
         const dataObj = document.currentScript.getAttribute('data-venda');
@@ -402,5 +542,5 @@
         };
         print();
     </script>
-</body>
+</body></div></td>
 </html>

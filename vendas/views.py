@@ -502,11 +502,14 @@ class ClienteCreateView(PermissionRequiredMixin, CreateView):
         context['form_comprovantes'] = kwargs.get('form_comprovantes', ComprovantesClienteForm(user=self.request.user))
         context['form_analise_credito'] = kwargs.get('form_analise_credito', AnaliseCreditoClienteForm(user=self.request.user))
         
-        produtos = Produto.objects.all().values('id', 'nome', 'valor_10_vezes', 'valor_12_vezes', 'valor_14_vezes', 'entrada_cliente')
+        produtos = Produto.objects.all().values('id', 'nome', 'valor_4_vezes', 'valor_6_vezes', 'valor_8_vezes', 'valor_10_vezes', 'valor_12_vezes', 'valor_14_vezes', 'entrada_cliente')
         produtos_list = [
             {
                 'id': p['id'],
                 'nome': p['nome'],
+                'valor4': float(p['valor_4_vezes']),
+                'valor6': float(p['valor_6_vezes']),
+                'valor8': float(p['valor_8_vezes']),
                 'valor10': float(p['valor_10_vezes']),
                 'valor12': float(p['valor_12_vezes']),
                 'valor14': float(p['valor_14_vezes']),
@@ -764,6 +767,23 @@ class ClienteUpdateImeiTelefoneView(PermissionRequiredMixin, UpdateView):
         context['cliente_id'] = cliente.id
         context['analise_credito'] = cliente.analise_credito
         context['status_app_choices'] = AnaliseCreditoCliente.STATUS_APP_CHOICES
+        
+        produtos = Produto.objects.all().values('id', 'nome', 'valor_4_vezes', 'valor_6_vezes', 'valor_8_vezes', 'valor_10_vezes', 'valor_12_vezes', 'valor_14_vezes', 'entrada_cliente')
+        produtos_list = [
+            {
+                'id': p['id'],
+                'nome': p['nome'],
+                'valor4': float(p['valor_4_vezes']),
+                'valor6': float(p['valor_6_vezes']),
+                'valor8': float(p['valor_8_vezes']),
+                'valor10': float(p['valor_10_vezes']),
+                'valor12': float(p['valor_12_vezes']),
+                'valor14': float(p['valor_14_vezes']),
+                'entrada': float(p['entrada_cliente']),
+            }
+            for p in produtos
+        ]
+        context['produtos_json'] = json.dumps(produtos_list)
 
         return context
 

@@ -810,69 +810,50 @@
         });
         
         let complete = true;
-        console.log('Starting validation with complete = true');
         requiredFields.forEach(field => {
           let value = $(field).val();
-          console.log('Checking field:', field, 'Value:', value, 'Length:', value ? value.length : 0);
           if (!value || value.trim() === '') {
-            console.log('❌ Field empty:', field, '- Setting complete = false');
             complete = false;
             return false;
           }
-          console.log('✅ Field OK:', field);
           
           if (field === '#id_email') {
             // Email validation for completion check
-            console.log('Validating email:', value);
             if (!value.includes('@')) {
-              console.log('❌ Email validation failed: no @ - Setting complete = false');
               complete = false;
               return false;
             } else {
               const parts = value.split('@');
-              console.log('Email parts:', parts);
               if (parts.length !== 2 || parts[0].length === 0 || parts[1].length === 0) {
-                console.log('❌ Email validation failed: invalid parts - Setting complete = false');
                 complete = false;
                 return false;
               } else if (!/[a-zA-Z]/.test(parts[0]) || !/[a-zA-Z]/.test(parts[1])) {
-                console.log('❌ Email validation failed: no letters - Setting complete = false');
                 complete = false;
                 return false;
               }
             }
-            console.log('✅ Email validation passed');
           }
           
           if (field === '#id_telefone') {
             // Phone validation - check if it has between 10 and 11 digits
-            console.log('Validating phone:', value);
             const digitsOnly = value.replace(/\D/g, '');
-            console.log('Phone digits only:', digitsOnly, 'Length:', digitsOnly.length);
             if (digitsOnly.length < 10 || digitsOnly.length > 11) {
-              console.log('❌ Phone validation failed: must have between 10 and 11 digits - Setting complete = false');
               complete = false;
               return false;
             }
-            console.log('✅ Phone validation passed');
           }
           
           if (field === '#id_rg') {
             // RG validation - check if it has between 7 and 12 digits
-            console.log('Validating RG:', value);
             const digitsOnly = value.replace(/\D/g, '');
-            console.log('RG digits only:', digitsOnly, 'Length:', digitsOnly.length);
             if (digitsOnly.length < 7 || digitsOnly.length > 12) {
-              console.log('❌ RG validation failed: must have between 7 and 12 digits - Setting complete = false');
               complete = false;
               return false;
             }
-            console.log('✅ RG validation passed');
           }
           
           if (field === '#id_nascimento') {
             // Age validation - check if person is at least 18 years old
-            console.log('Validating birth date:', value);
             if (value) {
               const birthDate = new Date(value);
               const today = new Date();
@@ -884,31 +865,23 @@
                 age--;
               }
               
-              console.log('Calculated age:', age);
               if (age < 18) {
-                console.log('❌ Age validation failed: must be at least 18 years old - Setting complete = false');
                 complete = false;
                 return false;
               }
-              console.log('✅ Age validation passed');
             }
           }
           
           if (field === '#id_cep') {
             // CEP validation - check if it has exactly 8 digits
-            console.log('Validating CEP:', value);
             const digitsOnly = value.replace(/\D/g, '');
-            console.log('CEP digits only:', digitsOnly, 'Length:', digitsOnly.length);
             if (digitsOnly.length !== 8) {
-              console.log('❌ CEP validation failed: must have exactly 8 digits - Setting complete = false');
               complete = false;
               return false;
             }
-            console.log('✅ CEP validation passed');
           }
         });
         
-        console.log('🎯 Final result - complete =', complete);
         
         // Additional validation for duplicate phones
         if (complete) {
@@ -916,7 +889,6 @@
           const telefone_adicional = $('#id_telefone_adicional').val();
           
           if (telefone && telefone_adicional && telefone === telefone_adicional) {
-            console.log('❌ Duplicate phone validation failed - Setting complete = false');
             complete = false;
           }
         }

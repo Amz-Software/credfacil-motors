@@ -1184,7 +1184,7 @@ def reprovar_analise_credito(request, id):
     user = request.user
     try:
         analise = AnaliseCreditoCliente.objects.get(id=id)
-        if not analise.status == 'EA' or not user.has_perm('vendas.change_status_analise'):
+        if not analise.status == 'EA' or not user.has_perm('vendas.change_status_analise') or not user.has_perm('vendas.can_edit_finished_sale'):
             messages.error(request, 'Somente solicitações em análise podem ser reprovadas')
             return redirect('vendas:cliente_list')
         analise.reprovar()

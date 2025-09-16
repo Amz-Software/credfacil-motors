@@ -1165,7 +1165,7 @@ def cancelar_analise_credito(request, id):
     user = request.user
     try:
         analise = AnaliseCreditoCliente.objects.get(id=id)
-        if (not analise.status == 'EA' or not user.has_perm('vendas.change_status_analise')) or not user.has_perm('vendas.can_edit_finished_sale'):
+        if (not analise.status == 'EA' and (not user.has_perm('vendas.change_status_analise'))) or not user.has_perm('vendas.can_edit_finished_sale'):
             messages.error(request, 'Somente solicitações em análise podem ser canceladas')
             return redirect('vendas:cliente_list')
         analise.cancelar()

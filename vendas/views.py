@@ -974,7 +974,7 @@ def gerar_venda(request, cliente_id):
 
     cliente = get_object_or_404(Cliente, id=cliente_id)
     loja = get_object_or_404(Loja, id=request.session.get('loja_id'))
-    credfacil = get_object_or_404(Loja, nome__icontains='CREDFÁCIL')
+    credfacil = Loja.objects.filter(credfacil=True).first()
     
     if not credfacil or not loja or not cliente:
         messages.error(request, "❌ Loja ou cliente não encontrado.")
@@ -1023,7 +1023,7 @@ def gerar_venda(request, cliente_id):
 
     # Verifica caixa aberto para a loja da análise
     caixa = Caixa.objects.filter(
-        loja=analise.loja,
+        loja=credfacil,
         data_fechamento__isnull=True
     ).first()
     if not caixa:
@@ -1281,6 +1281,7 @@ class VendaCreateView(PermissionRequiredMixin, CreateView):
         produto_venda_formset = context['produto_venda_formset']
         pagamento_formset = context['pagamento_formset']
         loja = Loja.objects.get(id=self.request.session.get('loja_id'))
+        loja_credfacil = Loja.objects.filter(credfacil=True).first()
 
         if not (produto_venda_formset.is_valid() and pagamento_formset.is_valid() and form.is_valid()):
             return self.form_invalid(form)
@@ -1303,7 +1304,7 @@ class VendaCreateView(PermissionRequiredMixin, CreateView):
         form.instance.loja = loja
         form.instance.criado_por = self.request.user
         form.instance.modificado_por = self.request.user
-        form.instance.caixa = Caixa.objects.filter(data_abertura=localtime(now()).date(), loja=loja).order_by('-criado_em').first()
+        form.instance.caixa = Caixa.objects.filter(data_abertura=localtime(now()).date(), loja=loja_credfacil).order_by('-criado_em').first()
         form.instance.data_venda = localtime(now())
         self.object = form.save()
 
@@ -1400,6 +1401,7 @@ class VendaUpdateView(PermissionRequiredMixin, UpdateView):
         produto_venda_formset = context['produto_venda_formset']
         pagamento_formset = context['pagamento_formset']
         loja_id = self.request.session.get('loja_id')
+        loja_credfacil = Loja.objects.filter(credfacil=True).first()
 
         # Verifica se a loja existe
         try:
@@ -1410,7 +1412,7 @@ class VendaUpdateView(PermissionRequiredMixin, UpdateView):
             return self.form_invalid(form)
 
         # Verifica se o caixa está aberto
-        if not Caixa.caixa_aberto(localtime(now()).date(), loja):
+        if not Caixa.caixa_aberto(localtime(now()).date(), loja_credfacil):
             messages.warning(self.request, 'Não é possível editar vendas com a loja bloqueada!')
             logger.warning("Tentativa de editar venda com caixa fechado para a loja %s", loja)
             return self.form_invalid(form)
@@ -1705,12 +1707,13 @@ class VendaTrocarProdutoView(PermissionRequiredMixin, View):
 def cancelar_venda(request, id):
     venda = get_object_or_404(Venda, id=id)
     data_atual = localtime(now()).date()
+    loja_credfacil = Loja.objects.filter(credfacil=True).first()
 
     if venda.is_deleted:
         messages.warning(request, 'Venda já cancelada')
         return redirect('vendas:venda_list')
     
-    if not Caixa.caixa_aberto(localtime(now()).date(), Loja.objects.get(id=request.session.get('loja_id'))):
+    if not Caixa.caixa_aberto(localtime(now()).date(), loja_credfacil):
         messages.warning(request, 'Não é possível cancelar vendas com a loja bloqueada!')
         return redirect('vendas:venda_list')
     

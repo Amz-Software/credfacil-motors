@@ -291,9 +291,61 @@
   box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.3);
 }
 
-/* Transições suaves */
-* {
+/* Transições suaves - excluindo modais para evitar conflitos */
+*:not(.modal):not(.modal *):not(.modal-backdrop):not(.modal-backdrop *) {
   transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+/* Correção específica para modais */
+.modal,
+.modal *,
+.modal-backdrop,
+.modal-backdrop * {
+  transition: none !important;
+}
+
+/* Garantir que modais tenham z-index correto */
+.modal {
+  z-index: 1055 !important;
+}
+
+.modal-backdrop {
+  z-index: 1050 !important;
+}
+
+/* Correção para hover em tabelas com modais */
+.table tbody tr:hover {
+  position: relative;
+  z-index: 1;
+}
+
+/* Evitar conflitos de hover quando modal está aberto */
+body.modal-open .table tbody tr:hover {
+  background-color: inherit !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Garantir que dropdowns funcionem corretamente */
+.dropdown-menu {
+  z-index: 1060 !important;
+}
+
+/* Desabilitar hover effects quando modal está aberto */
+body.modal-hover-disabled .table tbody tr:hover {
+  background-color: inherit !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+body.modal-hover-disabled .card:hover {
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+body.modal-hover-disabled .btn:hover {
+  transform: none !important;
+  box-shadow: none !important;
 }
 
 /* Text utilities para dark mode */

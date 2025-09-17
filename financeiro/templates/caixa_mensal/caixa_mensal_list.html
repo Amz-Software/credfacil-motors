@@ -121,28 +121,6 @@ Caixas Mensais
                       </div>
                     </div>
                   </td>
-                  <div class="modal fade" id="fecharModal{{ caixa.id }}" tabindex="-1"
-                    aria-labelledby="fecharModalLabel{{ caixa.id }}" aria-hidden="true">
-                    <div class="modal-dialog">
-                      <div class="modal-content">
-                        <div class="modal-header">
-                          <h5 class="modal-title" id="fecharModalLabel{{ caixa.id }}">Confirmar Fechamento do Caixa Mensal</h5>
-                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                          Você tem certeza que deseja fechar o caixa mensal de {{ caixa.mes|date:"F Y" }}?
-                        </div>
-                        <div class="modal-footer">
-                          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                          <form method="post" class="d-inline-block" action="{% url 'financeiro:caixa_mensal_close' caixa.id %}">
-                            {% csrf_token %}
-                            <input type="hidden" name="fechar_caixa_mensal" value="{{ caixa.id }}">
-                            <button type="submit" class="btn btn-primary">Confirmar</button>
-                          </form>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
                 {% empty %}
                 <td colspan="5">Nenhum registro encontrado</td>
                 </tr>
@@ -156,5 +134,33 @@ Caixas Mensais
     </div>
   </div>
 </div>
+
+<!-- Modais de fechamento de caixa mensal -->
+{% for caixa in caixas %}
+  {% if not caixa.data_fechamento %}
+    <div class="modal fade" id="fecharModal{{ caixa.id }}" tabindex="-1"
+      aria-labelledby="fecharModalLabel{{ caixa.id }}" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="fecharModalLabel{{ caixa.id }}">Confirmar Fechamento do Caixa Mensal</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            Você tem certeza que deseja fechar o caixa mensal de {{ caixa.mes|date:"F Y" }}?
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <form method="post" class="d-inline-block" action="{% url 'financeiro:caixa_mensal_close' caixa.id %}">
+              {% csrf_token %}
+              <input type="hidden" name="fechar_caixa_mensal" value="{{ caixa.id }}">
+              <button type="submit" class="btn btn-primary">Confirmar</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+{% endfor %}
 
 {% endblock %}

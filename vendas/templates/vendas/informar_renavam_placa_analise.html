@@ -76,11 +76,11 @@ Informar RENAVAM e Placa - Análise de Crédito
                                    id="renavam_informado" 
                                    name="renavam_informado" 
                                    value="{{ analise.renavam_informado|default:'' }}"
-                                   placeholder="Ex: 12345678901"
-                                   maxlength="15">
+                                   placeholder="Ex: ABC123456789"
+                                   maxlength="20">
                             <div class="form-text">
                                 <i class="bx bx-info-circle me-1"></i>
-                                RENAVAM do veículo (mínimo 9 dígitos). Se não existir no estoque, será criado automaticamente.
+                                RENAVAM do veículo (mínimo 9 caracteres). Se não existir no estoque, será criado automaticamente.
                             </div>
                         </div>
                     </div>
@@ -138,11 +138,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const form = document.querySelector('form');
     const btnSalvar = document.getElementById('btnSalvar');
     
-    // Máscara para RENAVAM (apenas números, até 15 dígitos)
+    // Máscara para RENAVAM (letras e números, até 20 caracteres)
     renavamInput.addEventListener('input', function(e) {
-        let value = e.target.value.replace(/\D/g, '');
-        if (value.length > 15) {
-            value = value.substring(0, 15);
+        let value = e.target.value.replace(/[^A-Za-z0-9]/g, '');
+        if (value.length > 20) {
+            value = value.substring(0, 20);
         }
         e.target.value = value;
     });
@@ -158,12 +158,12 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Validação do formulário
     form.addEventListener('submit', function(e) {
-        const renavam = renavamInput.value.replace(/\D/g, '');
+        const renavam = renavamInput.value.replace(/[^A-Za-z0-9]/g, '');
         const placa = placaInput.value.replace(/[^A-Z0-9]/g, '');
         
         if (renavam && renavam.length < 9) {
             e.preventDefault();
-            alert('RENAVAM deve ter pelo menos 9 dígitos.');
+            alert('RENAVAM deve ter pelo menos 9 caracteres.');
             renavamInput.focus();
             return false;
         }

@@ -3269,10 +3269,10 @@ def informar_renavam_placa_analise(request, pk):
         #         'cliente': analise.cliente
         #     })
         
-        # Validação do formato do RENAVAM (removida obrigatoriedade de 11 dígitos)
-        renavam_limpo = re.sub(r'\D', '', renavam_informado)
+        # Validação do formato do RENAVAM (aceita letras e números)
+        renavam_limpo = re.sub(r'[^A-Za-z0-9]', '', renavam_informado)
         if len(renavam_limpo) < 9:
-            messages.error(request, 'RENAVAM deve ter pelo menos 9 dígitos.')
+            messages.error(request, 'RENAVAM deve ter pelo menos 9 caracteres.')
             return render(request, 'vendas/informar_renavam_placa_analise.html', {
                 'analise': analise,
                 'cliente': analise.cliente

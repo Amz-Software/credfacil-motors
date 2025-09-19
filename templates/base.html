@@ -345,16 +345,16 @@
     }
     
     /* Melhorias específicas para dropdowns em tabelas */
-    .table .dropdown {
-      position: relative;
-    }
-    
+    .table .dropdown { position: static; }
     .table .dropdown-menu {
-      z-index: 1050; /* Garantir que apareça acima de outros elementos */
+      position: absolute; /* sempre absoluto em relação à célula */
+      inset: auto auto auto 0; /* base à esquerda da célula */
+      transform: translateY(0);
+      z-index: 1080 !important; /* acima de cards e conteúdos */
       min-width: 160px;
       border: none;
       border-radius: 8px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.18);
       padding: 8px 0;
     }
     
@@ -743,6 +743,61 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/corejs-typeahead/1.3.1/typeahead.bundle.min.js"></script>
   {{ form.media.js }}
   {%endif%}
+
+  <!-- Portal global para dropdowns: garante que apareçam acima de qualquer container -->
+  <script>
+    (function () {
+      function getPlacement(toggle, menu) {
+        if (toggle.closest('.dropup')) return menu.classList.contains('dropdown-menu-end') ? 'top-end' : 'top-start';
+        if (toggle.closest('.dropstart')) return 'left-start';
+        if (toggle.closest('.dropend')) return 'right-start';
+        return menu.classList.contains('dropdown-menu-end') ? 'bottom-end' : 'bottom-start';
+      }
+
+      document.addEventListener('shown.bs.dropdown', function (ev) {
+        var toggle = ev.target;
+        var menu = toggle.parentElement.querySelector('.dropdown-menu');
+        if (!menu) return;
+        if (!menu.__ddOriginalParent) menu.__ddOriginalParent = menu.parentElement;
+        toggle.__ddMenu = menu;
+
+        // Move para o body e posiciona com Popper em estratégia fixa
+        document.body.appendChild(menu);
+        menu.style.position = 'fixed';
+        menu.style.zIndex = '2000';
+        menu.style.display = 'block';
+
+        if (window.Popper && window.Popper.createPopper) {
+          menu.__popperInstance = window.Popper.createPopper(toggle, menu, {
+            strategy: 'fixed',
+            placement: getPlacement(toggle, menu),
+            modifiers: [
+              { name: 'offset', options: { offset: [0, 6] } },
+              { name: 'preventOverflow', options: { boundary: 'viewport' } },
+              { name: 'flip', options: { fallbackPlacements: ['top', 'bottom', 'right', 'left'] } }
+            ]
+          });
+        }
+      });
+
+      document.addEventListener('hidden.bs.dropdown', function (ev) {
+        var toggle = ev.target;
+        var menu = toggle.__ddMenu;
+        if (!menu) return;
+        if (menu.__popperInstance) {
+          menu.__popperInstance.destroy();
+          menu.__popperInstance = null;
+        }
+        if (menu.__ddOriginalParent) {
+          menu.__ddOriginalParent.appendChild(menu);
+        }
+        menu.style.position = '';
+        menu.style.zIndex = '';
+        menu.style.display = '';
+        toggle.__ddMenu = null;
+      });
+    })();
+  </script>
 
   <script>
     document.addEventListener('DOMContentLoaded', function () {

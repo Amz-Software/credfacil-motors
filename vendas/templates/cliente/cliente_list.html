@@ -61,6 +61,8 @@ Clientes
       border: 1px solid var(--alert-info-border) !important;
       color: var(--alert-info-color) !important;
     }
+
+    /* Dropdown já configurado inline */
   </style>
 {% endblock extra_head %}
 
@@ -324,11 +326,11 @@ Clientes
               {% endif %}
             </td>
             <td>
-              <div class="dropdown">
-                <button class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
+              <div class="dropdown z-index-1000">
+                <button class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown" aria-expanded="false">
                   <i class="bx bx-dots-vertical-rounded"></i>
                 </button>
-                <div class="dropdown-menu">
+                <div class="dropdown-menu dropdown-menu-end">
                   {# Botão Editar (sempre disponível) #}
                   {% if user|has_perm:"vendas.change_cliente" %}
                   <a href="{% url 'vendas:cliente_update' cliente.pk %}" class="dropdown-item">

@@ -304,46 +304,44 @@
   transition: none !important;
 }
 
-/* Garantir que modais tenham z-index correto */
-.modal {
-  z-index: 1055 !important;
+/* Z-index hierarchy seguindo Bootstrap padrões */
+/* Bootstrap z-index: 
+   - dropdown: 1000
+   - sticky: 1020  
+   - fixed: 1030
+   - modal-backdrop: 1040
+   - modal: 1050
+   - popover: 1060
+   - tooltip: 1070
+*/
+
+/* Garantir hierarquia correta de z-index */
+.dropdown-menu {
+  z-index: 1000 !important; /* Bootstrap padrão */
 }
 
 .modal-backdrop {
-  z-index: 1050 !important;
+  z-index: 1040 !important; /* Bootstrap padrão */
 }
 
-/* Correção para hover em tabelas com modais */
-.table tbody tr:hover {
+.modal {
+  z-index: 1050 !important; /* Bootstrap padrão */
+}
+
+/* Tabelas com hover suave que não quebra modais */
+.table tbody tr {
   position: relative;
-  z-index: 1;
+  z-index: auto; /* Deixa o browser decidir */
 }
 
-/* Evitar conflitos de hover quando modal está aberto */
+.table tbody tr:hover {
+  z-index: 1; /* Apenas quando hover */
+}
+
+/* Quando modal está aberto, desabilita hover de tabelas */
 body.modal-open .table tbody tr:hover {
+  z-index: auto !important;
   background-color: inherit !important;
-  transform: none !important;
-  box-shadow: none !important;
-}
-
-/* Garantir que dropdowns funcionem corretamente */
-.dropdown-menu {
-  z-index: 1060 !important;
-}
-
-/* Desabilitar hover effects quando modal está aberto */
-body.modal-hover-disabled .table tbody tr:hover {
-  background-color: inherit !important;
-  transform: none !important;
-  box-shadow: none !important;
-}
-
-body.modal-hover-disabled .card:hover {
-  transform: none !important;
-  box-shadow: none !important;
-}
-
-body.modal-hover-disabled .btn:hover {
   transform: none !important;
   box-shadow: none !important;
 }

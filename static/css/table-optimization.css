@@ -71,13 +71,30 @@ small, .text-muted {
     font-size: 0.85rem !important;
 }
 
-/* Otimizar dropdowns */
+/* Otimizar dropdowns - sem quebrar funcionalidade */
 .dropdown-menu {
     font-size: 0.8rem !important;
+    /* Z-index gerenciado no dark-mode-improvements.css */
 }
 
 .dropdown-item {
     padding: 0.3rem 0.8rem !important;
+}
+
+/* Dropdowns em tabelas - container seguro */
+.table .dropdown {
+    position: static; /* Não força relative que pode quebrar */
+}
+
+/* Container de células que pode ter dropdowns */
+.table td {
+    position: relative; /* Apenas para células */
+}
+
+/* Overflow seguro para tabelas responsivas */
+.table-responsive {
+    overflow-x: auto;
+    overflow-y: visible; /* Permite dropdowns saírem da área */
 }
 
 /* Reduzir espaçamento dos alertas */

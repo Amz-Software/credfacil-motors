@@ -60,7 +60,7 @@
       border-radius: 12px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.08);
       margin: 0.5rem;
-      overflow: hidden;
+      overflow: visible; /* Evita cortar dropdowns dentro do conteúdo */
     }
     
     /* Cards com design mais elegante - responsivo ao modo dark */
@@ -177,7 +177,7 @@
     /* Tabelas com design mais limpo - responsivo ao modo dark */
     .table {
       border-radius: 8px;
-      overflow: hidden;
+      overflow: visible; /* Permite que dropdowns extrapolem a tabela sem serem cortados */
       background: var(--bs-card-bg, #fff);
     }
     

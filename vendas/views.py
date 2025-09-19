@@ -2585,6 +2585,70 @@ class ProdutoVendidoListView(PermissionRequiredMixin, ListView):
 
 
 def contrato_view(request, pk):
+    # Utilitário simples para escrever números por extenso em pt-BR
+    def numero_por_extenso(numero_inteiro: int) -> str:
+        unidades = [
+            'zero', 'um', 'dois', 'três', 'quatro', 'cinco', 'seis', 'sete', 'oito', 'nove'
+        ]
+        especiais = [
+            'dez', 'onze', 'doze', 'treze', 'quatorze', 'quinze', 'dezesseis', 'dezessete', 'dezoito', 'dezenove'
+        ]
+        dezenas = [
+            '', '', 'vinte', 'trinta', 'quarenta', 'cinquenta', 'sessenta', 'setenta', 'oitenta', 'noventa'
+        ]
+        centenas = [
+            '', 'cento', 'duzentos', 'trezentos', 'quatrocentos', 'quinhentos', 'seiscentos', 'setecentos', 'oitocentos', 'novecentos'
+        ]
+
+        if numero_inteiro < 0:
+            return f"menos {numero_por_extenso(abs(numero_inteiro))}"
+        if numero_inteiro < 10:
+            return unidades[numero_inteiro]
+        if 10 <= numero_inteiro < 20:
+            return especiais[numero_inteiro - 10]
+        if numero_inteiro < 100:
+            dez, uni = divmod(numero_inteiro, 10)
+            return dezenas[dez] if uni == 0 else f"{dezenas[dez]} e {unidades[uni]}"
+        if numero_inteiro == 100:
+            return 'cem'
+        if numero_inteiro < 1000:
+            cen, resto = divmod(numero_inteiro, 100)
+            return centenas[cen] if resto == 0 else f"{centenas[cen]} e {numero_por_extenso(resto)}"
+        if numero_inteiro < 1000000:
+            mil, resto = divmod(numero_inteiro, 1000)
+            prefixo = 'mil' if mil == 1 else f"{numero_por_extenso(mil)} mil"
+            if resto == 0:
+                return prefixo
+            # usa 'e' quando resto < 100, senão espaço
+            conj = ' e ' if resto < 100 else ' '
+            return f"{prefixo}{conj}{numero_por_extenso(resto)}"
+        # fallback simples para números maiores
+        return str(numero_inteiro)
+
+    def valor_em_reais_por_extenso(valor_decimal) -> str:
+        try:
+            from decimal import Decimal, ROUND_HALF_UP
+            valor = Decimal(valor_decimal).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        except Exception:
+            # Se não conseguir converter, devolve string vazia
+            return ''
+
+        inteiro = int(valor)
+        centavos = int((valor - inteiro) * 100)
+        partes = []
+        if inteiro == 0:
+            partes.append('zero real')
+        elif inteiro == 1:
+            partes.append('um real')
+        else:
+            partes.append(f"{numero_por_extenso(inteiro)} reais")
+
+        if centavos > 0:
+            if centavos == 1:
+                partes.append('e um centavo')
+            else:
+                partes.append(f"e {numero_por_extenso(centavos)} centavos")
+        return ' '.join(partes)
     
     # Busca a venda
     venda = Venda.objects.get(pk=pk)
@@ -2617,6 +2681,11 @@ def contrato_view(request, pk):
 
     ultima_parcela = parcelas_meses[-1] if parcelas_meses else None
 
+    # Calcula valores para a cláusula de taxa de locação
+    valor_entrada = venda.valor_entrada_cliente
+    valor_parcela = pagamento_carne.valor_parcela if pagamento_carne else None
+    quantidade_parcelas = parcelas
+
     context = {
         'venda': venda,
         'valor_total': valor_total,
@@ -2628,11 +2697,15 @@ def contrato_view(request, pk):
         'aparelho': aparelho,
         'renavam': renavam,
         'placa_veiculo': placa_veiculo,
-        'valor_parcela': pagamento_carne.valor_parcela if pagamento_carne else None,
-        'quantidade_parcelas': parcelas,
+        'valor_parcela': valor_parcela,
+        'quantidade_parcelas': quantidade_parcelas,
         'parcelas_meses': parcelas_meses,
         'primeira_parcela': primeira_parcela.strftime('%d/%m/%Y') if primeira_parcela else None,
         'ultima_parcela': ultima_parcela,
+        'valor_entrada': valor_entrada,
+        'valor_entrada_extenso': valor_em_reais_por_extenso(valor_entrada) if valor_entrada is not None else '',
+        'quantidade_parcelas_extenso': numero_por_extenso(quantidade_parcelas) if quantidade_parcelas else '',
+        'valor_parcela_extenso': valor_em_reais_por_extenso(valor_parcela) if valor_parcela is not None else '',
 
     }
 

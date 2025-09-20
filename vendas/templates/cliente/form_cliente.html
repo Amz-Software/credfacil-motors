@@ -404,7 +404,7 @@
           <!-- ABA DADOS CLIENTE -->
           <div class="tab-pane fade show active" id="tab-dados" role="tabpanel">
             <div class="form-section">
-              <h5><i class="bx bx-user me-2"></i>Dados do Cliente</h5>
+              <h5><i class="bx bx-user me-2"></i>Dados do Cliente <span id="age-individuo" class="badge bg-info ms-2"></span></h5>
               
               {% if form_cliente.non_field_errors %}
                 <div class="alert alert-danger">
@@ -434,6 +434,7 @@
                           {% endif %}
                         </label>
                         {{ field }}
+                        <small id="age-hint" class="form-text text-muted" style="display:block;margin-top:4px"></small>
                         {% if field.errors %}
                           <div class="text-danger small">{{ field.errors|striptags }}</div>
                         {% endif %}
@@ -853,19 +854,24 @@
           }
           
           if (field === '#id_nascimento') {
-            // Age validation - check if person is at least 18 years old
+            // Age validation - check if person is at least 22 years old
             if (value) {
               const birthDate = new Date(value);
-              const today = new Date();
-              const age = today.getFullYear() - birthDate.getFullYear();
-              const monthDiff = today.getMonth() - birthDate.getMonth();
-              
-              // Adjust age if birthday hasn't occurred this year
-              if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-                age--;
-              }
-              
-              if (age < 18) {
+              if (!isNaN(birthDate)) {
+                const today = new Date();
+                let age = today.getFullYear() - birthDate.getFullYear();
+                const monthDiff = today.getMonth() - birthDate.getMonth();
+                
+                // Adjust age if birthday hasn't occurred this year
+                if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                  age--;
+                }
+                
+                if (age < 22) {
+                  complete = false;
+                  return false;
+                }
+              } else {
                 complete = false;
                 return false;
               }
@@ -971,21 +977,26 @@
               message = 'RG deve ter entre 7 e 12 dígitos';
             }
           } else if (fieldId === 'id_nascimento') {
-            // Age validation - check if person is at least 18 years old
+            // Age validation - check if person is at least 22 years old
             if (value) {
               const birthDate = new Date(value);
-              const today = new Date();
-              const age = today.getFullYear() - birthDate.getFullYear();
-              const monthDiff = today.getMonth() - birthDate.getMonth();
-              
-              // Adjust age if birthday hasn't occurred this year
-              if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-                age--;
-              }
-              
-              if (age < 18) {
+              if (!isNaN(birthDate)) {
+                const today = new Date();
+                let age = today.getFullYear() - birthDate.getFullYear();
+                const monthDiff = today.getMonth() - birthDate.getMonth();
+                
+                // Adjust age if birthday hasn't occurred this year
+                if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                  age--;
+                }
+                
+                if (age < 22) {
+                  isValid = false;
+                  message = 'Cliente deve ter pelo menos 22 anos';
+                }
+              } else {
                 isValid = false;
-                message = 'Cliente deve ter pelo menos 18 anos';
+                message = 'Data de nascimento inválida';
               }
             }
           } else if (fieldId === 'id_cep') {
@@ -1071,6 +1082,56 @@
         return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
       }
 
+      // Helper: calcula idade e atualiza hint
+      function calcularIdade(dateStr) {
+        if (!dateStr) return null;
+        let birthDate = new Date(dateStr);
+        // Suporte a formato dd/mm/aaaa
+        if (isNaN(birthDate) && /^(\d{2})\/(\d{2})\/(\d{4})$/.test(dateStr)) {
+          const [, dd, mm, yyyy] = dateStr.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+          birthDate = new Date(parseInt(yyyy, 10), parseInt(mm, 10) - 1, parseInt(dd, 10));
+        }
+        if (isNaN(birthDate)) return null;
+        const today = new Date();
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+          age--;
+        }
+        return age;
+      }
+
+      function atualizarHintIdade() {
+        const $nasc = $('#id_nascimento');
+        const $hint = $('#age-hint');
+        const $badge = $('#age-individuo');
+        if (!$nasc.length) return;
+        const valor = $nasc.val();
+        if (!valor) {
+          if ($hint.length) $hint.text('');
+          if ($badge.length) $badge.text('');
+          return;
+        }
+        const idade = calcularIdade(valor);
+        if (idade === null) {
+          if ($hint.length) $hint.text('Data inválida');
+          if ($badge.length) $badge.text('');
+          return;
+        }
+        if ($hint.length) $hint.text('Idade: ' + idade + ' anos');
+        if ($badge.length) $badge.text(idade + ' anos');
+        if (idade < 22) {
+          $nasc.addClass('is-invalid').removeClass('is-valid');
+          $nasc.siblings('.validation-feedback').removeClass('valid-feedback').addClass('invalid-feedback').text('Cliente deve ter pelo menos 22 anos');
+        }
+      }
+
+      // Bind eventos para atualizar o hint em tempo real
+      $(document).on('input change', '#id_nascimento', atualizarHintIdade);
+
+      // Atualiza ao carregar
+      setTimeout(atualizarHintIdade, 0);
+
       function atualizaInfo() {
         const prodId = $('#id_produto').val();
         const np     = $('#id_numero_parcelas').val();
@@ -1120,27 +1181,29 @@
       atualizaInfo();
       updateProgress();
       
-      // Form submission enhancement - simplified
+      // Form submission enhancement - bloqueia se idade < 22
       $('#clienteForm').on('submit', function(e) {
-        // Allow form submission without blocking
-        // Just show a warning if there are validation errors
+        const nascVal = $('#id_nascimento').val();
+        const idade = calcularIdade(nascVal);
+        if (idade === null || idade < 22) {
+          e.preventDefault();
+          $('#id_nascimento').addClass('is-invalid').removeClass('is-valid');
+          $('#id_nascimento').siblings('.validation-feedback')
+            .removeClass('valid-feedback').addClass('invalid-feedback')
+            .text('Cliente deve ter pelo menos 22 anos');
+          $('[data-bs-target="#tab-dados"]').tab('show');
+          return false;
+        }
+
+        // Mantém aviso opcional das seções incompletas
         let incompleteSteps = [];
-        
-        if (!checkDadosComplete()) {
-          incompleteSteps.push('Dados do Cliente');
-        }
-        if (!checkComprovantesComplete()) {
-          incompleteSteps.push('Comprovantes');
-        }
-        if (!checkProdutoComplete()) {
-          incompleteSteps.push('Produto e Condições');
-        }
-        
+        if (!checkDadosComplete()) incompleteSteps.push('Dados do Cliente');
+        if (!checkComprovantesComplete()) incompleteSteps.push('Comprovantes');
+        if (!checkProdutoComplete()) incompleteSteps.push('Produto e Condições');
         if (incompleteSteps.length > 0) {
           let message = 'Atenção: As seguintes seções podem estar incompletas:\n\n' + incompleteSteps.join('\n') + '\n\nDeseja continuar mesmo assim?';
           if (!confirm(message)) {
             e.preventDefault();
-            // Switch to first incomplete tab
             if (!checkDadosComplete()) {
               $('[data-bs-target="#tab-dados"]').tab('show');
             } else if (!checkComprovantesComplete()) {

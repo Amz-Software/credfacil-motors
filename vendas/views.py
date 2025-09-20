@@ -3459,3 +3459,19 @@ def informar_renavam_placa_analise(request, pk):
         'cliente': analise.cliente,
     }
     return render(request, 'vendas/informar_renavam_placa_analise.html', context)
+
+@login_required
+@permission_required('vendas.change_pagamento', raise_exception=True)
+def toggle_sem_contato_pagamento(request, pk):
+    pagamento = get_object_or_404(Pagamento, pk=pk)
+    pagamento.sem_contato = not pagamento.sem_contato
+    pagamento.save(update_fields=['sem_contato'])
+    return redirect(reverse('financeiro:contas_a_receber_update', args=[pagamento.pk]))
+
+@login_required
+@permission_required('vendas.change_pagamento', raise_exception=True)
+def toggle_mais_prazo_pagamento(request, pk):
+    pagamento = get_object_or_404(Pagamento, pk=pk)
+    pagamento.mais_prazo = not pagamento.mais_prazo
+    pagamento.save(update_fields=['mais_prazo'])
+    return redirect(reverse('financeiro:contas_a_receber_update', args=[pagamento.pk]))

@@ -168,6 +168,8 @@ class RelatorioContasAReceberForm(forms.Form):
             ('pendente', 'A Vencer'),
             ('pago', 'Pago'),
             ('atrasado', 'Atrasado'),
+            ('sem_contato', 'Sem contato'),
+            ('mais_prazo', 'Mais prazo'),
             ('todos', 'Todos')
         ],
         label='Status',

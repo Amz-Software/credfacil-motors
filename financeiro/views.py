@@ -409,6 +409,10 @@ class ContasAReceberListView(BaseView, PermissionRequiredMixin, ListView):
             qs = qs.filter(todas_parcelas_pagas=True)
         elif status == 'pendente':  # novo
             qs = qs.filter(com_pagamento_pendente=True)
+        elif status == 'sem_contato':
+            qs = qs.filter(sem_contato=True)
+        elif status == 'mais_prazo':
+            qs = qs.filter(mais_prazo=True)
 
         loja = self.request.GET.get('loja')
 
@@ -597,6 +601,12 @@ class FolhaRelatorioContasAReceberView(BaseView, PermissionRequiredMixin, Templa
                     elif status == 'atrasado':
                         q = Q(com_parcela_atrasada=True)
                         date_q = Q(ultimo_vencimento__isnull=False, ultimo_vencimento__gte=data_inicio_dt, ultimo_vencimento__lt=data_final_dt_plus)
+                    elif status == 'sem_contato':
+                        q = Q(sem_contato=True)
+                        date_q = Q()  # sem restrição de data específica
+                    elif status == 'mais_prazo':
+                        q = Q(mais_prazo=True)
+                        date_q = Q()
                     else:
                         continue
                     q_status = q if q_status is None else q_status | q

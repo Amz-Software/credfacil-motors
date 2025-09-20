@@ -425,11 +425,13 @@ class ContasAReceberListView(BaseView, PermissionRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        queryset = self.get_queryset()
-        for pagamento in queryset:
+        # Usa somente os itens da página atual para não quebrar a paginação
+        page_qs = context.get('object_list', [])
+        for pagamento in page_qs:
             status = self.verificar_atraso_parcela(pagamento)
             pagamento.atrasado = status
-        context['contas_a_receber'] = queryset
+        # Mantém a chave esperada no template apontando para a lista paginada
+        context['contas_a_receber'] = page_qs
         if self.request.user.has_perm('vendas.can_view_all_stores'):
             context['lojas'] = Loja.objects.all()
         return context

@@ -440,6 +440,36 @@
                         {% endif %}
                       </div>
                     </div>
+                  {% elif field.label == 'Profissão' or field.label == 'Qtd. Dependentes' or field.label == 'Recebe Auxílio?' or field.label == 'Total de Renda' %}
+                    <div class="col-md-6">
+                      <div class="form-group">
+                        <label for="{{ field.id_for_label }}" class="form-label">
+                          {{ field.label }}
+                          {% if field.field.required %}
+                            <span class="text-danger">*</span>
+                          {% endif %}
+                        </label>
+                        {{ field }}
+                        {% if field.errors %}
+                          <div class="text-danger small">{{ field.errors|striptags }}</div>
+                        {% endif %}
+                      </div>
+                    </div>
+                  {% elif field.label == 'Observação' %}
+                    <div class="col-md-12">
+                      <div class="form-group">
+                        <label for="{{ field.id_for_label }}" class="form-label">
+                          {{ field.label }}
+                          {% if field.field.required %}
+                            <span class="text-danger">*</span>
+                          {% endif %}
+                        </label>
+                        {{ field }}
+                        {% if field.errors %}
+                          <div class="text-danger small">{{ field.errors|striptags }}</div>
+                        {% endif %}
+                      </div>
+                    </div>
                   {% else %}
                     <div class="col-md-6">
                       <div class="form-group">
@@ -798,7 +828,12 @@
           '#id_telefone',
           '#id_email',
           '#id_rg',
-          '#id_cep'
+          '#id_cep',
+          '#id_profissao',
+          '#id_quantidade_dependentes',
+          '#id_recebe_auxilio',
+          '#id_total_renda',
+          '#id_observacao'
         ];
         
         console.log('=== DEBUG CHECK DADOS COMPLETE ===');
@@ -1181,8 +1216,16 @@
       atualizaInfo();
       updateProgress();
       
-      // Form submission enhancement - bloqueia se idade < 22
+      // Form submission enhancement - bloqueia se idade < 22 e se Dados do Cliente incompleto
       $('#clienteForm').on('submit', function(e) {
+        // Bloqueia imediatamente se a aba Dados do Cliente estiver incompleta
+        if (!checkDadosComplete()) {
+          e.preventDefault();
+          $('[data-bs-target="#tab-dados"]').tab('show');
+          alert('Preencha todos os campos obrigatórios em Dados do Cliente.');
+          return false;
+        }
+
         const nascVal = $('#id_nascimento').val();
         const idade = calcularIdade(nascVal);
         if (idade === null || idade < 22) {
@@ -1197,16 +1240,14 @@
 
         // Mantém aviso opcional das seções incompletas
         let incompleteSteps = [];
-        if (!checkDadosComplete()) incompleteSteps.push('Dados do Cliente');
+        // Dados do Cliente já foi bloqueado acima
         if (!checkComprovantesComplete()) incompleteSteps.push('Comprovantes');
         if (!checkProdutoComplete()) incompleteSteps.push('Produto e Condições');
         if (incompleteSteps.length > 0) {
           let message = 'Atenção: As seguintes seções podem estar incompletas:\n\n' + incompleteSteps.join('\n') + '\n\nDeseja continuar mesmo assim?';
           if (!confirm(message)) {
             e.preventDefault();
-            if (!checkDadosComplete()) {
-              $('[data-bs-target="#tab-dados"]').tab('show');
-            } else if (!checkComprovantesComplete()) {
+            if (!checkComprovantesComplete()) {
               $('[data-bs-target="#tab-comprovantes"]').tab('show');
             } else if (!checkProdutoComplete()) {
               $('[data-bs-target="#tab-analise"]').tab('show');

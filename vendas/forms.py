@@ -66,6 +66,11 @@ class ClienteForm(forms.ModelForm):
             'bairro': forms.TextInput(attrs={'class': 'form-control'}),
             'endereco': forms.TextInput(attrs={'class': 'form-control'}),
             'cidade': forms.TextInput(attrs={'class': 'form-control'}),
+            'profissao': forms.TextInput(attrs={'class': 'form-control'}),
+            'quantidade_dependentes': forms.NumberInput(attrs={'class': 'form-control', 'min': '0'}),
+            'recebe_auxilio': forms.Select(choices=[(True, 'Sim'), (False, 'Não')], attrs={'class': 'form-control'}),
+            'total_renda': forms.TextInput(attrs={'class': 'form-control money'}),
+            'observacao': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
         }
         labels = {
             'nome': 'Nome*',
@@ -77,6 +82,11 @@ class ClienteForm(forms.ModelForm):
             'bairro': 'Bairro*',
             'endereco': 'Endereço*',
             'cidade': 'Cidade*',
+            'profissao': 'Profissão',
+            'quantidade_dependentes': 'Qtd. Dependentes',
+            'recebe_auxilio': 'Recebe Auxílio?',
+            'total_renda': 'Total de Renda',
+            'observacao': 'Observação',
         }
 
     def __init__(self, *args, **kwargs):
@@ -85,6 +95,11 @@ class ClienteForm(forms.ModelForm):
         for name, field in self.fields.items():
             if name not in ['email']:
                 field.required = True
+
+        # Força escolha explícita em "Recebe Auxílio?"
+        if 'recebe_auxilio' in self.fields:
+            self.fields['recebe_auxilio'].choices = [('', '---------'), (True, 'Sim'), (False, 'Não')]
+            self.fields['recebe_auxilio'].initial = ''
                 
         if self.instance and self.instance.pk:
             if user and not user.has_perm('vendas.can_edit_finished_sale'):

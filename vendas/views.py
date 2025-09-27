@@ -1412,7 +1412,7 @@ class VendaUpdateView(PermissionRequiredMixin, UpdateView):
             return self.form_invalid(form)
 
         # Verifica se o caixa está aberto
-        if not Caixa.caixa_aberto(localtime(now()).date(), loja_credfacil):
+        if not Caixa.caixa_aberto(loja_credfacil):
             messages.warning(self.request, 'Não é possível editar vendas com a loja bloqueada!')
             logger.warning("Tentativa de editar venda com caixa fechado para a loja %s", loja)
             return self.form_invalid(form)
@@ -1443,6 +1443,16 @@ class VendaUpdateView(PermissionRequiredMixin, UpdateView):
             logger.exception("Erro ao processar a venda: %s", e)
             return self.form_invalid(form)
 
+    
+    def form_invalid(self, form):
+        messages.error(self.request, 'Erro ao atualizar venda')
+        if form.errors:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(self.request, f"Erro no campo {field}: {error}")
+        return super().form_invalid(form)
+    
+    
     def _atualizar_venda(self, form, loja):
         """Salva a instância da venda com possíveis alterações."""
         form.instance.loja = loja

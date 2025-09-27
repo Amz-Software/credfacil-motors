@@ -1,0 +1,258 @@
+/**
+ * Correções para conflitos específicos entre estilos globais e modais
+ * Este arquivo resolve problemas causados pelos CSS customizados
+ */
+
+/* Desabilitar transições globais para modais */
+.modal,
+.modal *,
+.modal-backdrop,
+.modal-backdrop * {
+    transition: none !important;
+    animation: none !important;
+    transform: none !important;
+}
+
+/* Exceção apenas para animações específicas do Bootstrap */
+.modal.fade .modal-dialog {
+    transition: transform 0.3s ease-out !important;
+}
+
+.modal-backdrop.fade {
+    transition: opacity 0.15s linear !important;
+}
+
+/* Desabilitar hover effects quando modal está aberto */
+body.modal-open .card:hover,
+body.modal-open .table tbody tr:hover {
+    transform: none !important;
+    box-shadow: none !important;
+    background-color: inherit !important;
+}
+
+/* Garantir que modais não sejam afetados por z-index de tabelas */
+.modal {
+    z-index: 1055 !important;
+    position: fixed !important;
+}
+
+.modal-backdrop {
+    z-index: 1050 !important;
+    position: fixed !important;
+}
+
+/* Correções para o template Sneat */
+.modal-dialog {
+    margin: 1.75rem auto !important;
+    max-width: 500px !important;
+}
+
+.modal-dialog-centered {
+    display: flex !important;
+    align-items: center !important;
+    min-height: calc(100% - 3.5rem) !important;
+}
+
+/* Garantir que o modal-content tenha as propriedades corretas */
+.modal-content {
+    position: relative !important;
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    pointer-events: auto !important;
+    background-color: #fff !important;
+    background-clip: padding-box !important;
+    border: 1px solid rgba(0, 0, 0, 0.2) !important;
+    border-radius: 0.3rem !important;
+    outline: 0 !important;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Correções para dark mode */
+.dark-style .modal-content {
+    background-color: #2b2c40 !important;
+    border-color: #444564 !important;
+    color: #a3a4cc !important;
+}
+
+/* Garantir que botões de fechar funcionem */
+.btn-close {
+    box-sizing: content-box !important;
+    width: 1em !important;
+    height: 1em !important;
+    padding: 0.25em 0.25em !important;
+    color: #000 !important;
+    background: transparent url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23000'%3e%3cpath d='m.5 1.5 1-1L8 7.5 14.5 1l1 1L9 8.5l6.5 6.5-1 1L8 9.5l-6.5 6.5-1-1L7 8.5.5 1.5z'/%3e%3c/svg%3e") center/1em auto no-repeat !important;
+    border: 0 !important;
+    border-radius: 0.25rem !important;
+    opacity: 0.5 !important;
+    cursor: pointer !important;
+}
+
+.btn-close:hover {
+    color: #000 !important;
+    text-decoration: none !important;
+    opacity: 0.75 !important;
+}
+
+.btn-close:focus {
+    outline: 0 !important;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
+    opacity: 1 !important;
+}
+
+.btn-close-white {
+    filter: invert(1) grayscale(100%) brightness(200%) !important;
+}
+
+/* Correções para formulários em modais */
+.modal .form-control,
+.modal .form-select {
+    background-color: #fff !important;
+    border-color: #ced4da !important;
+    color: #212529 !important;
+}
+
+.modal .form-control:focus,
+.modal .form-select:focus {
+    border-color: #86b7fe !important;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
+}
+
+/* Dark mode para formulários */
+.dark-style .modal .form-control,
+.dark-style .modal .form-select {
+    background-color: #2b2c40 !important;
+    border-color: #444564 !important;
+    color: #a3a4cc !important;
+}
+
+.dark-style .modal .form-control:focus,
+.dark-style .modal .form-select:focus {
+    background-color: #2b2c40 !important;
+    border-color: #86b7fe !important;
+    color: #a3a4cc !important;
+}
+
+/* Correções para alertas em modais */
+.modal .alert {
+    margin-bottom: 1rem !important;
+    border: 1px solid transparent !important;
+    border-radius: 0.375rem !important;
+}
+
+/* Garantir que select2 funcione em modais */
+.modal .select2-container {
+    z-index: 1056 !important;
+}
+
+.modal .select2-dropdown {
+    z-index: 1056 !important;
+}
+
+/* Garantir que dropdowns funcionem em modais */
+.modal .dropdown-menu {
+    z-index: 1056 !important;
+}
+
+/* Garantir que tooltips funcionem em modais */
+.modal .tooltip {
+    z-index: 1057 !important;
+}
+
+/* Correções para overflow */
+.modal-body {
+    overflow-y: auto !important;
+    max-height: calc(100vh - 200px) !important;
+}
+
+/* Responsividade */
+@media (max-width: 575.98px) {
+    .modal-dialog {
+        margin: 0.5rem !important;
+        max-width: none !important;
+    }
+    
+    .modal-dialog-centered {
+        min-height: calc(100% - 1rem) !important;
+    }
+}
+
+/* Garantir que o body não role quando modal está aberto */
+body.modal-open {
+    overflow: hidden !important;
+}
+
+/* Correções para o backdrop */
+.modal-backdrop {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background-color: rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Garantir que modais sejam sempre visíveis quando abertos */
+.modal.show {
+    display: block !important;
+}
+
+/* Correções para animações específicas do modal de caixa */
+#confirmModal .modal-content {
+    box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175) !important;
+}
+
+/* Garantir que ícones sejam visíveis */
+.modal .bx,
+.modal .bi {
+    display: inline-block !important;
+    vertical-align: middle !important;
+}
+
+/* Correções para o header com background colorido */
+.modal-header.bg-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: #fff !important;
+}
+
+.modal-header.bg-warning {
+    background: linear-gradient(135deg, #ffab00 0%, #ff8f00 100%) !important;
+    color: #212529 !important;
+}
+
+/* Correções para footer com background */
+.modal-footer.bg-light {
+    background-color: #f8f9fa !important;
+    border-top: 1px solid #dee2e6 !important;
+}
+
+/* Dark mode para headers coloridos */
+.dark-style .modal-header.bg-primary {
+    background: linear-gradient(135deg, #5a67d8 0%, #6b5b95 100%) !important;
+    color: #fff !important;
+}
+
+.dark-style .modal-header.bg-warning {
+    background: linear-gradient(135deg, #e6a700 0%, #cc7a00 100%) !important;
+    color: #212529 !important;
+}
+
+.dark-style .modal-footer.bg-light {
+    background-color: rgba(68, 69, 100, 0.3) !important;
+    border-top: 1px solid #444564 !important;
+}
+
+/* Garantir que os modais não sejam afetados por transformações globais */
+.modal * {
+    transform: none !important;
+}
+
+/* Exceção apenas para animações de entrada/saída */
+.modal.fade .modal-dialog {
+    transform: translate(0, -50px) !important;
+}
+
+.modal.show .modal-dialog {
+    transform: none !important;
+}

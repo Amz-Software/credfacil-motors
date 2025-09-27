@@ -27,6 +27,10 @@
                         <label for="id_vendedor" class="form-label">Vendedor*</label>
                         {{ form.vendedor }}
                       </div>
+                      <div class="col-md-6">
+                        <label for="id_repasse_logista" class="form-label">Repasse Logista*</label>
+                        {{ form.repasse_logista }}
+                      </div>
                       <div class="col-md-12">
                         <label for="id_observacao" class="form-label">Observação</label>
                         {{ form.observacao }}
@@ -162,23 +166,34 @@
   // -------------------------------------------------------------------------
   function configurarProdutoForm(form) {
     const produtoSelect = form.querySelector('select[name$="-produto"]');
-            const renavamField = form.querySelector('select[name$="-renavam"]');
+    const renavamField = form.querySelector('select[name$="-renavam"]');
+    const imeiField = form.querySelector('select[name$="-imei"]');
     const valorField = form.querySelector('input[name$="-valor_unitario"]');
     const quantidadeField = form.querySelector('input[name$="-quantidade"]');
     const valorTotalField = form.querySelector('input[name$="-valor_total"]');
     const valorDescontoField = form.querySelector('input[name$="-valor_desconto"]');
 
-            if (!produtoSelect || !renavamField || !valorField) return;
+    if (!produtoSelect || !valorField) return;
 
     // Inicializa valores
-    valorDescontoField.value = "0.00";
+    if (valorDescontoField) {
+      valorDescontoField.value = "0.00";
+    }
 
     // Destruir Select2 existente se houver (pra evitar conflitos ao recriar form dinâmico)
-            if ($(renavamField).data('select2')) {
-            $(renavamField).select2('destroy');
-        }
-        renavamField.required = false;
-    quantidadeField.readOnly = false;
+    if (renavamField && $(renavamField).data('select2')) {
+      $(renavamField).select2('destroy');
+    }
+    if (imeiField && $(imeiField).data('select2')) {
+      $(imeiField).select2('destroy');
+    }
+    
+    if (renavamField) {
+      renavamField.required = false;
+    }
+    if (quantidadeField) {
+      quantidadeField.readOnly = false;
+    }
 
     verificarProduto();
     atualizarValorTotal();
@@ -214,10 +229,14 @@
             quantidadeField.value = 1;
             quantidadeField.readOnly = true;
           } else {
-            imeiField.value = "";
-            imeiField.disabled = true;
-            imeiField.required = false;
-            quantidadeField.readOnly = false;
+            if (imeiField) {
+              imeiField.value = "";
+              imeiField.disabled = true;
+              imeiField.required = false;
+            }
+            if (quantidadeField) {
+              quantidadeField.readOnly = false;
+            }
           }
         }); 
     }
@@ -261,13 +280,15 @@
       const produtoId = e.params.data.id;
       
       // Limpa campos relevantes
-      valorField.value = "";
-      quantidadeField.value = "";
-      valorTotalField.value = "";
-      imeiField.value = "";
-      imeiField.disabled = true;
-      imeiField.required = false;
-      quantidadeField.readOnly = true;
+      if (valorField) valorField.value = "";
+      if (quantidadeField) quantidadeField.value = "";
+      if (valorTotalField) valorTotalField.value = "";
+      if (imeiField) {
+        imeiField.value = "";
+        imeiField.disabled = true;
+        imeiField.required = false;
+      }
+      if (quantidadeField) quantidadeField.readOnly = true;
 
       if (!produtoId) {
         return;
@@ -281,13 +302,18 @@
 
           if (data.serializado) {
             // Se o produto exige RENAVAM
-            renavamField.disabled = false;
-            renavamField.required = true;
-            quantidadeField.value = 1;
-            quantidadeField.readOnly = true;
+            if (renavamField) {
+              renavamField.disabled = false;
+              renavamField.required = true;
+            }
+            if (quantidadeField) {
+              quantidadeField.value = 1;
+              quantidadeField.readOnly = true;
+            }
 
             // Configura Select2 para o campo RENAVAM
-            $(renavamField).select2({
+            if (renavamField) {
+              $(renavamField).select2({
               ajax: {
                 url: `/info-products/renavam/${produtoId}/`,
                 dataType: 'json',
@@ -307,10 +333,12 @@
               },
               placeholder: "Selecione o RENAVAM",
               allowClear: true,
-            });
+              });
+            }
 
             // Ao selecionar RENAVAM
-            $(renavamField).on('select2:select', function (e) {
+            if (renavamField) {
+              $(renavamField).on('select2:select', function (e) {
               const renavamValue = e.params.data.id;
               console.log('RENAVAM selecionado:', renavamValue);
 
@@ -326,17 +354,22 @@
                     } else {
                       alert(info.message);
                       valorField.value = "";
-                      $(renavamField).val(null).trigger('change'); // Reseta o campo RENAVAM no Select2
+                      if (renavamField) $(renavamField).val(null).trigger('change'); // Reseta o campo RENAVAM no Select2
                     }
                   });
               }
-            });
+              });
+            }
           } else {
             // Produto não exige RENAVAM
-            renavamField.disabled = true;
-            renavamField.required = false;
-            quantidadeField.readOnly = false;
-            $(renavamField).val(null).trigger('change');
+            if (renavamField) {
+              renavamField.disabled = true;
+              renavamField.required = false;
+              $(renavamField).val(null).trigger('change');
+            }
+            if (quantidadeField) {
+              quantidadeField.readOnly = false;
+            }
 
             fetch(`/info-products/?product_id=${produtoId}`)
               .then(response => response.json())
@@ -355,36 +388,50 @@
         });
     });
 
-    $(imeiField).on('select2:select', function (e) {
-      console.log('IMEI selecionado:', e.params.data);
-      const imeiId = e.params.data.id;
-      console.log('IMEI selecionado:', imeiId);
-      const produtoId = produtoSelect.value;
+    if (imeiField) {
+      $(imeiField).on('select2:select', function (e) {
+        console.log('IMEI selecionado:', e.params.data);
+        const imeiId = e.params.data.id;
+        console.log('IMEI selecionado:', imeiId);
+        const produtoId = produtoSelect.value;
 
-      if (produtoId && imeiId) {
-      console.log('Produto selecionado:', produtoId);
-      fetch(`/produto/details/${produtoId}/`)
-        .then(response => response.json())
-        .then(data => {
+        if (produtoId && imeiId) {
+          console.log('Produto selecionado:', produtoId);
+          fetch(`/produto/details/${produtoId}/`)
+            .then(response => response.json())
+            .then(data => {
 
-        if (data.serializado) {
-          quantidadeField.value = 1;
-          quantidadeField.readOnly = true;
-        } else {
-          quantidadeField.readOnly = false;
-          renavamField.disabled = true;
-          $(renavamField).val(null).trigger('change');
+              if (data.serializado) {
+                if (quantidadeField) {
+                  quantidadeField.value = 1;
+                  quantidadeField.readOnly = true;
+                }
+              } else {
+                if (quantidadeField) {
+                  quantidadeField.readOnly = false;
+                }
+                if (renavamField) {
+                  renavamField.disabled = true;
+                  $(renavamField).val(null).trigger('change');
+                }
+              }
+            });
         }
-        });
-      }
-    });
+      });
+    }
 
-    quantidadeField.addEventListener('input', function () {
-      verificarProduto();
-      atualizarValorTotal();
-    });
-    valorField.addEventListener('input', atualizarValorTotal);
-    valorDescontoField.addEventListener('input', atualizarValorTotal);
+    if (quantidadeField) {
+      quantidadeField.addEventListener('input', function () {
+        verificarProduto();
+        atualizarValorTotal();
+      });
+    }
+    if (valorField) {
+      valorField.addEventListener('input', atualizarValorTotal);
+    }
+    if (valorDescontoField) {
+      valorDescontoField.addEventListener('input', atualizarValorTotal);
+    }
   }
 
   

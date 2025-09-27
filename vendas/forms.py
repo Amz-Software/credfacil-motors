@@ -801,11 +801,13 @@ class VendaForm(forms.ModelForm):
             'cliente': forms.Select(attrs={'class': 'form-control'}),
             'vendedor': forms.Select(attrs={'class': 'form-control'}),
             'observacao': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'repasse_logista': forms.TextInput(attrs={'class': 'form-control money'}),
         }
         labels = {
             'cliente': 'Cliente*',
             'vendedor': 'Vendedor*',
             'observacao': 'Observação',
+            'repasse_logista': 'Repasse Logista*',
         }
 
     def __init__(self, *args, **kwargs):
@@ -892,8 +894,9 @@ class ProdutoVendaEditForm(forms.ModelForm):
     )
     # quero apenas o produto que está na venda
     produto = forms.ModelChoiceField(
-        queryset=None,
+        queryset=Produto.objects.all(),
         label="Produto",
+        widget=forms.Select(attrs={'class': 'form-control'})
     )
 
     class Meta:
@@ -912,6 +915,15 @@ class ProdutoVendaEditForm(forms.ModelForm):
                     'data-placeholder': 'Selecione um IMEI',
                     'data-allow-clear': 'true',
                 }
+            ),
+            'renavam': EstoqueImeiSelectWidgetEdit(
+                max_results=10,
+                attrs={
+                    'class': 'form-control',
+                    'data-minimum-input-length': '0',
+                    'data-placeholder': 'Selecione um RENAVAM',
+                    'data-allow-clear': 'true',
+                }
             )
         }
         labels = {
@@ -919,17 +931,43 @@ class ProdutoVendaEditForm(forms.ModelForm):
             'valor_desconto': 'Desconto*',
             'quantidade': 'Quantidade*', 
             'produto': 'Produto*',
+            'imei': 'IMEI',
+            'renavam': 'RENAVAM',
         }
     
     def __init__(self, *args, **kwargs):
         loja = kwargs.pop('loja', None)
         super().__init__(*args, **kwargs)
-        self.fields['produto'].queryset = Produto.objects.filter(loja=loja).filter(id=self.instance.produto.id)
+        
+        # Configurar queryset do IMEI
+        if 'imei' in self.fields:
+            self.fields['imei'].queryset = EstoqueImei.objects.filter(
+                vendido=False, 
+                cancelado=False
+            )
+        
+        # Configurar queryset do RENAVAM
+        if 'renavam' in self.fields:
+            self.fields['renavam'].queryset = EstoqueImei.objects.filter(
+                vendido=False, 
+                cancelado=False
+            )
 
 
 
 class PagamentoForm(forms.ModelForm):
-    valor_parcela = forms.DecimalField(label='Valor Parcela', disabled=True, required=False, widget=forms.NumberInput(attrs={'class': 'form-control', 'readonly': 'readonly'}))
+    valor_parcela = forms.DecimalField(
+        label='Valor Parcela', 
+        disabled=True, 
+        required=False, 
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'readonly': 'readonly'})
+    )
+    porcentagem_desconto = forms.DecimalField(
+        initial=0.00,
+        required=False,
+        widget=forms.HiddenInput()
+    )
+    
     class Meta:
         model = Pagamento
         fields = '__all__'
@@ -950,10 +988,13 @@ class PagamentoForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         loja = kwargs.pop('loja', None)
         super().__init__(*args, **kwargs)
-        if loja:
-            self.fields['tipo_pagamento'].queryset = TipoPagamento.objects.filter(loja=loja)
-            # ajustar data da primeira parcela para o padrao yyyy-MM-dd
-            self.fields['data_primeira_parcela'].widget.format = '%Y-%m-%d'
+        
+        # Ajustar data da primeira parcela para o padrão yyyy-MM-dd
+        self.fields['data_primeira_parcela'].widget.format = '%Y-%m-%d'
+        
+        # Garantir que porcentagem_desconto tenha valor padrão
+        if not self.initial.get('porcentagem_desconto'):
+            self.initial['porcentagem_desconto'] = 0.00
 
 class LancamentoForm(forms.ModelForm):
     class Meta:

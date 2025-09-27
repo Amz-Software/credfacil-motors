@@ -55,33 +55,48 @@ Caixas
           </button>
           {% endif %}
 
-          <!-- Novo modal -->
+          <!-- Modal de Abertura de Caixa -->
           <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
+            <div class="modal-dialog modal-dialog-centered">
               <div class="modal-content">
                 <form method="post">
                   {% csrf_token %}
                   <input type="hidden" name="criar_caixa" value="1">
-                  <div class="modal-header">
-                    <h5 class="modal-title" id="confirmModalLabel">Confirmar Abertura do Caixa</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="confirmModalLabel">
+                      <i class="bx bx-plus-circle me-2"></i>Confirmar Abertura do Caixa
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
                   </div>
-                  <div class="modal-body">
+                  <div class="modal-body p-4">
                     {% if user|has_perm:"vendas.can_view_all_stores" %}
-                      <div class="mb-3">
-                        <label for="lojaSelect" class="form-label">Selecione a loja</label>
-                        <select name="loja_id" id="lojaSelect" class="form-select" required>
+                      <div class="mb-4">
+                        <label for="lojaSelect" class="form-label fw-semibold">
+                          <i class="bx bx-store me-1"></i>Selecione a loja
+                        </label>
+                        <select name="loja_id" id="lojaSelect" class="form-select form-select-lg" required>
+                          <option value="">Escolha uma loja...</option>
                           {% for loja in lojas %}
                             <option value="{{ loja.id }}">{{ loja.nome }}</option>
                           {% endfor %}
                         </select>
                       </div>
                     {% endif %}
-                    <p>Você tem certeza que deseja abrir um novo caixa?</p>
+                    <div class="alert alert-info d-flex align-items-center" role="alert">
+                      <i class="bx bx-info-circle me-2 fs-5"></i>
+                      <div>
+                        <strong>Confirmação necessária:</strong><br>
+                        Você tem certeza que deseja abrir um novo caixa?
+                      </div>
+                    </div>
                   </div>
-                  <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Confirmar</button>
+                  <div class="modal-footer bg-light border-0 p-4">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                      <i class="bx bx-x me-1"></i>Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                      <i class="bx bx-check me-1"></i>Confirmar Abertura
+                    </button>
                   </div>
                 </form>
               </div>
@@ -174,21 +189,33 @@ Caixas
   {% if not caixa.data_fechamento %}
     <div class="modal fade" id="fecharModal{{ caixa.id }}" tabindex="-1"
       aria-labelledby="fecharModalLabel{{ caixa.id }}" aria-hidden="true">
-      <div class="modal-dialog">
+      <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="fecharModalLabel{{ caixa.id }}">Confirmar Fechamento do Caixa</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          <div class="modal-header bg-warning text-dark">
+            <h5 class="modal-title" id="fecharModalLabel{{ caixa.id }}">
+              <i class="bx bx-lock me-2"></i>Confirmar Fechamento do Caixa
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
           </div>
-          <div class="modal-body">
-            Você tem certeza que deseja fechar o caixa aberto em {{ caixa.data_abertura|date:"d/m/Y" }}?
+          <div class="modal-body p-4">
+            <div class="alert alert-warning d-flex align-items-center" role="alert">
+              <i class="bx bx-error me-2 fs-5"></i>
+              <div>
+                <strong>Atenção:</strong><br>
+                Você tem certeza que deseja fechar o caixa aberto em <strong>{{ caixa.data_abertura|date:"d/m/Y" }}</strong>?
+              </div>
+            </div>
           </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <div class="modal-footer bg-light border-0 p-4">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+              <i class="bx bx-x me-1"></i>Cancelar
+            </button>
             <form method="post" class="d-inline-block">
               {% csrf_token %}
               <input type="hidden" name="fechar_caixa" value="{{ caixa.id }}">
-              <button type="submit" class="btn btn-primary">Confirmar</button>
+              <button type="submit" class="btn btn-warning">
+                <i class="bx bx-lock me-1"></i>Fechar Caixa
+              </button>
             </form>
           </div>
         </div>

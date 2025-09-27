@@ -65,11 +65,14 @@ class Caixa(Base):
         if self.data_fechamento:
             return True
         return False
-        
     
     @classmethod
-    def caixa_aberto(cls, data, loja):
-        return cls.objects.filter(data_abertura=data, data_fechamento__isnull=True, loja=loja).exists()
+    def caixa_aberto(cls, loja):
+        return cls.objects.filter(data_fechamento__isnull=True, loja=loja).exists()
+    
+    # @classmethod
+    # def caixa_aberto(cls, data, loja):
+    #     return cls.objects.filter(data_abertura=data, data_fechamento__isnull=True, loja=loja).exists()
 
     def __str__(self):
         return f"Caixa do dia {self.data_abertura} - {self.loja}"

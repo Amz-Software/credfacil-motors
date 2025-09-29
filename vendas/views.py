@@ -1723,7 +1723,7 @@ def cancelar_venda(request, id):
         messages.warning(request, 'Venda já cancelada')
         return redirect('vendas:venda_list')
     
-    if not Caixa.caixa_aberto(localtime(now()).date(), loja_credfacil):
+    if not Caixa.caixa_aberto(loja_credfacil):
         messages.warning(request, 'Não é possível cancelar vendas com a loja bloqueada!')
         return redirect('vendas:venda_list')
     

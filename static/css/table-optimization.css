@@ -72,7 +72,7 @@ small, .text-muted {
 }
 
 /* Otimizar dropdowns - sem quebrar funcionalidade */
-.dropdown-menu {
+.table .dropdown-menu {
     font-size: 0.8rem !important;
     /* Z-index gerenciado no dark-mode-improvements.css */
 }

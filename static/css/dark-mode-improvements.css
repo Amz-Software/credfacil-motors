@@ -315,9 +315,9 @@
    - tooltip: 1070
 */
 
-/* Garantir hierarquia correta de z-index */
-.dropdown-menu {
-  z-index: 1000 !important; /* Bootstrap padrão */
+/* Garantir hierarquia correta de z-index - apenas para dropdowns em contextos especiais */
+.table .dropdown-menu {
+  z-index: 1000 !important; /* Apenas para dropdowns em tabelas */
 }
 
 .modal-backdrop {

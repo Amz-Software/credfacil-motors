@@ -748,60 +748,6 @@
   {{ form.media.js }}
   {%endif%}
 
-  <!-- Portal global para dropdowns: garante que apareçam acima de qualquer container -->
-  <script>
-    (function () {
-      function getPlacement(toggle, menu) {
-        if (toggle.closest('.dropup')) return menu.classList.contains('dropdown-menu-end') ? 'top-end' : 'top-start';
-        if (toggle.closest('.dropstart')) return 'left-start';
-        if (toggle.closest('.dropend')) return 'right-start';
-        return menu.classList.contains('dropdown-menu-end') ? 'bottom-end' : 'bottom-start';
-      }
-
-      document.addEventListener('shown.bs.dropdown', function (ev) {
-        var toggle = ev.target;
-        var menu = toggle.parentElement.querySelector('.dropdown-menu');
-        if (!menu) return;
-        if (!menu.__ddOriginalParent) menu.__ddOriginalParent = menu.parentElement;
-        toggle.__ddMenu = menu;
-
-        // Move para o body e posiciona com Popper em estratégia fixa
-        document.body.appendChild(menu);
-        menu.style.position = 'fixed';
-        menu.style.zIndex = '2000';
-        menu.style.display = 'block';
-
-        if (window.Popper && window.Popper.createPopper) {
-          menu.__popperInstance = window.Popper.createPopper(toggle, menu, {
-            strategy: 'fixed',
-            placement: getPlacement(toggle, menu),
-            modifiers: [
-              { name: 'offset', options: { offset: [0, 6] } },
-              { name: 'preventOverflow', options: { boundary: 'viewport' } },
-              { name: 'flip', options: { fallbackPlacements: ['top', 'bottom', 'right', 'left'] } }
-            ]
-          });
-        }
-      });
-
-      document.addEventListener('hidden.bs.dropdown', function (ev) {
-        var toggle = ev.target;
-        var menu = toggle.__ddMenu;
-        if (!menu) return;
-        if (menu.__popperInstance) {
-          menu.__popperInstance.destroy();
-          menu.__popperInstance = null;
-        }
-        if (menu.__ddOriginalParent) {
-          menu.__ddOriginalParent.appendChild(menu);
-        }
-        menu.style.position = '';
-        menu.style.zIndex = '';
-        menu.style.display = '';
-        toggle.__ddMenu = null;
-      });
-    })();
-  </script>
 
   <script>
     document.addEventListener('DOMContentLoaded', function () {

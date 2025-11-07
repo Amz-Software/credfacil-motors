@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatório Avançado Contas a Receber</title>
+    <style>
+        @media print {
+            * {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            margin: 0;
+            padding: 10px;
+            font-size: 11px;
+        }
+        h2, h3 {
+            text-align: center;
+            margin: 10px 0;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 20px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 4px;
+            text-align: left;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+            font-weight: bold;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+        .center {
+            text-align: center;
+        }
+        .end {
+            text-align: right;
+        }
+        .situacao-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            margin: 2px;
+            border-radius: 3px;
+            font-size: 9px;
+            font-weight: bold;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            margin: 2px;
+            border-radius: 3px;
+            font-size: 9px;
+            color: white;
+        }
+        .lembrete-sim {
+            color: green;
+            font-size: 16px;
+        }
+        .lembrete-nao {
+            color: gray;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Relatório Avançado de Contas a Receber</h2>
+        {% if contas_a_receber %}
+        <table>
+            <thead>
+            <tr>
+                <th>Loja</th>
+                <th>Data da Venda</th>
+                <th>Cliente</th>
+                <th class="center">Lembrete</th>
+                <th>Número de Telefone</th>
+                <th>RENAVAM</th>
+                <th>Próximo Vencimento</th>
+                <th>Situações</th>
+                <th>Status Pagamentos</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for conta in contas_a_receber %}
+            <tr>
+                <td>{{ conta.loja.nome }}</td>
+                <td>{{ conta.data_venda|date:"d/m/Y" }}</td>
+                <td>{{ conta.cliente.nome }}</td>
+                <td class="center">
+                    {% if conta.lembrete %}
+                        <span class="lembrete-sim">✓</span>
+                    {% else %}
+                        <span class="lembrete-nao">✗</span>
+                    {% endif %}
+                </td>
+                <td>{{ conta.telefone }}</td>
+                <td>{{ conta.renavam|default:"-" }}</td>
+                <td>{{ conta.proximo_vencimento|date:"d/m/Y"|default:"-" }}</td>
+                <td>
+                    {% if conta.situacoes.lembrete %}<span class="situacao-badge" style="background-color: #0d6efd; color: white;">Lembrete</span>{% endif %}
+                    {% if conta.situacoes.bo %}<span class="situacao-badge" style="background-color: #dc3545; color: white;">BO</span>{% endif %}
+                    {% if conta.situacoes.flag_atrasado %}<span class="situacao-badge" style="background-color: #fd7e14; color: white;">Atrasado</span>{% endif %}
+                    {% if conta.situacoes.sem_conexao %}<span class="situacao-badge" style="background-color: #6c757d; color: white;">Sem conexão</span>{% endif %}
+                    {% if conta.situacoes.roubo %}<span class="situacao-badge" style="background-color: #000000; color: white;">Roubo</span>{% endif %}
+                    {% if conta.situacoes.bloqueado %}<span class="situacao-badge" style="background-color: #6f42c1; color: white;">Bloqueado</span>{% endif %}
+                    {% if conta.situacoes.desativado %}<span class="situacao-badge" style="background-color: #6c757d; color: white;">Desativado</span>{% endif %}
+                    {% if conta.situacoes.devolucao %}<span class="situacao-badge" style="background-color: #ffcd39; color: #000;">Devolução</span>{% endif %}
+                    {% if conta.situacoes.sem_contato %}<span class="situacao-badge" style="background-color: #4f46e5; color: white;">Sem contato</span>{% endif %}
+                    {% if conta.situacoes.mais_prazo %}<span class="situacao-badge" style="background-color: #20c997; color: white;">Mais prazo</span>{% endif %}
+                </td>
+                <td>
+                    {% for status in conta.statuses %}
+                        <span class="status-badge" style="background-color: {{ status.cor_hex }};">{{ status.nome }}</span>
+                    {% empty %}
+                        -
+                    {% endfor %}
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="center">Nenhuma conta encontrada com os filtros selecionados.</p>
+        {% endif %}
+    </div>
+    
+    <script>
+        window.onload = function() {
+            window.print();
+        };
+    </script>
+</body>
+</html>
+

@@ -195,6 +195,29 @@ Editar Produto
                               </div>
                             </div>
                           </div>
+
+                          <!-- Parcelamento 16x -->
+                          <div class="col-12 col-sm-6 col-lg-4 mb-3">
+                            <div class="card h-100 border-danger" data-bs-toggle="tooltip" data-bs-placement="top" title="Parcelamento em 16 vezes - Prazo máximo para valores muito altos">
+                              <div class="card-header bg-light text-center">
+                                <h6 class="mb-0 text-danger">
+                                  <i class="bx bx-credit-card me-1"></i>
+                                  16x Parcelas
+                                </h6>
+                                <small class="text-muted">Prazo máximo</small>
+                              </div>
+                              <div class="card-body">
+                                <div class="form-group mb-2">
+                                  <label for="id_valor_16_vezes" class="form-label fw-bold">Valor Total</label>
+                                  {{ form.valor_16_vezes }}
+                                </div>
+                                <div class="form-group">
+                                  <label for="id_valor_16_vezes_calculado" class="form-label text-muted">Valor da Parcela</label>
+                                  <input type="text" id="id_valor_16_vezes_calculado" class="form-control bg-light" readonly>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
                         </div>
 
                         <!-- Barra de Progresso -->
@@ -202,7 +225,7 @@ Editar Produto
                           <div class="col-12">
                             <div class="d-flex justify-content-between align-items-center mb-2">
                               <span class="text-muted">Progresso de Preenchimento</span>
-                              <span class="badge bg-primary" id="progress-text">0/6</span>
+                              <span class="badge bg-primary" id="progress-text">0/7</span>
                             </div>
                             <div class="progress mb-3" style="height: 8px;">
                               <div class="progress-bar bg-primary" role="progressbar" id="progress-parcelamentos" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
@@ -268,6 +291,14 @@ Editar Produto
                                     </div>
                                   </div>
                                 </div>
+                                <div class="col-md-2 text-center mb-2">
+                                  <div class="card border-danger h-100">
+                                    <div class="card-body p-2">
+                                      <small class="text-muted">16x</small><br>
+                                      <span class="fw-bold text-danger" id="resumo-16x">R$ 0,00</span>
+                                    </div>
+                                  </div>
+                                </div>
                               </div>
                             </div>
                           </div>
@@ -322,7 +353,8 @@ const parcelamentos = [
     { id: '8', parcelas: 8, color: 'warning' },
     { id: '10', parcelas: 10, color: 'info' },
     { id: '12', parcelas: 12, color: 'secondary' },
-    { id: '14', parcelas: 14, color: 'dark' }
+    { id: '14', parcelas: 14, color: 'dark' },
+    { id: '16', parcelas: 16, color: 'danger' }
 ];
 
 // Função para formatar valor monetário

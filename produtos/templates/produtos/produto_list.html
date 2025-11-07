@@ -4,6 +4,61 @@
 Produtos
 {% endblock title %}
 
+{% block extra_head %}
+<style>
+  .valores-parcela-badge {
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .valores-parcela-badge:hover {
+    transform: scale(1.05);
+  }
+  .popover {
+    max-width: 400px;
+  }
+  .parcela-item {
+    padding: 8px 12px;
+    border-bottom: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .parcela-item:last-child {
+    border-bottom: none;
+  }
+  .parcela-label {
+    font-weight: 600;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .parcela-valores {
+    text-align: right;
+  }
+  .parcela-total {
+    font-size: 14px;
+    color: #666;
+  }
+  .parcela-mensal {
+    font-size: 12px;
+    color: #999;
+  }
+  .dark-style .parcela-label {
+    color: #e0e0e0;
+  }
+  .dark-style .parcela-item {
+    border-bottom-color: #404040;
+  }
+  .dark-style .parcela-total {
+    color: #aaa;
+  }
+  .dark-style .parcela-mensal {
+    color: #888;
+  }
+</style>
+{% endblock extra_head %}
+
 {% block content %}
 
 <div class="container-xxl mt-4">
@@ -32,12 +87,7 @@ Produtos
           <th scope="col">Nome</th>
           <th scope="col">Valor Repasse Logista</th>
           <th scope="col">Entrada Cliente</th>
-          <th scope="col">Valor 4 Vezes</th>
-          <th scope="col">Valor 6 Vezes</th>
-          <th scope="col">Valor 8 Vezes</th>
-          <th scope="col">Valor 10 Vezes</th>
-          <th scope="col">Valor 12 Vezes</th>
-          <th scope="col">Valor 14 Vezes</th>
+          <th scope="col" class="text-center">Valores Parcela</th>
           <th scope="col">Ações</th>
           </tr>
         </thead>
@@ -46,14 +96,109 @@ Produtos
           <tr>
           <td>{{ produto.codigo }}</td>
           <td>{{ produto.nome }}</td>
-          <td>{{ produto.valor_repasse_logista|floatformat:2 }}</td>
-          <td>{{ produto.entrada_cliente|floatformat:2 }}</td>
-          <td>{{ produto.valor_4_vezes|floatformat:2 }}</td>
-          <td>{{ produto.valor_6_vezes|floatformat:2 }}</td>
-          <td>{{ produto.valor_8_vezes|floatformat:2 }}</td>
-          <td>{{ produto.valor_10_vezes|floatformat:2 }}</td>
-          <td>{{ produto.valor_12_vezes|floatformat:2 }}</td>
-          <td>{{ produto.valor_14_vezes|floatformat:2 }}</td>
+          <td>R$ {{ produto.valor_repasse_logista|floatformat:2 }}</td>
+          <td>R$ {{ produto.entrada_cliente|floatformat:2 }}</td>
+          <td class="text-center">
+            <span 
+              class="badge bg-label-primary valores-parcela-badge"
+              data-bs-toggle="popover"
+              data-bs-placement="left"
+              data-bs-trigger="hover"
+              data-bs-html="true"
+              data-bs-content="
+                <div style='min-width: 280px;'>
+                  {% if produto.valor_4_vezes > 0 %}
+                  <div class='parcela-item'>
+                    <span class='parcela-label'>
+                      <span style='display: inline-block; background-color: #696cff; width: 10px; height: 10px; border-radius: 50%;'></span>
+                      4x
+                    </span>
+                    <span class='parcela-valores'>
+                      <div class='parcela-total'>R$ {{ produto.valor_4_vezes|floatformat:2 }}</div>
+                      <div class='parcela-mensal'>R$ {{ produto.valor_4_vezes|dividir:4|floatformat:2 }}/mês</div>
+                    </span>
+                  </div>
+                  {% endif %}
+                  {% if produto.valor_6_vezes > 0 %}
+                  <div class='parcela-item'>
+                    <span class='parcela-label'>
+                      <span style='display: inline-block; background-color: #71dd37; width: 10px; height: 10px; border-radius: 50%;'></span>
+                      6x
+                    </span>
+                    <span class='parcela-valores'>
+                      <div class='parcela-total'>R$ {{ produto.valor_6_vezes|floatformat:2 }}</div>
+                      <div class='parcela-mensal'>R$ {{ produto.valor_6_vezes|dividir:6|floatformat:2 }}/mês</div>
+                    </span>
+                  </div>
+                  {% endif %}
+                  {% if produto.valor_8_vezes > 0 %}
+                  <div class='parcela-item'>
+                    <span class='parcela-label'>
+                      <span style='display: inline-block; background-color: #ffab00; width: 10px; height: 10px; border-radius: 50%;'></span>
+                      8x
+                    </span>
+                    <span class='parcela-valores'>
+                      <div class='parcela-total'>R$ {{ produto.valor_8_vezes|floatformat:2 }}</div>
+                      <div class='parcela-mensal'>R$ {{ produto.valor_8_vezes|dividir:8|floatformat:2 }}/mês</div>
+                    </span>
+                  </div>
+                  {% endif %}
+                  {% if produto.valor_10_vezes > 0 %}
+                  <div class='parcela-item'>
+                    <span class='parcela-label'>
+                      <span style='display: inline-block; background-color: #03c3ec; width: 10px; height: 10px; border-radius: 50%;'></span>
+                      10x
+                    </span>
+                    <span class='parcela-valores'>
+                      <div class='parcela-total'>R$ {{ produto.valor_10_vezes|floatformat:2 }}</div>
+                      <div class='parcela-mensal'>R$ {{ produto.valor_10_vezes|dividir:10|floatformat:2 }}/mês</div>
+                    </span>
+                  </div>
+                  {% endif %}
+                  {% if produto.valor_12_vezes > 0 %}
+                  <div class='parcela-item'>
+                    <span class='parcela-label'>
+                      <span style='display: inline-block; background-color: #8592a3; width: 10px; height: 10px; border-radius: 50%;'></span>
+                      12x
+                    </span>
+                    <span class='parcela-valores'>
+                      <div class='parcela-total'>R$ {{ produto.valor_12_vezes|floatformat:2 }}</div>
+                      <div class='parcela-mensal'>R$ {{ produto.valor_12_vezes|dividir:12|floatformat:2 }}/mês</div>
+                    </span>
+                  </div>
+                  {% endif %}
+                  {% if produto.valor_14_vezes > 0 %}
+                  <div class='parcela-item'>
+                    <span class='parcela-label'>
+                      <span style='display: inline-block; background-color: #233446; width: 10px; height: 10px; border-radius: 50%;'></span>
+                      14x
+                    </span>
+                    <span class='parcela-valores'>
+                      <div class='parcela-total'>R$ {{ produto.valor_14_vezes|floatformat:2 }}</div>
+                      <div class='parcela-mensal'>R$ {{ produto.valor_14_vezes|dividir:14|floatformat:2 }}/mês</div>
+                    </span>
+                  </div>
+                  {% endif %}
+                  {% if produto.valor_16_vezes > 0 %}
+                  <div class='parcela-item'>
+                    <span class='parcela-label'>
+                      <span style='display: inline-block; background-color: #ff3e1d; width: 10px; height: 10px; border-radius: 50%;'></span>
+                      16x
+                    </span>
+                    <span class='parcela-valores'>
+                      <div class='parcela-total'>R$ {{ produto.valor_16_vezes|floatformat:2 }}</div>
+                      <div class='parcela-mensal'>R$ {{ produto.valor_16_vezes|dividir:16|floatformat:2 }}/mês</div>
+                    </span>
+                  </div>
+                  {% endif %}
+                </div>
+              "
+              data-bs-title="Modalidades de Parcelamento"
+            >
+              <i class="bx bx-credit-card me-1"></i>
+              Ver Parcelas
+            </span>
+          </td>
           <td>
             <div class="dropdown">
             <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
@@ -74,7 +219,7 @@ Produtos
             </div>
           </td>
           {% empty %}
-          <td colspan="8">Nenhum registro encontrado</td>
+          <td colspan="6">Nenhum registro encontrado</td>
           </tr>
           {% endfor %}
         </tbody>
@@ -88,3 +233,19 @@ Produtos
 </div>
 
 {% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Inicializa todos os popovers
+document.addEventListener('DOMContentLoaded', function() {
+  const popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
+  const popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
+    return new bootstrap.Popover(popoverTriggerEl, {
+      html: true,
+      sanitize: false,
+      customClass: 'popover-parcelas'
+    });
+  });
+});
+</script>
+{% endblock extra_scripts %}

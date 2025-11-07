@@ -9,6 +9,7 @@ from django.db import models
 from django.utils import timezone
 from django.urls import reverse
 import re
+import calendar
 
 
 class Base(models.Model):
@@ -171,12 +172,13 @@ class Loja(Base):
     porcentagem_desconto_10 = models.DecimalField(max_digits=5, decimal_places=2, default=25.00)
     porcentagem_desconto_12 = models.DecimalField(max_digits=5, decimal_places=2, default=25.00)
     porcentagem_desconto_14 = models.DecimalField(max_digits=5, decimal_places=2, default=25.00)
+    porcentagem_desconto_16 = models.DecimalField(max_digits=5, decimal_places=2, default=25.00)
     qr_code_aplicativo = models.ImageField(upload_to='qr_codes_aplicativo/', null=True, blank=True)
     codigo_aplicativo = models.CharField(max_length=100, null=True, blank=True)
     objects = LojaQuerySet.as_manager()
 
 
-    REPASSES_DIAS = (5, 15)
+    REPASSES_DIAS = (1, 16)
 
     def get_repasses_status(self, meses_atras=0, limite_meses=6):
         hoje = date.today()
@@ -202,19 +204,21 @@ class Loja(Base):
                 except ValueError:
                     continue
 
-                # Data do repasse anterior
+                # Define o período de vendas baseado no dia do repasse
                 if idx == 0:
+                    # Repasse dia 01: vendas de 16 até 31 do mês anterior
                     prev_mes, prev_ano = (mes-1, ano)
                     if prev_mes == 0:
                         prev_mes, prev_ano = 12, ano-1
-                    dia_prev = self.REPASSES_DIAS[-1]
-                    dt_prev = date(prev_ano, prev_mes, dia_prev)
+                    
+                    inicio = date(prev_ano, prev_mes, 16)
+                    # Último dia do mês anterior
+                    ultimo_dia = calendar.monthrange(prev_ano, prev_mes)[1]
+                    fim = date(prev_ano, prev_mes, ultimo_dia)
                 else:
-                    dt_prev = date(ano, mes, self.REPASSES_DIAS[idx-1])
-
-                # Intervalo de vendas (exclusive dt_prev, inclusive dt_atual)
-                inicio = dt_prev + timedelta(days=1)
-                fim    = dt_atual
+                    # Repasse dia 16: vendas de 01 até 15 do mês atual
+                    inicio = date(ano, mes, 1)
+                    fim = date(ano, mes, 15)
 
                 vendas_periodo = vendas_qs.filter(
                     data_venda__date__gte=inicio,
@@ -462,8 +466,8 @@ class AnaliseCreditoCliente(Base):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='EA')
     status_aplicativo = models.CharField(max_length=20, choices=STATUS_APP_CHOICES, default='P', verbose_name='Status do aplicativo')
     data_pagamento = models.CharField(max_length=20, null=True, blank=True, choices=(
-        ('5', 'Dia 5'),
-        ('15', 'Dia 15'),
+        ('1', 'Dia 1'),
+        ('16', 'Dia 16'),
     ), verbose_name='Data de pagamento')
     numero_parcelas = models.CharField(max_length=20, choices=(
         ('4', '4x'),
@@ -472,6 +476,7 @@ class AnaliseCreditoCliente(Base):
         ('10', '10x'),
         ('12', '12x'),
         ('14', '14x'),
+        ('16', '16x'),
     ))
     produto = models.ForeignKey('produtos.Produto', on_delete=models.CASCADE, related_name='analises_credito')
     renavam = models.ForeignKey('estoque.EstoqueImei', on_delete=models.CASCADE, related_name='analises_credito_renavam', null=True, blank=True, verbose_name='RENAVAM')
@@ -647,13 +652,27 @@ class TipoPagamento(Base):
     
     class  Meta:
         verbose_name_plural = 'Tipos de Pagamentos'
+
+
+class StatusPagamento(Base):
+    nome = models.CharField(max_length=100)
+    cor_hex = models.CharField(max_length=7, default='#6c757d')
+    
+    def __str__(self):
+        return self.nome
+    
+    class Meta:
+        verbose_name_plural = 'Status de Pagamentos'
         
 
 class PagamentoQuerySet(models.QuerySet):
     def with_parcelas_info(self):
         # Ignora pagamentos do tipo "entrada"
         return self.exclude(tipo_pagamento__nome__iexact='ENTRADA').annotate(
-            total_parcelas=Count('parcelas_pagamento'),
+            total_parcelas=Count(
+                'parcelas_pagamento',
+                filter=Q(devolucao=False) | Q(parcelas_pagamento__pago=True)
+            ),
             parcelas_pagas=Count(
                 'parcelas_pagamento',
                 filter=Q(parcelas_pagamento__pago=True)
@@ -668,34 +687,39 @@ class PagamentoQuerySet(models.QuerySet):
             parcelas_atrasadas=Count(
                 'parcelas_pagamento',
                 filter=Q(
+                    devolucao=False,
                     parcelas_pagamento__pago=False,
                     parcelas_pagamento__data_vencimento__lt=timezone.now()
                 )
             ),
             next_vencimento=Min(
                 'parcelas_pagamento__data_vencimento',
-                filter=Q(parcelas_pagamento__pago=False)
+                filter=Q(devolucao=False, parcelas_pagamento__pago=False)
             )
         )
 
     def with_status_flags(self):
         return self.with_parcelas_info().annotate(
             todas_parcelas_pagas=Case(
+                When(devolucao=True, then=Value(True)),
                 When(parcelas_pagas=F('total_parcelas'), then=Value(True)),
                 default=Value(False),
                 output_field=BooleanField()
             ),
             pago_dentro_prazo=Case(
+                When(devolucao=True, then=Value(False)),
                 When(parcelas_pagas_no_prazo=F('total_parcelas'), then=Value(True)),
                 default=Value(False),
                 output_field=BooleanField()
             ),
             com_parcela_atrasada=Case(
+                When(devolucao=True, then=Value(False)),
                 When(parcelas_atrasadas__gt=0, then=Value(True)),
                 default=Value(False),
                 output_field=BooleanField()
             ),
             com_pagamento_pendente=Case(
+                When(devolucao=True, then=Value(False)),
                 When(
                     Q(parcelas_pagas__lt=F('total_parcelas')) &
                     Q(parcelas_atrasadas=0),
@@ -717,6 +741,13 @@ class Pagamento(Base):
     quitado = models.BooleanField(default=False)
     sem_contato = models.BooleanField(default=False)
     mais_prazo = models.BooleanField(default=False)
+    devolucao = models.BooleanField(default=False)
+    bo = models.BooleanField(default=False)
+    flag_atrasado = models.BooleanField(default=False)
+    sem_conexao = models.BooleanField(default=False)
+    roubo = models.BooleanField(default=False)
+    lembrete = models.BooleanField(default=False)
+    statuses = models.ManyToManyField('vendas.StatusPagamento', related_name='pagamentos', blank=True)
     porcentagem_desconto = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
     objects = PagamentoQuerySet.as_manager()
     data_primeira_parcela = models.DateField()
@@ -726,9 +757,13 @@ class Pagamento(Base):
         return self.valor / self.parcelas
     
     def valor_atrasado(self):
+        if self.devolucao:
+            return 0
         return sum(parcela.valor_restante for parcela in self.parcelas_pagamento.filter(pago=False, data_vencimento__lt=timezone.now()))
     
     def ultimo_vencimento(self):
+        if self.devolucao:
+            return None
         # primeiro pagamento em atraso
         # pega a última parcela que não foi paga que tem a data vencimento menor que a data atual e ordena por data de vencimento
         ultimo = self.parcelas_pagamento.filter(pago=False, data_vencimento__lt=timezone.now()).order_by('data_vencimento').last()
@@ -743,22 +778,34 @@ class Pagamento(Base):
         return ultimo.data_pagamento if ultimo else None
     
     def valor_a_vencer(self):
+        if self.devolucao:
+            return 0
         return sum(parcela.valor_restante for parcela in self.parcelas_pagamento.filter(pago=False, data_vencimento__gte=timezone.now()))
 
     def valor_atual_a_vencer(self):
+        if self.devolucao:
+            return 0
         proximo = self.parcelas_pagamento.filter(pago=False, data_vencimento__gte=timezone.now()).order_by('data_vencimento').first()
         if proximo:
             return proximo.valor_restante
         return 0
 
     def proximo_vencimento(self):
+        if self.devolucao:
+            return None
         proximo = self.parcelas_pagamento.filter(pago=False, data_vencimento__gte=timezone.now()).order_by('data_vencimento').first()
         return proximo.data_vencimento if proximo else None
     
     def valor_total_parcelas(self):
+        if self.devolucao:
+            # Em devolução, só conta as parcelas já pagas
+            return sum(parcela.valor for parcela in self.parcelas_pagamento.filter(pago=True))
         return sum(parcela.valor for parcela in self.parcelas_pagamento.all())
     
     def parcelas_totais(self):
+        if self.devolucao:
+            # Em devolução, só conta as parcelas já pagas
+            return self.parcelas_pagamento.filter(pago=True).count()
         return self.parcelas_pagamento.count()
 
     def parcelas_pagas(self):
@@ -768,15 +815,23 @@ class Pagamento(Base):
         return sum(parcela.valor for parcela in self.parcelas_pagamento.filter(pago=True))
     
     def valor_pendente(self):
+        if self.devolucao:
+            return 0
         return self.valor - sum(parcela.valor for parcela in self.parcelas_pagamento.filter(pago=True))
     
     def parcelas_pendentes(self):
+        if self.devolucao:
+            return 0
         return self.parcelas_pagamento.filter(pago=False).count()
 
     def total_a_vencer(self):
+        if self.devolucao:
+            return 0
         return sum(parcela.valor_restante for parcela in self.parcelas_pagamento.filter(pago=False))
     
     def total_atrasos(self):
+        if self.devolucao:
+            return 0
         return sum(parcela.valor_restante for parcela in self.parcelas_pagamento.filter(pago=False, data_vencimento__lt=timezone.now()))
     
     def total_pago(self):

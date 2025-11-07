@@ -20,6 +20,14 @@
       color: #fff !important;
       opacity: 0.8;
     }
+    /* Linha em devolução em âmbar/amarelo */
+    .table-devolucao,
+    .table-devolucao th,
+    .table-devolucao td {
+      background-color: #ffcd39 !important;
+      color: #000 !important;
+      font-weight: 500;
+    }
     /* Sombreamento leve para o card */
     .card-custom {
       border: none;
@@ -46,6 +54,7 @@
             data-bs-html="true"
             title="
               <ul class='mb-0 ps-3'>
+                <li><strong>Âmbar:</strong> Devolução</li>
                 <li><strong>Cinza:</strong> Desativado</li>
                 <li><strong>Roxo:</strong> Bloqueado</li>
                 <li><strong>Vermelho:</strong> Atrasado</li>
@@ -188,13 +197,20 @@
               <th class="text-center">Parcelas Totais</th>
               <th class="text-center">Parcelas Pagas</th>
               <th class="text-end">Valor Quitado</th>
+              <th class="text-center">Lembrete</th>
+              <th class="text-center">BO</th>
+              <th class="text-center">Atrasado</th>
+              <th class="text-center">Sem conexão</th>
+              <th class="text-center">Roubo</th>
+              <th class="text-center">Devolução</th>
               <th>Ações</th>
             </tr>
           </thead>
           <tbody>
             {% for conta in contas_a_receber %}
               <tr class="
-          {% if conta.desativado %}table-secondary
+          {% if conta.devolucao %}table-devolucao
+          {% elif conta.desativado %}table-secondary
           {% elif conta.bloqueado %}table-purple
           {% elif conta.com_parcela_atrasada %}table-danger
           {% elif conta.com_pagamento_pendente %}table-warning
@@ -263,6 +279,48 @@
           <td class="text-end">
             {{ conta.valor_quitado|default:"0.00"|floatformat:2 }}
           </td>
+          <td class="text-center">
+            {% if conta.lembrete %}
+              <span style="display: inline-block; background-color: #0d6efd; width: 12px; height: 12px; border-radius: 50%;" title="Lembrete"></span>
+            {% else %}
+              <span class="text-muted">-</span>
+            {% endif %}
+          </td>
+          <td class="text-center">
+            {% if conta.bo %}
+              <span style="display: inline-block; background-color: #dc3545; width: 12px; height: 12px; border-radius: 50%;" title="BO"></span>
+            {% else %}
+              <span class="text-muted">-</span>
+            {% endif %}
+          </td>
+          <td class="text-center">
+            {% if conta.flag_atrasado %}
+              <span style="display: inline-block; background-color: #fd7e14; width: 12px; height: 12px; border-radius: 50%;" title="Atrasado"></span>
+            {% else %}
+              <span class="text-muted">-</span>
+            {% endif %}
+          </td>
+          <td class="text-center">
+            {% if conta.sem_conexao %}
+              <span style="display: inline-block; background-color: #6c757d; width: 12px; height: 12px; border-radius: 50%;" title="Sem conexão"></span>
+            {% else %}
+              <span class="text-muted">-</span>
+            {% endif %}
+          </td>
+          <td class="text-center">
+            {% if conta.roubo %}
+              <span style="display: inline-block; background-color: #000000; width: 12px; height: 12px; border-radius: 50%;" title="Roubo"></span>
+            {% else %}
+              <span class="text-muted">-</span>
+            {% endif %}
+          </td>
+          <td class="text-center">
+            {% if conta.devolucao %}
+              <span style="display: inline-block; background-color: #ffcd39; width: 12px; height: 12px; border-radius: 50%;" title="Devolução"></span>
+            {% else %}
+              <span class="text-muted">-</span>
+            {% endif %}
+          </td>
           <td>
             {% if user|has_perm:"vendas.view_pagamento" %}
               <a
@@ -276,7 +334,7 @@
               </tr>
             {% empty %}
               <tr>
-          <td colspan="16" class="text-center py-4">
+          <td colspan="22" class="text-center py-4">
             Nenhum registro encontrado
           </td>
               </tr>

@@ -96,6 +96,41 @@ urlpatterns = [
         toggle_mais_prazo_pagamento,
         name='toggle_mais_prazo_pagamento'
     ),
+    path(
+        'pagamento/<int:pk>/toggle-devolucao/',
+        toggle_devolucao_pagamento,
+        name='toggle_devolucao_pagamento'
+    ),
+    path(
+        'pagamento/<int:pk>/toggle-bo/',
+        toggle_bo_pagamento,
+        name='toggle_bo_pagamento'
+    ),
+    path(
+        'pagamento/<int:pk>/toggle-flag-atrasado/',
+        toggle_flag_atrasado_pagamento,
+        name='toggle_flag_atrasado_pagamento'
+    ),
+    path(
+        'pagamento/<int:pk>/toggle-sem-conexao/',
+        toggle_sem_conexao_pagamento,
+        name='toggle_sem_conexao_pagamento'
+    ),
+    path(
+        'pagamento/<int:pk>/toggle-roubo/',
+        toggle_roubo_pagamento,
+        name='toggle_roubo_pagamento'
+    ),
+    path(
+        'pagamento/<int:pk>/toggle-lembrete/',
+        toggle_lembrete_pagamento,
+        name='toggle_lembrete_pagamento'
+    ),
+    path(
+        'pagamento/<int:pk>/toggle-status/<int:status_id>/',
+        toggle_status_pagamento,
+        name='toggle_status_pagamento'
+    ),
     
     path(
         'consultar-pagamentos/',

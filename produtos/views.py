@@ -1,5 +1,6 @@
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.mixins import PermissionRequiredMixin
+from django.contrib import messages
 from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, DetailView, UpdateView, DeleteView
 from vendas.models import Loja
@@ -55,7 +56,15 @@ def generate_views(modelo, form=None, paginacao=10, template_dir=''):
         
         def form_valid(self, form):
             form.instance.loja = Loja.objects.get(pk=self.request.session.get('loja_id'))
+            messages.success(self.request, f'{modelo._meta.verbose_name} cadastrado com sucesso!')
             return super().form_valid(form)
+        
+        def form_invalid(self, form):
+            messages.error(self.request, f'Erro ao cadastrar {modelo._meta.verbose_name}. Verifique os campos.')
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(self.request, f'{field}: {error}')
+            return super().form_invalid(form)
 
         def get_form_kwargs(self):
             kwargs = super().get_form_kwargs()
@@ -84,6 +93,17 @@ def generate_views(modelo, form=None, paginacao=10, template_dir=''):
             kwargs = super().get_form_kwargs()
             kwargs['user'] = self.request.user
             return kwargs
+        
+        def form_valid(self, form):
+            messages.success(self.request, f'{modelo._meta.verbose_name} atualizado com sucesso!')
+            return super().form_valid(form)
+        
+        def form_invalid(self, form):
+            messages.error(self.request, f'Erro ao atualizar {modelo._meta.verbose_name}. Verifique os campos.')
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(self.request, f'{field}: {error}')
+            return super().form_invalid(form)
 
     class GeneratedDeleteView(PermissionRequiredMixin, DeleteView):
         model = modelo

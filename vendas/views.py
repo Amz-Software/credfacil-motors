@@ -502,7 +502,7 @@ class ClienteCreateView(PermissionRequiredMixin, CreateView):
         context['form_comprovantes'] = kwargs.get('form_comprovantes', ComprovantesClienteForm(user=self.request.user))
         context['form_analise_credito'] = kwargs.get('form_analise_credito', AnaliseCreditoClienteForm(user=self.request.user))
         
-        produtos = Produto.objects.all().values('id', 'nome', 'valor_4_vezes', 'valor_6_vezes', 'valor_8_vezes', 'valor_10_vezes', 'valor_12_vezes', 'valor_14_vezes', 'entrada_cliente')
+        produtos = Produto.objects.all().values('id', 'nome', 'valor_4_vezes', 'valor_6_vezes', 'valor_8_vezes', 'valor_10_vezes', 'valor_12_vezes', 'valor_14_vezes', 'valor_16_vezes', 'entrada_cliente')
         produtos_list = [
             {
                 'id': p['id'],
@@ -513,6 +513,7 @@ class ClienteCreateView(PermissionRequiredMixin, CreateView):
                 'valor10': float(p['valor_10_vezes']),
                 'valor12': float(p['valor_12_vezes']),
                 'valor14': float(p['valor_14_vezes']),
+                'valor16': float(p['valor_16_vezes']),
                 'entrada': float(p['entrada_cliente']),
             }
             for p in produtos
@@ -768,7 +769,7 @@ class ClienteUpdateImeiTelefoneView(PermissionRequiredMixin, UpdateView):
         context['analise_credito'] = cliente.analise_credito
         context['status_app_choices'] = AnaliseCreditoCliente.STATUS_APP_CHOICES
         
-        produtos = Produto.objects.all().values('id', 'nome', 'valor_4_vezes', 'valor_6_vezes', 'valor_8_vezes', 'valor_10_vezes', 'valor_12_vezes', 'valor_14_vezes', 'entrada_cliente')
+        produtos = Produto.objects.all().values('id', 'nome', 'valor_4_vezes', 'valor_6_vezes', 'valor_8_vezes', 'valor_10_vezes', 'valor_12_vezes', 'valor_14_vezes', 'valor_16_vezes', 'entrada_cliente')
         produtos_list = [
             {
                 'id': p['id'],
@@ -779,6 +780,7 @@ class ClienteUpdateImeiTelefoneView(PermissionRequiredMixin, UpdateView):
                 'valor10': float(p['valor_10_vezes']),
                 'valor12': float(p['valor_12_vezes']),
                 'valor14': float(p['valor_14_vezes']),
+                'valor16': float(p['valor_16_vezes']),
                 'entrada': float(p['entrada_cliente']),
             }
             for p in produtos
@@ -903,7 +905,7 @@ class ClienteStatusAppUpdateView(PermissionRequiredMixin, View):
 
 def calcular_data_primeira_parcela(data_pagamento_str):
     """
-    Retorna a data com o dia escolhido (05 ou 15) mais distante possível,
+    Retorna a data com o dia escolhido (01 ou 16) mais distante possível,
     mas ainda dentro de até 40 dias após a data da compra.
     """
     hoje = timezone.now().date()
@@ -1093,6 +1095,10 @@ def gerar_venda(request, cliente_id):
         valor_credfacil = produto.valor_14_vezes
         parcelas = 14
         porcentagem_desconto = credfacil.porcentagem_desconto_14
+    elif analise.numero_parcelas == '16':
+        valor_credfacil = produto.valor_16_vezes
+        parcelas = 16
+        porcentagem_desconto = credfacil.porcentagem_desconto_16
 
     # Cria ProdutoVenda
     ProdutoVenda.objects.create(
@@ -2980,6 +2986,9 @@ class GraficoTemplateView(TemplateView):
         parcelas_por_venda = defaultdict(list)
 
         for parcela in parcelas_qs:
+            # Se o pagamento está em devolução, só considera parcelas já pagas
+            if parcela.pagamento.devolucao and not parcela.pago:
+                continue
             parcelas_por_venda[parcela.pagamento.venda_id].append(parcela)
 
         total_vendas = vendas.count()
@@ -3022,11 +3031,12 @@ class GraficoTemplateView(TemplateView):
             valores_por_loja[loja_nome]['total_vencidas'] += valor_vencidas
             valores_por_loja[loja_nome]['total_pagas'] += valor_pagas
 
-            # Calcular desativados por loja
+            # Calcular desativados por loja (excluindo devoluções)
             parcelas_desativadas_loja = Parcela.objects.filter(
                 pagamento__venda=venda,
                 pagamento__tipo_pagamento__nome='CREDFACIL',
                 pagamento__desativado=True,
+                pagamento__devolucao=False,
                 pago=False
             )
 
@@ -3484,4 +3494,66 @@ def toggle_mais_prazo_pagamento(request, pk):
     pagamento = get_object_or_404(Pagamento, pk=pk)
     pagamento.mais_prazo = not pagamento.mais_prazo
     pagamento.save(update_fields=['mais_prazo'])
+    return redirect(reverse('financeiro:contas_a_receber_update', args=[pagamento.pk]))
+
+@login_required
+@permission_required('vendas.change_pagamento', raise_exception=True)
+def toggle_devolucao_pagamento(request, pk):
+    pagamento = get_object_or_404(Pagamento, pk=pk)
+    pagamento.devolucao = not pagamento.devolucao
+    pagamento.save(update_fields=['devolucao'])
+    return redirect(reverse('financeiro:contas_a_receber_update', args=[pagamento.pk]))
+
+@login_required
+@permission_required('vendas.change_pagamento', raise_exception=True)
+def toggle_bo_pagamento(request, pk):
+    pagamento = get_object_or_404(Pagamento, pk=pk)
+    pagamento.bo = not pagamento.bo
+    pagamento.save(update_fields=['bo'])
+    return redirect(reverse('financeiro:contas_a_receber_update', args=[pagamento.pk]))
+
+@login_required
+@permission_required('vendas.change_pagamento', raise_exception=True)
+def toggle_flag_atrasado_pagamento(request, pk):
+    pagamento = get_object_or_404(Pagamento, pk=pk)
+    pagamento.flag_atrasado = not pagamento.flag_atrasado
+    pagamento.save(update_fields=['flag_atrasado'])
+    return redirect(reverse('financeiro:contas_a_receber_update', args=[pagamento.pk]))
+
+@login_required
+@permission_required('vendas.change_pagamento', raise_exception=True)
+def toggle_sem_conexao_pagamento(request, pk):
+    pagamento = get_object_or_404(Pagamento, pk=pk)
+    pagamento.sem_conexao = not pagamento.sem_conexao
+    pagamento.save(update_fields=['sem_conexao'])
+    return redirect(reverse('financeiro:contas_a_receber_update', args=[pagamento.pk]))
+
+@login_required
+@permission_required('vendas.change_pagamento', raise_exception=True)
+def toggle_roubo_pagamento(request, pk):
+    pagamento = get_object_or_404(Pagamento, pk=pk)
+    pagamento.roubo = not pagamento.roubo
+    pagamento.save(update_fields=['roubo'])
+    return redirect(reverse('financeiro:contas_a_receber_update', args=[pagamento.pk]))
+
+@login_required
+@permission_required('vendas.change_pagamento', raise_exception=True)
+def toggle_lembrete_pagamento(request, pk):
+    pagamento = get_object_or_404(Pagamento, pk=pk)
+    pagamento.lembrete = not pagamento.lembrete
+    pagamento.save(update_fields=['lembrete'])
+    return redirect(reverse('financeiro:contas_a_receber_update', args=[pagamento.pk]))
+
+@login_required
+@permission_required('vendas.change_pagamento', raise_exception=True)
+def toggle_status_pagamento(request, pk, status_id):
+    from vendas.models import StatusPagamento
+    pagamento = get_object_or_404(Pagamento, pk=pk)
+    status = get_object_or_404(StatusPagamento, pk=status_id)
+    
+    if status in pagamento.statuses.all():
+        pagamento.statuses.remove(status)
+    else:
+        pagamento.statuses.add(status)
+    
     return redirect(reverse('financeiro:contas_a_receber_update', args=[pagamento.pk]))

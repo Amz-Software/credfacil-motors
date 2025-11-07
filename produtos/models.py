@@ -6,6 +6,7 @@ class Produto(Base):
     nome = models.CharField(max_length=100)
     valor_repasse_logista = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     entrada_cliente = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    valor_16_vezes = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     valor_14_vezes = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     valor_12_vezes = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     valor_10_vezes = models.DecimalField(max_digits=10, decimal_places=2, default=0)

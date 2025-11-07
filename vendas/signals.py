@@ -40,7 +40,7 @@ def criar_ou_atualizar_parcelas(sender, instance, created, **kwargs):
             )
 
 def calcular_data_vencimento(data_primeira_parcela, numero_parcela):
-    # Cada parcela é no mesmo dia do mês (5 ou 15), nos meses seguintes
+    # Cada parcela é no mesmo dia do mês (1 ou 16), nos meses seguintes
     # Se o dia não existir no mês, usa o último dia do mês
     from datetime import date
     import calendar

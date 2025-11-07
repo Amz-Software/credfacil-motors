@@ -241,3 +241,64 @@ class RepasseForm(forms.ModelForm):
             'status': 'Status',
             'observacao': 'Observação',
         }
+
+
+class PagamentoStatusForm(forms.ModelForm):
+    from vendas.models import StatusPagamento
+    statuses = forms.ModelMultipleChoiceField(
+        queryset=StatusPagamento.objects.all(),
+        required=False,
+        widget=Select2MultipleWidget(attrs={'class': 'form-control'})
+    )
+    
+    class Meta:
+        model = Pagamento
+        fields = ['statuses']
+
+
+class RelatorioContasAReceberAvancadoForm(forms.Form):
+    data_inicial = forms.DateField(
+        label='Data Inicial',
+        required=False,
+        widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date'})
+    )
+    data_final = forms.DateField(
+        label='Data Final',
+        required=False,
+        widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date'})
+    )
+    lojas = forms.ModelMultipleChoiceField(
+        queryset=Loja.objects.all(),
+        label='Lojas',
+        required=False,
+        widget=Select2MultipleWidget(attrs={'class': 'form-control'})
+    )
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        from vendas.models import StatusPagamento
+        
+        self.fields['status_pagamento'] = forms.ModelMultipleChoiceField(
+            queryset=StatusPagamento.objects.all(),
+            label='Status de Pagamento',
+            required=False,
+            widget=Select2MultipleWidget(attrs={'class': 'form-control'})
+        )
+        
+        self.fields['situacoes'] = forms.MultipleChoiceField(
+            choices=[
+                ('bo', 'BO'),
+                ('flag_atrasado', 'Atrasado'),
+                ('sem_conexao', 'Sem conexão'),
+                ('roubo', 'Roubo'),
+                ('bloqueado', 'Bloquear Aparelho'),
+                ('desativado', 'Desativar Cliente'),
+                ('devolucao', 'Devolução'),
+                ('sem_contato', 'Sem contato'),
+                ('mais_prazo', 'Mais prazo'),
+                ('lembrete', 'Lembrete'),
+            ],
+            label='Situações',
+            required=False,
+            widget=Select2MultipleWidget(attrs={'class': 'form-control'})
+        )

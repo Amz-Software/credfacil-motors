@@ -224,6 +224,7 @@ Clientes
           <th scope="col">Nome</th>
           <th scope="col">Parcela</th>
           <th scope="col">Solicitado Em</th>
+          <th scope="col">Tempo</th>
           <th scope="col">Aprovador por</th>
           {% if user|has_perm:"vendas.change_status_analise" %}
           <th scope="col">Loja</th>
@@ -254,6 +255,30 @@ Clientes
             <td>{{ cliente.nome }}</td>
             <td>{{ cliente.analise_credito.numero_parcelas }}x</td>
             <td>{{ cliente.analise_credito.data_analise|date:"d/m/Y H:m" }}</td>
+            <td>
+              {% if cliente.analise_credito.status == 'EA' %}
+                <span class="cronometro" 
+                      data-inicio="{{ cliente.analise_credito.data_analise.isoformat }}"
+                      data-status="EA">
+                  <i class="bx bx-time-five me-1"></i>
+                  <span class="tempo-text">Calculando...</span>
+                </span>
+              {% elif cliente.analise_credito.status == 'A' and cliente.analise_credito.data_aprovacao %}
+                <span class="badge bg-label-success">
+                  {{ cliente.analise_credito.data_aprovacao|timesince:cliente.analise_credito.data_analise }}
+                </span>
+              {% elif cliente.analise_credito.status == 'R' and cliente.analise_credito.data_reprovacao %}
+                <span class="badge bg-label-danger">
+                  {{ cliente.analise_credito.data_reprovacao|timesince:cliente.analise_credito.data_analise }}
+                </span>
+              {% elif cliente.analise_credito.status == 'C' and cliente.analise_credito.data_cancelamento %}
+                <span class="badge bg-label-secondary">
+                  {{ cliente.analise_credito.data_cancelamento|timesince:cliente.analise_credito.data_analise }}
+                </span>
+              {% else %}
+                <span class="badge bg-label-secondary">-</span>
+              {% endif %}
+            </td>
             <td>
                 {{ cliente.analise_credito.aprovado_por|default:"Não Aprovado" }}
             </td>
@@ -471,6 +496,46 @@ Clientes
 {% block extra_scripts %}
   {{ status_choices|json_script:"statusChoices" }}
   <script>
+    // Cronômetro em tempo real
+    function atualizarCronometros() {
+      const cronometros = document.querySelectorAll('.cronometro');
+      const agora = new Date();
+      
+      cronometros.forEach(cronometro => {
+        const dataInicio = new Date(cronometro.dataset.inicio);
+        const status = cronometro.dataset.status;
+        
+        if (status === 'EA') {
+          const diferencaMs = agora - dataInicio;
+          const segundos = Math.floor(diferencaMs / 1000);
+          const minutos = Math.floor(segundos / 60);
+          const horas = Math.floor(minutos / 60);
+          const dias = Math.floor(horas / 24);
+          
+          let tempoTexto = '';
+          if (dias > 0) {
+            tempoTexto = `${dias}d ${horas % 24}h ${minutos % 60}m`;
+          } else if (horas > 0) {
+            tempoTexto = `${horas}h ${minutos % 60}m`;
+          } else if (minutos > 0) {
+            tempoTexto = `${minutos}m ${segundos % 60}s`;
+          } else {
+            tempoTexto = `${segundos}s`;
+          }
+          
+          const tempoEl = cronometro.querySelector('.tempo-text');
+          if (tempoEl) {
+            tempoEl.textContent = tempoTexto;
+          }
+        }
+      });
+    }
+    
+    // Atualiza a cada segundo
+    setInterval(atualizarCronometros, 1000);
+    // Atualiza imediatamente ao carregar
+    document.addEventListener('DOMContentLoaded', atualizarCronometros);
+    
     const statusChoices = JSON.parse(
       document.getElementById('statusChoices').textContent
     );

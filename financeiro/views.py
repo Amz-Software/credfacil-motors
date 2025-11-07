@@ -458,6 +458,7 @@ class ContasAReceberDetailView(PermissionRequiredMixin, DetailView):
     permission_required = 'vendas.view_pagamento'
 
     def get_context_data(self, **kwargs):
+        from vendas.models import StatusPagamento
         context = super().get_context_data(**kwargs)
         conta_a_receber = self.get_object()
         context['parcela_form'] = ParcelaInlineFormSet(
@@ -470,6 +471,7 @@ class ContasAReceberDetailView(PermissionRequiredMixin, DetailView):
             c.form = ContatoForm(instance=c)
         context['contacts'] = contatos
         context['contato_form'] = ContatoForm()
+        context['all_status'] = StatusPagamento.objects.all()
         return context
 
 
@@ -778,3 +780,85 @@ class ContatoUpdateView(PermissionRequiredMixin, UpdateView):
     def get_success_url(self):
         # volta à tela de pagamento
         return reverse('financeiro:contas_a_receber_update', args=[self.kwargs['pagamento_pk']])
+
+
+class RelatorioContasAReceberAvancadoView(BaseView, PermissionRequiredMixin, TemplateView):
+    template_name = 'contas_a_receber/relatorio_avancado.html'
+    permission_required = 'vendas.can_genarate_report_payments'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        from financeiro.forms import RelatorioContasAReceberAvancadoForm
+        context['form'] = RelatorioContasAReceberAvancadoForm()
+        return context
+
+
+class FolhaRelatorioContasAReceberAvancadoView(BaseView, PermissionRequiredMixin, TemplateView):
+    template_name = 'contas_a_receber/folha_relatorio_avancado.html'
+    permission_required = 'vendas.can_genarate_report_payments'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        data_inicio = self.request.GET.get('data_inicial')
+        data_fim = self.request.GET.get('data_final')
+        lojas = self.request.GET.getlist('lojas')
+        status_pagamento_ids = self.request.GET.getlist('status_pagamento')
+        situacoes = self.request.GET.getlist('situacoes')
+        
+        contas_a_receber = []
+        
+        if lojas:
+            lojas_qs = Loja.objects.filter(id__in=lojas)
+            
+            for loja in lojas_qs:
+                pagamentos_qs = Pagamento.objects.filter(
+                    venda__loja=loja,
+                    venda__is_deleted=False
+                ).exclude(tipo_pagamento__nome__iexact='ENTRADA')
+                
+                if data_inicio:
+                    data_inicio_dt = datetime.strptime(data_inicio, "%Y-%m-%d").date()
+                    pagamentos_qs = pagamentos_qs.filter(venda__data_venda__date__gte=data_inicio_dt)
+                
+                if data_fim:
+                    data_fim_dt = datetime.strptime(data_fim, "%Y-%m-%d").date()
+                    data_fim_dt_plus = data_fim_dt + timedelta(days=1)
+                    pagamentos_qs = pagamentos_qs.filter(venda__data_venda__date__lt=data_fim_dt_plus)
+                
+                if status_pagamento_ids:
+                    pagamentos_qs = pagamentos_qs.filter(statuses__id__in=status_pagamento_ids).distinct()
+                
+                if situacoes:
+                    q_filters = Q()
+                    for situacao in situacoes:
+                        q_filters |= Q(**{situacao: True})
+                    pagamentos_qs = pagamentos_qs.filter(q_filters)
+                
+                for pagamento in pagamentos_qs:
+                    proximo_vencimento = pagamento.proximo_vencimento()
+                    contas_a_receber.append({
+                        'loja': loja,
+                        'data_venda': pagamento.venda.data_venda,
+                        'cliente': pagamento.venda.cliente,
+                        'lembrete': pagamento.lembrete,
+                        'telefone': pagamento.venda.cliente.telefone,
+                        'renavam': pagamento.venda.itens_venda.first().renavam if pagamento.venda.itens_venda.exists() else '',
+                        'proximo_vencimento': proximo_vencimento,
+                        'situacoes': {
+                            'bo': pagamento.bo,
+                            'flag_atrasado': pagamento.flag_atrasado,
+                            'sem_conexao': pagamento.sem_conexao,
+                            'roubo': pagamento.roubo,
+                            'bloqueado': pagamento.bloqueado,
+                            'desativado': pagamento.desativado,
+                            'devolucao': pagamento.devolucao,
+                            'sem_contato': pagamento.sem_contato,
+                            'mais_prazo': pagamento.mais_prazo,
+                            'lembrete': pagamento.lembrete,
+                        },
+                        'statuses': pagamento.statuses.all(),
+                    })
+        
+        context['contas_a_receber'] = contas_a_receber
+        return context

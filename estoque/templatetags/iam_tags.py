@@ -23,3 +23,10 @@ def total_vendas(produto, loja_id):
 @register.filter
 def get_item(dict_, key):
     return dict_.get(key, 0)
+
+@register.filter
+def dividir(value, arg):
+    try:
+        return float(value) / float(arg)
+    except (ValueError, ZeroDivisionError, TypeError):
+        return 0

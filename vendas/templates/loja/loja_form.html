@@ -154,6 +154,17 @@
                         </div>
                         <small class="form-text text-muted">Porcentagem de desconto para parcelamento em 14 vezes</small>
                       </div>
+                      
+                      <div class="col-md-6 col-lg-4 mb-3">
+                        <label for="id_porcentagem_desconto_16" class="form-label fw-bold">
+                          <span class="text-danger">16x Parcelas</span> <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group">
+                          {{ form.porcentagem_desconto_16 }}
+                          <span class="input-group-text">%</span>
+                        </div>
+                        <small class="form-text text-muted">Porcentagem de desconto para parcelamento em 16 vezes</small>
+                      </div>
                     </div>
                     
                     <!-- Resumo das Porcentagens -->
@@ -210,6 +221,14 @@
                                 <div class="card-body p-2">
                                   <small class="text-muted">14x</small><br>
                                   <span class="fw-bold text-dark" id="resumo-14x">25%</span>
+                                </div>
+                              </div>
+                            </div>
+                            <div class="col-md-2 text-center">
+                              <div class="card border-danger h-100">
+                                <div class="card-body p-2">
+                                  <small class="text-muted">16x</small><br>
+                                  <span class="fw-bold text-danger" id="resumo-16x">25%</span>
                                 </div>
                               </div>
                             </div>
@@ -285,7 +304,7 @@
     
     // Função para atualizar resumo das porcentagens
     function updatePorcentagensResumo() {
-        const porcentagens = ['4', '6', '8', '10', '12', '14'];
+        const porcentagens = ['4', '6', '8', '10', '12', '14', '16'];
         porcentagens.forEach(parc => {
             const campo = document.getElementById(`id_porcentagem_desconto_${parc}`);
             const resumo = document.getElementById(`resumo-${parc}x`);
@@ -298,7 +317,7 @@
     
     // Adicionar event listeners para os campos de porcentagem
     document.addEventListener('DOMContentLoaded', function() {
-        const porcentagens = ['4', '6', '8', '10', '12', '14'];
+        const porcentagens = ['4', '6', '8', '10', '12', '14', '16'];
         porcentagens.forEach(parc => {
             const campo = document.getElementById(`id_porcentagem_desconto_${parc}`);
             if (campo) {

@@ -1086,6 +1086,7 @@ class LojaForm(forms.ModelForm):
             'porcentagem_desconto_10': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0', 'max': '100'}),
             'porcentagem_desconto_12': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0', 'max': '100'}),
             'porcentagem_desconto_14': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0', 'max': '100'}),
+            'porcentagem_desconto_16': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0', 'max': '100'}),
         }
         
         labels = {
@@ -1095,6 +1096,7 @@ class LojaForm(forms.ModelForm):
             'porcentagem_desconto_10': 'Porcentagem de Desconto 10x',
             'porcentagem_desconto_12': 'Porcentagem de Desconto 12x',
             'porcentagem_desconto_14': 'Porcentagem de Desconto 14x',
+            'porcentagem_desconto_16': 'Porcentagem de Desconto 16x',
         }        
 
     def __init__(self, *args, **kwargs):
@@ -1105,6 +1107,10 @@ class LojaForm(forms.ModelForm):
         self.fields['porcentagem_desconto_4'].required = True
         self.fields['porcentagem_desconto_6'].required = True
         self.fields['porcentagem_desconto_8'].required = True
+        self.fields['porcentagem_desconto_10'].required = True
+        self.fields['porcentagem_desconto_12'].required = True
+        self.fields['porcentagem_desconto_14'].required = True
+        self.fields['porcentagem_desconto_16'].required = True
 
         # Removido o código que tentava acessar um campo 'loja' inexistente
         # O campo user_loja é usado apenas para contexto, não para definir campos do formulário
@@ -1117,6 +1123,9 @@ class LojaForm(forms.ModelForm):
             
         if self.instance and self.instance.porcentagem_desconto_14 is not None:
             self.initial['porcentagem_desconto_14'] = str(self.instance.porcentagem_desconto_14).replace(',', '.')
+            
+        if self.instance and self.instance.porcentagem_desconto_16 is not None:
+            self.initial['porcentagem_desconto_16'] = str(self.instance.porcentagem_desconto_16).replace(',', '.')
 
 
     def save(self, commit=True):

@@ -553,24 +553,29 @@ class ClienteCreateView(PermissionRequiredMixin, CreateView):
             comprovantes = form_comprovantes.save()
             contato_adicional = form_adicional.save()
             informacao = form_informacao.save()
-            loja_id = request.session.get('loja_id')
+            loja_id = request.session.get('loja_id') or getattr(request.user, 'loja_id', None)
 
-            # Atribui os comprovantes ao form_cliente antes de salvar
-            cliente = form_cliente.save(commit=False)
-            cliente.criado_por = request.user
-            cliente.modificado_por = request.user
-            cliente.loja = Loja.objects.get(id=loja_id)
-            
-            cliente.contato_adicional = contato_adicional
-            cliente.informacao_pessoal = informacao
-            cliente.comprovantes = comprovantes
-            cliente.save()
+            if not loja_id:
+                messages.error(request, "❌ Não foi possível identificar a loja ativa. Selecione uma loja e tente novamente.")
+                return self.form_invalid(form_cliente)
 
             try:
                 loja = Loja.objects.get(id=loja_id)
             except Loja.DoesNotExist:
                 print(f"❌ Loja com ID {loja_id} não encontrada")
+                messages.error(request, "❌ Loja selecionada não existe.")
                 return self.form_invalid(form_cliente)
+
+            # Atribui os comprovantes ao form_cliente antes de salvar
+            cliente = form_cliente.save(commit=False)
+            cliente.criado_por = request.user
+            cliente.modificado_por = request.user
+            cliente.loja = loja
+            
+            cliente.contato_adicional = contato_adicional
+            cliente.informacao_pessoal = informacao
+            cliente.comprovantes = comprovantes
+            cliente.save()
 
             analise = form_analise_credito.save(commit=False)
             analise.cliente = cliente

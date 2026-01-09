@@ -2337,6 +2337,7 @@ class FolhaRelatorioSolicitacoesView(PermissionRequiredMixin, TemplateView):
         parcelas        = request.GET.get('parcelas')
         analise_serasa  = request.GET.get('analise_serasa')
         vr              = request.GET.get('venda_realizada', '').lower()
+        analise_online  = request.GET.get('analise_online')
 
         filtros = {}
         user = request.user
@@ -2358,6 +2359,9 @@ class FolhaRelatorioSolicitacoesView(PermissionRequiredMixin, TemplateView):
             filtros['analise_credito__venda__isnull'] = False
         elif vr in ('false', '0'):
             filtros['analise_credito__venda__isnull'] = True
+            
+        if analise_online in ('true', 'false', 'true', 'false'):
+            filtros['analise_credito__analise_online'] = analise_online == 'true'
 
         # datas
         if data_inicial and data_final:
@@ -2471,6 +2475,7 @@ class FolhaRelatorioVendasView(PermissionRequiredMixin, TemplateView):
         analise_serasa = request.GET.getlist('analise_serasa')
         parcelas = request.GET.getlist('parcelas')
         loja_ids = request.GET.getlist('lojas')
+        analise_online = request.GET.get('analise_online')
 
         filtros = {}
 
@@ -2515,6 +2520,9 @@ class FolhaRelatorioVendasView(PermissionRequiredMixin, TemplateView):
                 self.loja = Loja.objects.filter(pk=loja_id).first()
             else:
                 self.loja = None
+                
+        if analise_online in ('true', 'false', 'true', 'false'):
+            filtros['analises_credito_venda__analise_online'] = analise_online == 'true'
 
         # faz a query
         self.vendas = Venda.objects.filter(**filtros).distinct()

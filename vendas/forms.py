@@ -1200,6 +1200,17 @@ class RelatorioVendasForm(forms.Form):
         required=False,
         widget=Select2MultipleWidget(attrs={'class': 'form-control'})
     )
+    analise_online = forms.TypedChoiceField(
+        label='Análise Online',
+        required=False,
+        choices=[
+            ('', '---------'),
+            ('True', 'Sim'),
+            ('False', 'Não'),
+        ],
+        coerce=lambda v: None if v == '' else (v == 'True'),
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
     def __init__(self, *args, **kwargs):
         loja = kwargs.pop('loja', None)
         user = kwargs.pop('user', None)
@@ -1286,6 +1297,17 @@ class RelatorioSolicitacoesForm(forms.Form):
     )
     venda_realizada = forms.TypedChoiceField(
         label='Venda Realizada',
+        required=False,
+        choices=[
+            ('', '---------'),
+            ('True', 'Sim'),
+            ('False', 'Não'),
+        ],
+        coerce=lambda v: None if v == '' else (v == 'True'),
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    analise_online = forms.TypedChoiceField(
+        label='Análise Online',
         required=False,
         choices=[
             ('', '---------'),

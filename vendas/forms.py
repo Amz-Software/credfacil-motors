@@ -412,9 +412,16 @@ class AnaliseCreditoClienteForm(forms.ModelForm):
         widget=Select2Widget(attrs={'class': 'form-control'}),
         label='Produto'
     )
+    
+    analise_online = forms.BooleanField(
+        required=False,
+        label='Análise Online',
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'})
+    )
+    
     class Meta:
         model = AnaliseCreditoCliente
-        fields = ['produto','data_pagamento','numero_parcelas', 'observacao']
+        fields = ['produto','data_pagamento','numero_parcelas', 'observacao', 'analise_online']
         widgets = {
             'data_pagamento': forms.Select(attrs={'class': 'form-control'}),
             'numero_parcelas': forms.Select(attrs={'class': 'form-control'}),
@@ -429,6 +436,7 @@ class AnaliseCreditoClienteForm(forms.ModelForm):
         self.fields['observacao'].required = True
         self.fields['observacao'].widget.attrs['required'] = 'required'
         
+        
         if self.instance and self.instance.pk:
             # Verifica se o usuário é analista
             is_analista = user and user.groups.filter(name='ANALISTA').exists()
@@ -441,6 +449,7 @@ class AnaliseCreditoClienteForm(forms.ModelForm):
                 self.fields['produto'].disabled = True
                 self.fields['numero_parcelas'].disabled = True
                 self.fields['data_pagamento'].disabled = True
+                self.fields['analise_online'].disabled = True
             
             # Se a venda foi gerada, apenas usuários com permissão específica podem editar
             if venda_gerada:
@@ -449,6 +458,7 @@ class AnaliseCreditoClienteForm(forms.ModelForm):
                     self.fields['numero_parcelas'].disabled = True
                     self.fields['data_pagamento'].disabled = True
                     self.fields['observacao'].disabled = True
+                    self.fields['analise_online'].disabled = True
             # Se a venda não foi gerada, analistas podem editar tudo
             elif not venda_gerada and is_analista:
                 # Analistas podem editar tudo antes da venda ser gerada
@@ -456,6 +466,7 @@ class AnaliseCreditoClienteForm(forms.ModelForm):
                 self.fields['numero_parcelas'].disabled = False
                 self.fields['data_pagamento'].disabled = False
                 self.fields['observacao'].disabled = False
+                self.fields['analise_online'].disabled = False
 
 
 class AnaliseCreditoClienteRenavamForm(forms.ModelForm):
@@ -1189,6 +1200,17 @@ class RelatorioVendasForm(forms.Form):
         required=False,
         widget=Select2MultipleWidget(attrs={'class': 'form-control'})
     )
+    analise_online = forms.TypedChoiceField(
+        label='Análise Online',
+        required=False,
+        choices=[
+            ('', '---------'),
+            ('True', 'Sim'),
+            ('False', 'Não'),
+        ],
+        coerce=lambda v: None if v == '' else (v == 'True'),
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
     def __init__(self, *args, **kwargs):
         loja = kwargs.pop('loja', None)
         user = kwargs.pop('user', None)
@@ -1275,6 +1297,17 @@ class RelatorioSolicitacoesForm(forms.Form):
     )
     venda_realizada = forms.TypedChoiceField(
         label='Venda Realizada',
+        required=False,
+        choices=[
+            ('', '---------'),
+            ('True', 'Sim'),
+            ('False', 'Não'),
+        ],
+        coerce=lambda v: None if v == '' else (v == 'True'),
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    analise_online = forms.TypedChoiceField(
+        label='Análise Online',
         required=False,
         choices=[
             ('', '---------'),

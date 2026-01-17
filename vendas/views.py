@@ -72,11 +72,20 @@ class BaseView(View):
 
 class IndexView(LoginRequiredMixin, TemplateView):
     template_name = 'index.html'
-
+    
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-
-        loja = Loja.objects.get(id=self.request.session.get('loja_id'))
+        
+        loja_id = self.request.session.get('loja_id')
+        
+        if loja_id:
+            loja = Loja.objects.filter(id=loja_id).first()
+        else:
+            loja = Loja.objects.first()
+            
+        if not loja:
+            return HttpResponse("Nenhuma loja encontrada. Por favor, contate o administrador.")
+        
         caixa_diario_loja = Caixa.objects.filter(loja=loja).order_by('-data_abertura').first()
         caixa_total = Caixa.objects.all().filter(loja=loja)
 

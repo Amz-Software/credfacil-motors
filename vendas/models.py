@@ -3,7 +3,7 @@ from django.utils import timezone
 from datetime import date, timedelta
 from decimal import Decimal
 from django.utils.functional import cached_property
-from django.db.models import Count, Q, Case, When, Value, IntegerField, BooleanField, F, Min
+from django.db.models import Count, Q, Case, When, Value, IntegerField, BooleanField, F, Min, Sum, Max, DecimalField
 from datetime import date, timedelta
 from django.db import models
 from django.utils import timezone
@@ -668,16 +668,38 @@ class StatusPagamento(Base):
 
 class PagamentoQuerySet(models.QuerySet):
     def with_parcelas_info(self):
+        hoje = timezone.now().date()
         # Ignora pagamentos do tipo "entrada"
         return self.exclude(tipo_pagamento__nome__iexact='ENTRADA').annotate(
+            
             total_parcelas=Count(
                 'parcelas_pagamento',
-                filter=Q(devolucao=False) | Q(parcelas_pagamento__pago=True)
+                filter=Q(parcelas_pagamento__pago=True)
             ),
+            
             parcelas_pagas=Count(
                 'parcelas_pagamento',
                 filter=Q(parcelas_pagamento__pago=True)
             ),
+            
+            parcelas_atrasadas=Count(
+                'parcelas_pagamento',
+                filter=Q(
+                    devolucao=False,
+                    parcelas_pagamento__pago=False,
+                    parcelas_pagamento__data_vencimento__lt=hoje
+                )
+            ),
+            
+            parcelas_pendentes=Count(
+                'parcelas_pagamento',
+                filter=Q(
+                    parcelas_pagamento__pago=False,
+                    parcelas_pagamento__data_vencimento__gte=hoje,
+                    devolucao=False
+                )
+            ),
+            
             parcelas_pagas_no_prazo=Count(
                 'parcelas_pagamento',
                 filter=Q(
@@ -685,50 +707,95 @@ class PagamentoQuerySet(models.QuerySet):
                     parcelas_pagamento__data_pagamento__lte=F('parcelas_pagamento__data_vencimento')
                 )
             ),
-            parcelas_atrasadas=Count(
-                'parcelas_pagamento',
-                filter=Q(
-                    devolucao=False,
-                    parcelas_pagamento__pago=False,
-                    parcelas_pagamento__data_vencimento__lt=timezone.now()
+            
+            valor_atrasado=Sum(
+                Case(
+                    When(
+                        parcelas_pagamento__pago=False,
+                        parcelas_pagamento__data_vencimento__lt=hoje,
+                        then=(
+                            F('parcelas_pagamento__valor')
+                            - F('parcelas_pagamento__desconto')
+                            - F('parcelas_pagamento__valor_pago')
+                        )
+                    ),
+                    default=Value(0),
+                    output_field=DecimalField()
                 )
             ),
-            next_vencimento=Min(
+            
+            valor_a_vencer=Sum(
+                Case(
+                    When(
+                        parcelas_pagamento__pago=False,
+                        parcelas_pagamento__data_vencimento__gte=hoje,
+                        then=(
+                            F('parcelas_pagamento__valor')
+                            - F('parcelas_pagamento__desconto')
+                            - F('parcelas_pagamento__valor_pago')
+                        )
+                    ),
+                    default=Value(0),
+                    output_field=DecimalField()
+                )
+            ),
+            
+            valor_quitado=Sum(
+                'parcelas_pagamento__valor',
+                filter=Q(parcelas_pagamento__pago=True)
+            ),
+            
+            ultimo_pagamento=Max(
+                'parcelas_pagamento__data_pagamento',
+                filter=Q(parcelas_pagamento__pago=True)
+            ),
+            
+            proximo_vencimento=Min(
                 'parcelas_pagamento__data_vencimento',
-                filter=Q(devolucao=False, parcelas_pagamento__pago=False)
+                filter=Q(parcelas_pagamento__pago=False, devolucao=False)
             )
         )
 
     def with_status_flags(self):
         return self.with_parcelas_info().annotate(
+            
             todas_parcelas_pagas=Case(
                 When(devolucao=True, then=Value(True)),
                 When(parcelas_pagas=F('total_parcelas'), then=Value(True)),
                 default=Value(False),
                 output_field=BooleanField()
             ),
-            pago_dentro_prazo=Case(
-                When(devolucao=True, then=Value(False)),
-                When(parcelas_pagas_no_prazo=F('total_parcelas'), then=Value(True)),
-                default=Value(False),
-                output_field=BooleanField()
-            ),
+            
             com_parcela_atrasada=Case(
                 When(devolucao=True, then=Value(False)),
                 When(parcelas_atrasadas__gt=0, then=Value(True)),
                 default=Value(False),
                 output_field=BooleanField()
             ),
+            
             com_pagamento_pendente=Case(
                 When(devolucao=True, then=Value(False)),
+                When(parcelas_pendentes__gt=0, then=Value(True)),
+                default=Value(False),
+                output_field=BooleanField()
+            ),
+            
+            pago_dentro_prazo=Case(
+                When(devolucao=True, then=Value(False)),
                 When(
-                    Q(parcelas_pagas__lt=F('total_parcelas')) &
-                    Q(parcelas_atrasadas=0),
+                    parcelas_pagas=F('total_parcelas'),
+                    parcelas_atrasadas=0,
                     then=Value(True)
                 ),
                 default=Value(False),
                 output_field=BooleanField()
             ),
+            
+            flag_bloqueado=F('bloqueado'),
+            flag_desativado=F('desativado'),
+            flag_roubo=F('roubo'),
+            flag_sem_conexao=F('sem_conexao'),
+            flag_devolucao=F('devolucao'),
         )
     
     

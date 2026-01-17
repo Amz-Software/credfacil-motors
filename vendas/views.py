@@ -412,22 +412,29 @@ class ClienteListView(BaseView, PermissionRequiredMixin, ListView):
             
         if not self.request.user.has_perm('vendas.view_all_analise_credito'):
             loja_id = self.request.session.get('loja_id')
-            qs = qs.filter(loja_id=loja_id)
+            if loja_id:
+                qs = qs.filter(loja_id=loja_id)
+            else:
+                qs = qs.none()
         
         return qs.order_by('-id')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        loja_id = self.request.session.get('loja_id')
         
-        context['loja'] = Loja.objects.get(id=loja_id)
+        loja_id = self.request.session.get('loja_id')
+        loja = Loja.objects.filter(id=loja_id).first() if loja_id else Loja.objects.first()
+            
+        if not loja:
+            return HttpResponse("Nenhuma loja encontrada. Por favor, contate o administrador.")
+        
+        context['loja'] = loja
         context['lojas'] = Loja.objects.all()
 
         if self.request.user.has_perm('vendas.view_all_analise_credito'):
             analises = AnaliseCreditoCliente.objects.all()
         else:
-            loja_id = self.request.session.get('loja_id')
-            analises = AnaliseCreditoCliente.objects.filter(loja_id=loja_id)
+            analises = AnaliseCreditoCliente.objects.filter(loja=loja)
 
         counts = analises.values('status').annotate(total=Count('id'))
         kpis = {item['status']: item['total'] for item in counts}

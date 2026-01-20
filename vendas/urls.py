@@ -41,10 +41,12 @@ urlpatterns = [
     #venda
     path('vendas/', VendaListView.as_view(), name='venda_list'),
     path('vendas/editar/<int:pk>/', VendaUpdateView.as_view(), name='venda_update'),
+    path('vendas/editar-especial/<int:pk>/', VendaEdicaoEspecialView.as_view(), name='venda_edicao_especial'),
     path('vendas/nova/', VendaCreateView.as_view(), name='venda_create'),
     path('vendas/detail/<int:pk>/', VendaDetailView.as_view(), name='venda_detail'),
     path('vendas/cancelar/<int:id>/', cancelar_venda , name='venda_cancel'),
     path('vendas/trocar/<int:pk>/', VendaTrocarProdutoView.as_view(), name='venda_trocar'),
+    path('vendas/documentos/<int:pk>/', VendaDocumentosUpdateView.as_view(), name='venda_documentos'),
     
     path('vendas/gerar-venda/<int:cliente_id>/', gerar_venda, name='gerar_venda'),
     

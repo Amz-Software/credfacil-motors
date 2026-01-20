@@ -7,6 +7,7 @@ from .models import *
 from django_select2.forms import Select2Widget, ModelSelect2Widget, Select2MultipleWidget
 from django_select2.forms import ModelSelect2MultipleWidget, HeavySelect2Widget
 from collections import OrderedDict
+from datetime import date
 
 
 class ProdutoChoiceField(forms.ModelChoiceField):
@@ -831,6 +832,18 @@ class VendaForm(forms.ModelForm):
         # if user:
         #     self.fields['vendedor'].initial = user
 
+class VendaDocumentosForm(forms.ModelForm):
+    class Meta:
+        model = Venda
+        fields = ['documento_assinado', 'foto_cliente']
+        widgets = {
+            'documento_assinado': forms.FileInput(attrs={'class': 'form-control', 'accept': '.pdf,.doc,.docx,.jpg,.jpeg,.png'}),
+            'foto_cliente': forms.FileInput(attrs={'class': 'form-control', 'accept': '.jpg,.jpeg,.png'}),
+        }
+        labels = {
+            'documento_assinado': 'Documento Assinado',
+            'foto_cliente': 'Foto do Cliente',
+        }
 
 class ProdutoSelectWidget(HeavySelect2Widget):
     data_view = 'vendas:produtos_ajax'
@@ -964,7 +977,60 @@ class ProdutoVendaEditForm(forms.ModelForm):
                 cancelado=False
             )
 
+class VendaEdicaoEspecialForm(forms.ModelForm):
+    class Meta:
+        model = Venda
+        fields = []
 
+class ProdutoVendaEdicaoEspecialForm(forms.ModelForm):
+    produto = ProdutoChoiceField(
+        queryset=Produto.objects.filter(ativo=True),
+        widget=Select2Widget(attrs={'class': 'form-control'}),
+        label="Produto",
+    )
+    imei = forms.CharField(
+        required=False,
+        label='imei',
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+
+    class Meta:
+        model = ProdutoVenda
+        fields = ['produto', 'imei']
+
+    def __init__(self, *args, **kwargs):
+        loja = kwargs.pop('loja', None)
+        super().__init__(*args, **kwargs)
+        if loja:
+            self.fields['produto'].queryset = Produto.objects.filter(ativo=True)
+
+
+class PagamentoEdicaoEspecialForm(forms.ModelForm):
+    PARCELAS_CHOICES = (
+        (4, '4x'),
+        (6, '6x'),
+        (8, '8x'),
+        (10, '10x'),
+    )
+
+    parcelas = forms.ChoiceField(
+        choices=PARCELAS_CHOICES,
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+
+    class Meta:
+        model = Pagamento
+        fields = ['parcelas']
+
+    def clean_parcelas(self):
+        parcelas = self.cleaned_data.get('parcelas')
+        if parcelas in (None, ''):
+            return self.instance.parcelas
+        try:
+            return int(parcelas)
+        except (TypeError, ValueError):
+            return self.instance.parcelas
 
 class PagamentoForm(forms.ModelForm):
     valor_parcela = forms.DecimalField(
@@ -1061,6 +1127,13 @@ ProdutoVendaFormSet = forms.inlineformset_factory(Venda, ProdutoVenda, form=Prod
 
 FormaPagamentoEditFormSet = forms.inlineformset_factory(Venda, Pagamento, form=PagamentoForm, extra=0, can_delete=True)
 ProdutoVendaEditFormSet = forms.inlineformset_factory(Venda, ProdutoVenda, form=ProdutoVendaEditForm, extra=0, can_delete=True)
+
+FormaPagamentoEdicaoEspecialFormSet = forms.inlineformset_factory(
+    Venda, Pagamento, form=PagamentoEdicaoEspecialForm, extra=0, can_delete=False
+)
+ProdutoVendaEdicaoEspecialFormSet = forms.inlineformset_factory(
+    Venda, ProdutoVenda, form=ProdutoVendaEdicaoEspecialForm, extra=0, can_delete=False
+)
 
 
 class UsuarioSelectWidget(ModelSelect2MultipleWidget):

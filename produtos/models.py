@@ -14,6 +14,7 @@ class Produto(Base):
     valor_6_vezes = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     valor_4_vezes = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     tipo = models.ForeignKey('produtos.TipoProduto', on_delete=models.PROTECT, related_name='produtos_tipo', null=True, blank=True)
+    ativo = models.BooleanField(default=True)
     
     def gerar_codigo(self):
         last_product = Produto.objects.all().order_by('codigo').last()

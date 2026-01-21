@@ -3,22 +3,24 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    # Em produção, evite bind-mount do projeto (.-/app). Mantive apenas volumes de persistência.
     volumes:
-      - .:/app
-      - ./static:/app/static
-      - ./mediafiles:/app/mediafiles
+      - staticfiles:/app/staticfiles
+      - mediafiles:/app/mediafiles
     command: >
       sh -c "python3 manage.py migrate &&
              python3 manage.py collectstatic --noinput &&
-             daphne -b 0.0.0.0 -p 8020 core.asgi:application"
+             daphne -b 0.0.0.0 -p 8020 --proxy-headers -t 300 --websocket_timeout 300 core.asgi:application"
     restart: always
     ports:
-      - '8020:8020'
+      - "8020:8020"
+    depends_on:
+      - redis
     networks:
       - mynetwork
 
   redis:
-    image: redis:latest
+    image: redis:7-alpine
     restart: always
     ports:
       - "6386:6379"
@@ -27,3 +29,7 @@ services:
 
 networks:
   mynetwork:
+
+volumes:
+  staticfiles:
+  mediafiles:

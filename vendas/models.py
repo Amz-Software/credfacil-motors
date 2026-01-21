@@ -3,13 +3,20 @@ from django.utils import timezone
 from datetime import date, timedelta
 from decimal import Decimal
 from django.utils.functional import cached_property
-from django.db.models import Count, Q, Case, When, Value, IntegerField, BooleanField, F, Min
+from django.db.models import Count, Q, Case, When, Value, IntegerField, BooleanField, F, Min, Sum, Max, DecimalField
 from datetime import date, timedelta
 from django.db import models
 from django.utils import timezone
 from django.urls import reverse
 import re
 import calendar
+import os
+from django.core.files.storage import default_storage
+
+def upload_to_venda(instance, filename):
+    if instance.pk:
+        return f'vendas/{instance.pk}/{filename}'
+    return f'vendas/temp/{filename}'
 
 
 class Base(models.Model):
@@ -358,8 +365,42 @@ class Venda(Base):
     caixa = models.ForeignKey('vendas.Caixa', on_delete=models.CASCADE, related_name='vendas')
     observacao = models.TextField(null=True, blank=True)
     repasse_logista = models.DecimalField(max_digits=10, decimal_places=2)
+    documento_assinado = models.FileField(upload_to=upload_to_venda, null=True, blank=True)
+    foto_cliente = models.ImageField(upload_to=upload_to_venda, null=True, blank=True)
     is_deleted = models.BooleanField(default=False)
     is_trocado = models.BooleanField(default=False)
+    
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+        
+        super().save(*args, **kwargs)
+        
+        if is_new and self.pk:
+            moved_documento = False
+            moved_foto = False
+            
+            if self.documento_assinado and 'vendas/temp/' in str(self.documento_assinado):
+                old_path = str(self.documento_assinado)
+                new_path = f'vendas/{self.pk}/{os.path.basename(old_path)}'
+                if default_storage.exists(old_path):
+                    with default_storage.open(old_path, 'rb') as old_file:
+                        default_storage.save(new_path, old_file)
+                    default_storage.delete(old_path)
+                    self.documento_assinado = new_path
+                    moved_documento = True
+            
+            if self.foto_cliente and 'vendas/temp/' in str(self.foto_cliente):
+                old_path = str(self.foto_cliente)
+                new_path = f'vendas/{self.pk}/{os.path.basename(old_path)}'
+                if default_storage.exists(old_path):
+                    with default_storage.open(old_path, 'rb') as old_file:
+                        default_storage.save(new_path, old_file)
+                    default_storage.delete(old_path)
+                    self.foto_cliente = new_path
+                    moved_foto = True
+            
+            if moved_documento or moved_foto:
+                super().save(update_fields=['documento_assinado', 'foto_cliente'])
     
     def qtd_total_parcelas(self):
         return sum(pagamento.parcelas for pagamento in self.pagamentos.filter(tipo_pagamento__parcelas=True))
@@ -668,16 +709,38 @@ class StatusPagamento(Base):
 
 class PagamentoQuerySet(models.QuerySet):
     def with_parcelas_info(self):
+        hoje = timezone.now().date()
         # Ignora pagamentos do tipo "entrada"
         return self.exclude(tipo_pagamento__nome__iexact='ENTRADA').annotate(
+            
             total_parcelas=Count(
                 'parcelas_pagamento',
-                filter=Q(devolucao=False) | Q(parcelas_pagamento__pago=True)
+                filter=Q(parcelas_pagamento__pago=True)
             ),
+            
             parcelas_pagas=Count(
                 'parcelas_pagamento',
                 filter=Q(parcelas_pagamento__pago=True)
             ),
+            
+            parcelas_atrasadas=Count(
+                'parcelas_pagamento',
+                filter=Q(
+                    devolucao=False,
+                    parcelas_pagamento__pago=False,
+                    parcelas_pagamento__data_vencimento__lt=hoje
+                )
+            ),
+            
+            parcelas_pendentes=Count(
+                'parcelas_pagamento',
+                filter=Q(
+                    parcelas_pagamento__pago=False,
+                    parcelas_pagamento__data_vencimento__gte=hoje,
+                    devolucao=False
+                )
+            ),
+            
             parcelas_pagas_no_prazo=Count(
                 'parcelas_pagamento',
                 filter=Q(
@@ -685,50 +748,95 @@ class PagamentoQuerySet(models.QuerySet):
                     parcelas_pagamento__data_pagamento__lte=F('parcelas_pagamento__data_vencimento')
                 )
             ),
-            parcelas_atrasadas=Count(
-                'parcelas_pagamento',
-                filter=Q(
-                    devolucao=False,
-                    parcelas_pagamento__pago=False,
-                    parcelas_pagamento__data_vencimento__lt=timezone.now()
+            
+            valor_atrasado=Sum(
+                Case(
+                    When(
+                        parcelas_pagamento__pago=False,
+                        parcelas_pagamento__data_vencimento__lt=hoje,
+                        then=(
+                            F('parcelas_pagamento__valor')
+                            - F('parcelas_pagamento__desconto')
+                            - F('parcelas_pagamento__valor_pago')
+                        )
+                    ),
+                    default=Value(0),
+                    output_field=DecimalField()
                 )
             ),
-            next_vencimento=Min(
+            
+            valor_a_vencer=Sum(
+                Case(
+                    When(
+                        parcelas_pagamento__pago=False,
+                        parcelas_pagamento__data_vencimento__gte=hoje,
+                        then=(
+                            F('parcelas_pagamento__valor')
+                            - F('parcelas_pagamento__desconto')
+                            - F('parcelas_pagamento__valor_pago')
+                        )
+                    ),
+                    default=Value(0),
+                    output_field=DecimalField()
+                )
+            ),
+            
+            valor_quitado=Sum(
+                'parcelas_pagamento__valor',
+                filter=Q(parcelas_pagamento__pago=True)
+            ),
+            
+            ultimo_pagamento=Max(
+                'parcelas_pagamento__data_pagamento',
+                filter=Q(parcelas_pagamento__pago=True)
+            ),
+            
+            proximo_vencimento=Min(
                 'parcelas_pagamento__data_vencimento',
-                filter=Q(devolucao=False, parcelas_pagamento__pago=False)
+                filter=Q(parcelas_pagamento__pago=False, devolucao=False)
             )
         )
 
     def with_status_flags(self):
         return self.with_parcelas_info().annotate(
+            
             todas_parcelas_pagas=Case(
                 When(devolucao=True, then=Value(True)),
                 When(parcelas_pagas=F('total_parcelas'), then=Value(True)),
                 default=Value(False),
                 output_field=BooleanField()
             ),
-            pago_dentro_prazo=Case(
-                When(devolucao=True, then=Value(False)),
-                When(parcelas_pagas_no_prazo=F('total_parcelas'), then=Value(True)),
-                default=Value(False),
-                output_field=BooleanField()
-            ),
+            
             com_parcela_atrasada=Case(
                 When(devolucao=True, then=Value(False)),
                 When(parcelas_atrasadas__gt=0, then=Value(True)),
                 default=Value(False),
                 output_field=BooleanField()
             ),
+            
             com_pagamento_pendente=Case(
                 When(devolucao=True, then=Value(False)),
+                When(parcelas_pendentes__gt=0, then=Value(True)),
+                default=Value(False),
+                output_field=BooleanField()
+            ),
+            
+            pago_dentro_prazo=Case(
+                When(devolucao=True, then=Value(False)),
                 When(
-                    Q(parcelas_pagas__lt=F('total_parcelas')) &
-                    Q(parcelas_atrasadas=0),
+                    parcelas_pagas=F('total_parcelas'),
+                    parcelas_atrasadas=0,
                     then=Value(True)
                 ),
                 default=Value(False),
                 output_field=BooleanField()
             ),
+            
+            flag_bloqueado=F('bloqueado'),
+            flag_desativado=F('desativado'),
+            flag_roubo=F('roubo'),
+            flag_sem_conexao=F('sem_conexao'),
+            flag_devolucao=F('devolucao'),
         )
     
     

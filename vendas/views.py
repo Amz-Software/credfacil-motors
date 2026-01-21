@@ -39,7 +39,7 @@ from vendas.forms import (
     ComprovantesClienteForm, ContatoAdicionalEditForm, ContatoAdicionalForm, FormaPagamentoEditFormSet,
     InformacaoPessoalEditForm, InformacaoPessoalForm, LojaForm, ProdutoVendaEditFormSet, RelatorioSolicitacoesForm,
     RelatorioVendasForm, VendaForm, ProdutoVendaFormSet, FormaPagamentoFormSet, LancamentoForm,
-    LancamentoCaixaTotalForm, ClienteTelefoneForm
+    LancamentoCaixaTotalForm, ClienteTelefoneForm, VendaEdicaoEspecialForm, VendaDocumentosForm
 )
 from .models import (
     AnaliseCreditoCliente, Caixa, Cliente, Loja, Pagamento, Parcela, ProdutoVenda, TipoPagamento, Venda,
@@ -47,6 +47,8 @@ from .models import (
 )
 from pypix import Pix
 #import q
+from django.template.loader import get_template
+import weasyprint
 
 
 
@@ -72,11 +74,20 @@ class BaseView(View):
 
 class IndexView(LoginRequiredMixin, TemplateView):
     template_name = 'index.html'
-
+    
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-
-        loja = Loja.objects.get(id=self.request.session.get('loja_id'))
+        
+        loja_id = self.request.session.get('loja_id')
+        
+        if loja_id:
+            loja = Loja.objects.filter(id=loja_id).first()
+        else:
+            loja = Loja.objects.first()
+            
+        if not loja:
+            return HttpResponse("Nenhuma loja encontrada. Por favor, contate o administrador.")
+        
         caixa_diario_loja = Caixa.objects.filter(loja=loja).order_by('-data_abertura').first()
         caixa_total = Caixa.objects.all().filter(loja=loja)
 
@@ -114,7 +125,7 @@ class IndexView(LoginRequiredMixin, TemplateView):
             for venda in vendas: 
                 parcelas = list(Parcela.objects.filter(
                     pagamento__venda=venda,
-                    pagamento__tipo_pagamento__nome='CREDFACIL',
+                    pagamento__tipo_pagamento__nome='IPX',
                     pagamento__desativado=False,
                 ).order_by('data_vencimento')[:3])
 
@@ -161,7 +172,7 @@ class IndexView(LoginRequiredMixin, TemplateView):
             # Busca parcelas de clientes desativados (apenas não pagas)
             parcelas_desativadas = Parcela.objects.filter(
                 pagamento__venda__loja=loja,
-                pagamento__tipo_pagamento__nome='CREDFACIL',
+                pagamento__tipo_pagamento__nome='IPX',
                 pagamento__desativado=True,
                 pago=False  # Apenas parcelas não pagas
             )
@@ -177,7 +188,7 @@ class IndexView(LoginRequiredMixin, TemplateView):
             # Total de pagamentos desativados
             total_pagamentos_desativados = Pagamento.objects.filter(
                 venda__loja=loja,
-                tipo_pagamento__nome='CREDFACIL',
+                tipo_pagamento__nome='IPX',
                 desativado=True
             ).count()
 
@@ -269,7 +280,7 @@ class CaixaListView(BaseView, PermissionRequiredMixin, ListView):
                 loja_id = request.session.get('loja_id')
             loja = Loja.objects.get(id=loja_id)
 
-            if not Caixa.caixa_aberto(today, loja):
+            if not Caixa.caixa_aberto(loja):
                 Caixa.objects.create(
                     data_abertura=today,
                     criado_por=user,
@@ -403,22 +414,29 @@ class ClienteListView(BaseView, PermissionRequiredMixin, ListView):
             
         if not self.request.user.has_perm('vendas.view_all_analise_credito'):
             loja_id = self.request.session.get('loja_id')
-            qs = qs.filter(loja_id=loja_id)
+            if loja_id:
+                qs = qs.filter(loja_id=loja_id)
+            else:
+                qs = qs.none()
         
         return qs.order_by('-id')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        loja_id = self.request.session.get('loja_id')
         
-        context['loja'] = Loja.objects.get(id=loja_id)
+        loja_id = self.request.session.get('loja_id')
+        loja = Loja.objects.filter(id=loja_id).first() if loja_id else Loja.objects.first()
+            
+        if not loja:
+            return HttpResponse("Nenhuma loja encontrada. Por favor, contate o administrador.")
+        
+        context['loja'] = loja
         context['lojas'] = Loja.objects.all()
 
         if self.request.user.has_perm('vendas.view_all_analise_credito'):
             analises = AnaliseCreditoCliente.objects.all()
         else:
-            loja_id = self.request.session.get('loja_id')
-            analises = AnaliseCreditoCliente.objects.filter(loja_id=loja_id)
+            analises = AnaliseCreditoCliente.objects.filter(loja=loja)
 
         counts = analises.values('status').annotate(total=Count('id'))
         kpis = {item['status']: item['total'] for item in counts}
@@ -684,30 +702,38 @@ class ClienteUpdateView(PermissionRequiredMixin, UpdateView):
             if not user.has_perm('vendas.can_edit_finished_sale'):
                 messages.warning(request, "❌ Somente usuários com permissão específica podem editar solicitações após a venda ser gerada.")
                 return redirect(self.success_url)
-
-        # Cria os formulários de forma segura
-        try:
-            form_cliente = ClienteForm(request.POST, instance=self.object, user=user)
-            form_adicional = ContatoAdicionalForm(request.POST, instance=self.object.contato_adicional, user=user)
-            form_informacao = InformacaoPessoalForm(request.POST, instance=self.object.informacao_pessoal, user=user)
-            form_comprovantes = ComprovantesClienteForm(request.POST, request.FILES, instance=self.object.comprovantes, user=user)
             
-            # Busca análise de crédito de forma segura
+        # Buscar loja da sessão
+        loja_id = request.session.get('loja_id')
+        loja = None
+        if loja_id:
             try:
-                analise_credito = self.object.analise_credito
-            except:
-                # Se não existe, cria uma nova
-                analise_credito = AnaliseCreditoCliente.objects.create(
-                    cliente=self.object,
-                    produto=Produto.objects.first(),
-                    criado_por=user,
-                    modificado_por=user
-                )
+                loja = Loja.objects.get(id=loja_id)
+            except Loja.DoesNotExist:
+                loja = None
+
+        form_cliente = ClienteForm(request.POST, instance=self.object, user=user)
+        form_adicional = ContatoAdicionalForm(request.POST, instance=self.object.contato_adicional, user=user)
+        form_informacao = InformacaoPessoalForm(request.POST, instance=self.object.informacao_pessoal, user=user)
+        form_comprovantes = ComprovantesClienteForm(request.POST, request.FILES, instance=self.object.comprovantes, user=user)
+        form_analise_credito = AnaliseCreditoClienteForm(request.POST, instance=self.object.analise_credito, user=request.user, loja=loja)
+         
+            # Busca análise de crédito de forma segura
+        #     try:
+        #         analise_credito = self.object.analise_credito
+        #     except:
+        #         # Se não existe, cria uma nova
+        #         analise_credito = AnaliseCreditoCliente.objects.create(
+        #             cliente=self.object,
+        #             produto=Produto.objects.first(),
+        #             criado_por=user,
+        #             modificado_por=user
+        #         )
             
-            form_analise_credito = AnaliseCreditoClienteForm(request.POST, instance=analise_credito, user=request.user)
-        except Exception as e:
-            messages.error(request, f"❌ Erro ao criar formulários: {str(e)}")
-            return redirect(self.success_url)
+        #     form_analise_credito = AnaliseCreditoClienteForm(request.POST, instance=analise_credito, user=request.user)
+        # except Exception as e:
+        #     messages.error(request, f"❌ Erro ao criar formulários: {str(e)}")
+        #     return redirect(self.success_url)
 
         if all([
             form_cliente.is_valid(),
@@ -738,6 +764,12 @@ class ClienteUpdateView(PermissionRequiredMixin, UpdateView):
             cliente.comprovantes = comprovantes
             cliente.save(user=user)
             messages.success(request, "✅ Soliticitação atualizada com sucesso")
+            
+            # Verificar se deve redirecionar para aprovação
+            aprovar_url = request.POST.get('aprovar_apos_salvar')
+            if aprovar_url:
+                return redirect(aprovar_url)
+            
             return redirect(self.success_url)
         else:
             print("❌ Formulários inválidos")
@@ -1565,6 +1597,126 @@ class VendaUpdateView(PermissionRequiredMixin, UpdateView):
             produto_imei.save()
         except EstoqueImei.DoesNotExist:
             logger.warning("Tentativa de restaurar IMEI inexistente %s para o produto %s", imei, produto)
+            
+class VendaEdicaoEspecialView(PermissionRequiredMixin, UpdateView):
+    model = Venda
+    form_class = VendaEdicaoEspecialForm
+    template_name = 'venda/venda_edit_especial.html'
+    permission_required = 'vendas.can_edit_imei_valores_venda'
+    
+    def get_success_url(self):
+        return reverse_lazy('vendas:venda_update', kwargs={'pk': self.object.id})
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        loja_id = self.object.loja.id
+        self.request.session['venda_id'] = self.object.id # Guarda o ID da venda na sessão
+        
+        if self.request.POST:
+            context['produto_venda_formset'] = ProdutoVendaEdicaoEspecialFormSet(
+                self.request.POST,
+                instance=self.object,
+                form_kwargs={'loja': loja_id}
+            )
+        else:
+            context['produto_venda_formset'] = ProdutoVendaEdicaoEspecialFormSet(
+                instance=self.object,
+                form_kwargs={'loja': loja_id}
+            )
+            context['pagamento_formset'] = FormaPagamentoEdicaoEspecialFormSet(
+                instance=self.object
+            )
+        return context
+    
+    def form_valid(self, form):
+        context = self.get_context_data()
+        produto_venda_formset = context['produto_venda_formset']
+        pagamento_formset = context['pagamento_formset']
+
+        loja = self.object.loja
+        if not loja:
+            messages.error(self.request, "Loja não encontrada")
+            return self.form_invalid(form)
+        
+        if not Caixa.caixa_aberto(localtime(now()).date(), loja):
+            messages.warning(self.request, 'Não é possível editar vendas com a loja bloqueada!')
+            logger.warning("Tentativa de editar venda com caixa fechado para a loja %s", loja)
+            return self.form_invalid(form)
+        
+        if not (form.is_valid() and produto_venda_formset.is_valid() and pagamento_formset.is_valid()):
+            return self.form_invalid(form)
+
+        try:
+            with transaction.atomic():
+                # Atualiza dados básicos da venda
+                self._atualizar_venda(form, loja)
+                # Processa produtos (incluindo estoque e IMEI)
+                self._processar_produtos(produto_venda_formset, loja)
+                messages.success(self.request, 'Venda atualizada com sucesso')
+            return super().form_valid(form)
+        except Exception as e:
+            messages.error(self.request, f"Erro ao processar a edição especial da venda: {str(e)}")
+            logger.exception("Erro ao processar a edição especial da venda: %s", e)
+            return self.form_invalid(form)
+        
+    def _atualizar_venda(self, form, loja):
+        form.instance.loja = loja
+        form.instance.modificado_por = self.request.user
+        self.object = form.save()
+        
+    def _processar_produtos(self, formset, loja):
+        produtos_modificados = formset.save(commit=False)
+        for produto_venda in produtos_modificados:
+            produto_venda.venda = self.object
+            produto_venda.loja = loja
+            produto_venda.save()
+        formset.save_m2m()
+        
+    def _processar_pagamentos(self, formset, loja):
+        pagamentos_modificados = formset.save(commit=False)
+
+        produto_venda = self.object.itens_venda.first()
+        produto_base = produto_venda.produto if produto_venda else None
+        quantidade_base = produto_venda.quantidade if produto_venda else 0
+
+        entrada_base = None
+        totais_parcelamento = {}
+        if produto_base:
+            entrada_base = produto_base.entrada_cliente * quantidade_base
+            totais_parcelamento = {
+                4: produto_base.valor_4_vezes * quantidade_base,
+                6: produto_base.valor_6_vezes * quantidade_base,
+                8: produto_base.valor_8_vezes * quantidade_base,
+                10: produto_base.valor_10_vezes * quantidade_base,
+            }
+
+        for pagamento in pagamentos_modificados:
+            pagamento.venda = self.object
+            pagamento.loja = loja
+            if pagamento.tipo_pagamento and pagamento.tipo_pagamento.nome.upper() == 'ENTRADA':
+                if entrada_base is not None:
+                    pagamento.valor = entrada_base
+            else:
+                try:
+                    parcelas = int(pagamento.parcelas) if pagamento.parcelas else None
+                except (TypeError, ValueError):
+                    parcelas = None
+                total = totais_parcelamento.get(parcelas)
+                if total is not None:
+                    pagamento.valor = total
+            pagamento.save()
+
+        formset.save_m2m()
+        
+class VendaDocumentosUpdateView(PermissionRequiredMixin, UpdateView):
+    model = Venda
+    form_class = VendaDocumentosForm
+    template_name = 'venda/venda_documentos.html'
+    permission_required = 'vendas.change_venda'
+    
+    def get_success_url(self):
+        messages.success(self.request, 'Documentos atualizados com sucesso!')
+        return reverse_lazy('vendas:venda_documentos', kwargs={'pk': self.object.pk})
             
             
 class VendaDetailView(PermissionRequiredMixin, DetailView):
@@ -3161,6 +3313,116 @@ class GraficoTemplateView(TemplateView):
         })
 
         return context
+    
+class DashboardReportPDFView(PermissionRequiredMixin, View):
+    permission_required = 'vendas.can_generate_dashboard_report'
+    
+    def get(self, request, *args, **kwargs):
+        # Reutilizar a lógica da GraficoTemplateView para calcular os dados
+        context = self.get_dashboard_data()
+        
+        # Renderizar o template PDF
+        template = get_template('dash/relatorio_pdf.html')
+        html = template.render(context)
+        
+        # Gerar PDF
+        pdf_buffer = BytesIO()
+        weasyprint.HTML(string=html).write_pdf(pdf_buffer)
+        pdf_buffer.seek(0)
+        
+        # Retornar o PDF
+        response = HttpResponse(pdf_buffer.getvalue(), content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="relatorio_dashboard_{timezone.now().strftime("%Y%m%d_%H%M%S")}.pdf"'
+        return response
+    
+    def get_dashboard_data(self):
+        """Reutiliza a lógica da GraficoTemplateView para calcular os dados"""
+        # Buscar todas as lojas
+        lojas = Loja.objects.all()
+        
+        vendas = Venda.objects.filter(is_deleted=False)
+        parcelas_qs = Parcela.objects.filter(
+            pagamento__venda__in=vendas,
+            pagamento__tipo_pagamento__nome='IPX'
+        ).select_related('pagamento', 'pagamento__venda')
+
+        parcelas_por_venda = defaultdict(list)
+        for parcela in parcelas_qs:
+            parcelas_por_venda[parcela.pagamento.venda_id].append(parcela)
+
+        # Dados por loja
+        dados_por_loja = {}
+        
+        for loja in lojas:
+            vendas_loja = vendas.filter(loja=loja)
+            parcelas_loja = Parcela.objects.filter(
+                pagamento__venda__in=vendas_loja,
+                pagamento__tipo_pagamento__nome='IPX'
+            ).select_related('pagamento', 'pagamento__venda')
+
+            # Calcular KPIs para esta loja
+            total_vendas_loja = vendas_loja.count()
+            total_de_parcelas_vencidas = total_de_parcelas_pagas = total_de_parcelas_a_vencer = 0
+            total_pagas = total_vencidas = total_a_vencer = 0
+
+            for venda in vendas_loja:
+                parcelas = parcelas_por_venda.get(venda.id, [])
+                
+                parcelas_vencidas = [p for p in parcelas if p.data_vencimento < timezone.now().date() and not p.pago and not p.pagamento_efetuado]
+                parcelas_pagas = [p for p in parcelas if p.pago and not p.pagamento_efetuado]
+                parcelas_a_vencer = [p for p in parcelas if p.data_vencimento >= timezone.now().date() and not p.pago and not p.pagamento_efetuado]
+
+                total_de_parcelas_vencidas += len(parcelas_vencidas)
+                total_de_parcelas_pagas += len(parcelas_pagas)
+                total_de_parcelas_a_vencer += len(parcelas_a_vencer)
+
+                total_vencidas += sum(p.valor for p in parcelas_vencidas)
+                total_pagas += sum(p.valor for p in parcelas_pagas)
+                total_a_vencer += sum(p.valor for p in parcelas_a_vencer)
+
+            # Calcular desativados para esta loja
+            parcelas_desativadas = Parcela.objects.filter(
+                pagamento__venda__in=vendas_loja,
+                pagamento__tipo_pagamento__nome='IPX',
+                pagamento__desativado=True,
+                pago=False
+            )
+            
+            total_desativados_vencidas = sum(p.valor for p in parcelas_desativadas if p.data_vencimento < timezone.now().date())
+            total_desativados_a_vencer = sum(p.valor for p in parcelas_desativadas if p.data_vencimento >= timezone.now().date())
+            qtd_desativados_vencidas = sum(1 for p in parcelas_desativadas if p.data_vencimento < timezone.now().date())
+            qtd_desativados_a_vencer = sum(1 for p in parcelas_desativadas if p.data_vencimento >= timezone.now().date())
+
+            # Calcular repasses para esta loja
+            produtos_vendidos = ProdutoVenda.objects.filter(venda__in=vendas_loja)
+            total_repasses = sum(pv.produto.valor_repasse_logista or 0 for pv in produtos_vendidos)
+
+            # Valor total das parcelas
+            valor_total_parcelas = total_pagas + total_vencidas + total_a_vencer + total_desativados_vencidas + total_desativados_a_vencer
+
+            dados_por_loja[loja.nome] = {
+                'loja': loja,
+                'total_vendas': total_vendas_loja,
+                'total_parcelas': total_de_parcelas_vencidas + total_de_parcelas_pagas + total_de_parcelas_a_vencer,
+                'parcelas_pagas': total_de_parcelas_pagas,
+                'parcelas_vencidas': total_de_parcelas_vencidas,
+                'parcelas_a_vencer': total_de_parcelas_a_vencer,
+                'total_pagas': total_pagas,
+                'total_vencidas': total_vencidas,
+                'total_a_vencer': total_a_vencer,
+                'total_desativados_vencidas': total_desativados_vencidas,
+                'total_desativados_a_vencer': total_desativados_a_vencer,
+                'qtd_desativados_vencidas': qtd_desativados_vencidas,
+                'qtd_desativados_a_vencer': qtd_desativados_a_vencer,
+                'total_repasses': total_repasses,
+                'valor_total_parcelas': valor_total_parcelas,
+            }
+
+        return {
+            'dados_por_loja': dados_por_loja,
+            'data_geracao': timezone.now(),
+            'usuario': self.request.user,
+        }
 
 @permission_required('vendas.change_analisecreditocliente', raise_exception=True)
 def informar_imei_analise(request, pk):

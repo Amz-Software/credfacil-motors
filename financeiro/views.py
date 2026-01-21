@@ -579,7 +579,7 @@ class FolhaRelatorioContasAReceberView(BaseView, PermissionRequiredMixin, Templa
                 output_field=DateField()
             )
 
-            pagamentos_qs = Pagamento.objects.exclude(venda__is_deleted=True).exclude(desativado=True).with_status_flags().distinct()
+            pagamentos_qs = Pagamento.objects.exclude(venda__is_deleted=True).with_status_flags().distinct()
             pagamentos_qs = pagamentos_qs.annotate(
                 proximo_vencimento=proximo_vencimento_subquery,
                 ultimo_vencimento=ultimo_vencimento_subquery,
@@ -608,6 +608,29 @@ class FolhaRelatorioContasAReceberView(BaseView, PermissionRequiredMixin, Templa
                         date_q = Q()  # sem restrição de data específica
                     elif status == 'mais_prazo':
                         q = Q(mais_prazo=True)
+                        date_q = Q()
+                    elif status == 'bloqueado':
+                        q = Q(bloqueado=True)
+                        date_q = Q()
+
+                    elif status == 'desativado':
+                        q = Q(desativado=True)
+                        date_q = Q()
+
+                    elif status == 'devolucao':
+                        q = Q(devolucao=True)
+                        date_q = Q()
+
+                    elif status == 'roubo':
+                        q = Q(roubo=True)
+                        date_q = Q()
+
+                    elif status == 'sem_conexao':
+                        q = Q(sem_conexao=True)
+                        date_q = Q()
+
+                    elif status == 'quitado':
+                        q = Q(todas_parcelas_pagas=True)
                         date_q = Q()
                     else:
                         continue

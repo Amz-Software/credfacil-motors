@@ -431,6 +431,7 @@ class AnaliseCreditoClienteForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         user = kwargs.pop('user', None)
+        loja = kwargs.pop('loja', None)
         super().__init__(*args, **kwargs)
         
         # Tornar o campo observacao obrigatório

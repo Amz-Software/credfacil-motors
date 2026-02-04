@@ -749,7 +749,7 @@ class PagamentoQuerySet(models.QuerySet):
                 )
             ),
             
-            valor_atrasado=Sum(
+            valor_atrasado_annotated=Sum(
                 Case(
                     When(
                         parcelas_pagamento__pago=False,
@@ -765,7 +765,7 @@ class PagamentoQuerySet(models.QuerySet):
                 )
             ),
             
-            valor_a_vencer=Sum(
+            valor_a_vencer_annotated=Sum(
                 Case(
                     When(
                         parcelas_pagamento__pago=False,
@@ -781,7 +781,7 @@ class PagamentoQuerySet(models.QuerySet):
                 )
             ),
             
-            valor_quitado=Sum(
+            valor_quitado_annotated=Sum(
                 'parcelas_pagamento__valor',
                 filter=Q(parcelas_pagamento__pago=True)
             ),

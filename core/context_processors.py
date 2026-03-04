@@ -34,6 +34,11 @@ def menu_items(request):
                     "url_name": "produtos:tipos",
                     "permission": "produtos.view_tipoproduto",
                 },
+                {
+                    "label": "Parcelamentos",
+                    "url_name": "vendas:parcelamento_list",
+                    "permission": "vendas.view_parcelamento",
+                },
             ]
         },
         {          

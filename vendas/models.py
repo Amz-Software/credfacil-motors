@@ -486,6 +486,19 @@ class Venda(Base):
         )
 
 
+class Parcelamento(Base):
+    qtd_vezes = models.IntegerField(unique=True, verbose_name='Quantidade de parcelas')
+    porcentagem_juros = models.DecimalField(max_digits=5, decimal_places=2, verbose_name='Porcentagem de juros (%)')
+
+    def __str__(self):
+        return f"{self.qtd_vezes}x – {self.porcentagem_juros}% de juros"
+
+    class Meta:
+        verbose_name = 'Parcelamento'
+        verbose_name_plural = 'Parcelamentos'
+        ordering = ['qtd_vezes']
+
+
 class AnaliseCreditoCliente(Base):
     STATUS_CHOICES = [
         ('EA', 'Em análise'),
@@ -509,17 +522,16 @@ class AnaliseCreditoCliente(Base):
     analise_online = models.BooleanField(default=False, verbose_name='Análise Online')
     data_pagamento = models.CharField(max_length=20, null=True, blank=True, choices=(
         ('1', 'Dia 1'),
-        ('16', 'Dia 16'),
+        ('10', 'Dia 10'),
+        ('20', 'Dia 20'),
     ), verbose_name='Data de pagamento')
-    numero_parcelas = models.CharField(max_length=20, choices=(
-        ('4', '4x'),
-        ('6', '6x'),
-        ('8', '8x'),
-        ('10', '10x'),
-        ('12', '12x'),
-        ('14', '14x'),
-        ('16', '16x'),
-    ))
+    numero_parcelas = models.CharField(max_length=20, verbose_name='Número de parcelas')
+    entrada_informada = models.DecimalField(
+        max_digits=10, decimal_places=2,
+        null=True, blank=True,
+        verbose_name='Entrada informada',
+        help_text='Valor de entrada definido pelo operador. Deve ser >= entrada mínima do produto.'
+    )
     produto = models.ForeignKey('produtos.Produto', on_delete=models.CASCADE, related_name='analises_credito')
     renavam = models.ForeignKey('estoque.EstoqueImei', on_delete=models.CASCADE, related_name='analises_credito_renavam', null=True, blank=True, verbose_name='RENAVAM')
     renavam_informado = models.CharField(max_length=20, null=True, blank=True, verbose_name='RENAVAM Informado')

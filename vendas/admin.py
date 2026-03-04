@@ -95,3 +95,10 @@ class AnaliseCreditoClienteAdmin(AdminBase):
 @admin.register(StatusPagamento)
 class StatusPagamentoAdmin(AdminBase):
     list_display = ('nome', )
+
+
+@admin.register(Parcelamento)
+class ParcelamentoAdmin(AdminBase):
+    list_display = ('qtd_vezes', 'porcentagem_juros', 'loja')
+    list_filter = ('loja',)
+    ordering = ('qtd_vezes',)

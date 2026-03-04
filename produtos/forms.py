@@ -7,41 +7,22 @@ from produtos.models import *
 class ProdutoForms(forms.ModelForm):
     class Meta:
         model = Produto
-        fields = '__all__'
-        exclude = ['loja', 'criado_por', 'modificado_por']
+        fields = ['codigo', 'nome', 'valor', 'entrada_cliente', 'tipo', 'ativo']
         labels = {
             'codigo': 'Código',
             'nome': 'Nome',
-            'valor_repasse_logista': 'Valor Repasse Logista',
-            'entrada_cliente': 'Entrada Cliente',
-            'valor_16_vezes': 'Valor total 16X',
-            'valor_14_vezes': 'Valor total 14X',
-            'valor_12_vezes': 'Valor total 12X',
-            'valor_10_vezes': 'Valor total 10X',
-            'valor_8_vezes': 'Valor total 8X',
-            'valor_6_vezes': 'Valor total 6X',
-            'valor_4_vezes': 'Valor total 4X',
+            'valor': 'Valor do Produto',
+            'entrada_cliente': 'Entrada Mínima',
             'tipo': 'Tipo',
-            'cor': 'Cor',
-            'memoria': 'Memória',
-            'estado': 'Estado',
+            'ativo': 'Ativo',
         }
         widgets = {
             'codigo': forms.TextInput(attrs={'class': 'form-control', 'disabled': 'disabled'}),
             'nome': forms.TextInput(attrs={'class': 'form-control'}),
-            'valor_repasse_logista': forms.TextInput(attrs={'class': 'form-control'}),
-            'entrada_cliente': forms.TextInput(attrs={'class': 'form-control'}),
-            'valor_16_vezes': forms.TextInput(attrs={'class': 'form-control', 'oninput': 'updateValues()'}),
-            'valor_14_vezes': forms.TextInput(attrs={'class': 'form-control', 'oninput': 'updateValues()'}),
-            'valor_12_vezes': forms.TextInput(attrs={'class': 'form-control', 'oninput': 'updateValues()'}),
-            'valor_10_vezes': forms.TextInput(attrs={'class': 'form-control', 'oninput': 'updateValues()'}),
-            'valor_8_vezes': forms.TextInput(attrs={'class': 'form-control', 'oninput': 'updateValues()'}),
-            'valor_6_vezes': forms.TextInput(attrs={'class': 'form-control', 'oninput': 'updateValues()'}),
-            'valor_4_vezes': forms.TextInput(attrs={'class': 'form-control', 'oninput': 'updateValues()'}),
+            'valor': forms.TextInput(attrs={'class': 'form-control money'}),
+            'entrada_cliente': forms.TextInput(attrs={'class': 'form-control money'}),
             'tipo': forms.Select(attrs={'class': 'form-control'}),
-            'cor': forms.Select(attrs={'class': 'form-control'}),
-            'memoria': forms.Select(attrs={'class': 'form-control'}),
-            'estado': forms.Select(attrs={'class': 'form-control'}),
+            'ativo': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
 
     def __init__(self, *args, disabled=False, **kwargs):

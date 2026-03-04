@@ -181,6 +181,12 @@ urlpatterns = [
         name='analista_confirm_installed'
     ),
 
+    # parcelamento
+    path('parcelamento/', ParcelamentoListView.as_view(), name='parcelamento_list'),
+    path('parcelamento/novo/', ParcelamentoCreateView.as_view(), name='parcelamento_create'),
+    path('parcelamento/editar/<int:pk>/', ParcelamentoUpdateView.as_view(), name='parcelamento_update'),
+    path('parcelamento/deletar/<int:pk>/', parcelamento_delete, name='parcelamento_delete'),
+
     path('graficos/', GraficoTemplateView.as_view(), name='grafico'),
     path('graficos/relatorio-pdf/', DashboardReportPDFView.as_view(), name='dashboard_report_pdf'),
     

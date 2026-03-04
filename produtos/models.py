@@ -4,6 +4,7 @@ from vendas.models import Base
 class Produto(Base):
     codigo = models.IntegerField(unique=True, blank=True, null=True)
     nome = models.CharField(max_length=100)
+    valor = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name='Valor base')
     valor_repasse_logista = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     entrada_cliente = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     valor_16_vezes = models.DecimalField(max_digits=10, decimal_places=2, default=0)

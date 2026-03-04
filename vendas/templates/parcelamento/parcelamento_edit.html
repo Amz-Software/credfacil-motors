@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% load static iam_tags %}
+{% block title %}Editar Parcelamento{% endblock title %}
+
+{% block content %}
+<div class="container-xxl mt-4">
+  <div class="row">
+    <div class="col-12 col-md-6 mx-auto">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0"><span class="text-muted fw-light">Parcelamentos /</span> Editar {{ object.qtd_vezes }}x</h5>
+        </div>
+        <div class="card-body">
+          <form method="post">
+            {% csrf_token %}
+
+            <div class="mb-3">
+              {{ form.qtd_vezes.label_tag }}
+              {{ form.qtd_vezes }}
+              {% if form.qtd_vezes.errors %}
+                <div class="text-danger small">{{ form.qtd_vezes.errors }}</div>
+              {% endif %}
+            </div>
+
+            <div class="mb-3">
+              {{ form.porcentagem_juros.label_tag }}
+              {{ form.porcentagem_juros }}
+              {% if form.porcentagem_juros.errors %}
+                <div class="text-danger small">{{ form.porcentagem_juros.errors }}</div>
+              {% endif %}
+              <small class="text-muted">Ex: 10.00 = 10% sobre o valor financiado</small>
+            </div>
+
+            <div class="d-flex gap-2">
+              {% if user|has_perm:"vendas.change_parcelamento" %}
+              <button type="submit" class="btn btn-primary">
+                <i class="bx bx-save me-1"></i> Salvar
+              </button>
+              {% endif %}
+              <a href="{% url 'vendas:parcelamento_list' %}" class="btn btn-outline-secondary">Cancelar</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -695,12 +695,16 @@
               
               <!-- Product Info Cards -->
               <div class="product-info-cards" id="parcelas-info">
+                <div class="info-card">
+                  <div class="info-card-label">Preço de Venda</div>
+                  <div class="info-card-value" id="info-preco-venda">—</div>
+                </div>
                 <div class="info-card entrada">
                   <div class="info-card-label">Entrada</div>
                   <div class="info-card-value" id="info-entrada">—</div>
                 </div>
                 <div class="info-card total">
-                  <div class="info-card-label">Total</div>
+                  <div class="info-card-label">Total Financiado</div>
                   <div class="info-card-value" id="info-total">—</div>
                 </div>
                 <div class="info-card parcelas">
@@ -1110,8 +1114,9 @@
         setTimeout(updateProgress, 100);
       });
       
-      // lista de produtos do contexto
+      // lista de produtos e parcelamentos do contexto
       const produtos = JSON.parse('{{ produtos_json|escapejs }}');
+      const parcelamentos = JSON.parse('{{ parcelamentos_json|escapejs }}');
 
       function formatBRL(v) {
         return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -1173,44 +1178,52 @@
 
         // se não houver produto selecionado, limpa tudo
         if (!prodId) {
-          $('#info-entrada, #info-total, #info-parcela').text('—');
+          $('#info-preco-venda, #info-entrada, #info-total, #info-parcela').text('—');
           return;
         }
 
         // busca dados do produto
         const p = produtos.find(x => x.id == prodId) || {};
-        const entrada = p.entrada  || 0;
-        const valor4  = p.valor4   || 0;
-        const valor6  = p.valor6   || 0;
-        const valor8  = p.valor8   || 0;
-        const valor10 = p.valor10  || 0;
-        const valor12 = p.valor12  || 0;
-        const valor14 = p.valor14  || 0;
+        const entradaMinima = p.entrada || 0;
+        const valorBase = p.valor || 0;
 
-        // escolhe total conforme parcelas
-        const total = { '4': valor4, '6': valor6, '8': valor8, '10': valor10, '12': valor12, '14': valor14 }[np] || 0;
-        const parcela = (np && total)
-          ? total / parseInt(np, 10)
-          : 0;
+        // entrada informada pelo operador (campo do formulário), ou mínima do produto
+        const entradaInputRaw = $('#id_entrada_informada').val() || '';
+        const entradaInformada = parseFloat(entradaInputRaw.replace(/\./g, '').replace(',', '.')) || 0;
+        const entrada = (entradaInformada >= entradaMinima) ? entradaInformada : entradaMinima;
+
+        // busca juros do parcelamento escolhido
+        const parc = parcelamentos.find(x => x.qtd_vezes == np);
+        $('#info-preco-venda').text(formatBRL(valorBase));
+        if (!parc || !np || !valorBase) {
+          $('#info-entrada').text(formatBRL(entrada));
+          $('#info-total, #info-parcela').text('—');
+          updateProgress();
+          return;
+        }
+
+        const valorFinanciado = valorBase - entrada;
+        const total = valorFinanciado * (1 + parc.porcentagem_juros / 100);
+        const parcela = total / parseInt(np, 10);
 
         // preenche os cards
         $('#info-entrada').text(formatBRL(entrada));
         $('#info-total')  .text(formatBRL(total));
 
-        const textoParcela = np
-          ? `${np}× de ${formatBRL(parcela)}`
-          : '—';
+        const textoParcela = `${np}× de ${formatBRL(parcela)}`;
         $('#info-parcela').text(textoParcela);
-        
+
         // Update progress after product selection
         updateProgress();
       }
 
-      // dispara ao mudar produto (Select2) ou número de parcelas
+      // dispara ao mudar produto (Select2), número de parcelas ou entrada informada
       $('#id_produto')
         .on('change select2:select', atualizaInfo);
       $('#id_numero_parcelas')
         .on('change', atualizaInfo);
+      $('#id_entrada_informada')
+        .on('input change', atualizaInfo);
 
       // inicializa ao carregar a página
       atualizaInfo();

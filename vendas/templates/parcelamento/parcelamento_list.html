@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% load static iam_tags %}
+{% block title %}Parcelamentos{% endblock title %}
+
+{% block content %}
+<div class="container-xxl mt-4">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h4 class="card-title">Tabela de Parcelamentos</h4>
+          {% if user|has_perm:"vendas.add_parcelamento" %}
+          <a href="{% url 'vendas:parcelamento_create' %}" class="btn btn-primary">
+            <i class="bx bx-plus me-1"></i> Adicionar Parcelamento
+          </a>
+          {% endif %}
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>Parcelas</th>
+                  <th>Juros (%)</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in items %}
+                <tr>
+                  <td><strong>{{ item.qtd_vezes }}x</strong></td>
+                  <td>{{ item.porcentagem_juros }}%</td>
+                  <td>
+                    <div class="dropdown">
+                      <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
+                        <i class="bx bx-dots-vertical-rounded"></i>
+                      </button>
+                      <div class="dropdown-menu">
+                        {% if user|has_perm:"vendas.change_parcelamento" %}
+                        <a class="dropdown-item" href="{% url 'vendas:parcelamento_update' item.id %}">
+                          <i class="bx bx-edit-alt me-1"></i> Editar
+                        </a>
+                        {% endif %}
+                        {% if user|has_perm:"vendas.delete_parcelamento" %}
+                        <form method="post" action="{% url 'vendas:parcelamento_delete' item.id %}"
+                              onsubmit="return confirm('Remover parcelamento {{ item.qtd_vezes }}x?')">
+                          {% csrf_token %}
+                          <button type="submit" class="dropdown-item text-danger">
+                            <i class="bx bx-trash me-1"></i> Remover
+                          </button>
+                        </form>
+                        {% endif %}
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="3" class="text-center text-muted">Nenhum parcelamento cadastrado.</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            {% include "snippets/pagination.html" %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -13,7 +13,7 @@ from datetime import date
 class ProdutoChoiceField(forms.ModelChoiceField):
     def label_from_instance(self, obj):
         # aqui você define exatamente como quer que apareça cada opção
-        return f"{obj.nome} – Entrada: R$ {obj.entrada_cliente}"
+        return f"{obj.nome} – Entrada Mín: R$ {obj.entrada_cliente}"
 
 class EstoqueImeiSelectWidgetEdit(HeavySelect2Widget):
     data_view = 'estoque:estoque-imei-search-edit'
@@ -413,62 +413,91 @@ class AnaliseCreditoClienteForm(forms.ModelForm):
         widget=Select2Widget(attrs={'class': 'form-control'}),
         label='Produto'
     )
-    
+
     analise_online = forms.BooleanField(
         required=False,
         label='Análise Online',
         widget=forms.CheckboxInput(attrs={'class': 'form-check-input'})
     )
-    
+
     class Meta:
         model = AnaliseCreditoCliente
-        fields = ['produto','data_pagamento','numero_parcelas', 'observacao', 'analise_online']
+        fields = ['produto', 'data_pagamento', 'numero_parcelas', 'entrada_informada', 'observacao', 'analise_online']
         widgets = {
             'data_pagamento': forms.Select(attrs={'class': 'form-control'}),
             'numero_parcelas': forms.Select(attrs={'class': 'form-control'}),
+            'entrada_informada': forms.TextInput(attrs={'class': 'form-control money'}),
             'observacao': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+        }
+        labels = {
+            'entrada_informada': 'Entrada informada (opcional)',
         }
 
     def __init__(self, *args, **kwargs):
         user = kwargs.pop('user', None)
         loja = kwargs.pop('loja', None)
         super().__init__(*args, **kwargs)
-        
+
+        # Choices dinâmicos de parcelas a partir da tabela Parcelamento
+        from vendas.models import Parcelamento
+        parcelas_qs = Parcelamento.objects.all()
+        self.fields['numero_parcelas'].widget = forms.Select(
+            attrs={'class': 'form-control'},
+            choices=[('', '---------')] + [(str(p.qtd_vezes), f"{p.qtd_vezes}x") for p in parcelas_qs]
+        )
+
         # Tornar o campo observacao obrigatório
         self.fields['observacao'].required = True
         self.fields['observacao'].widget.attrs['required'] = 'required'
-        
-        
+
         if self.instance and self.instance.pk:
             # Verifica se o usuário é analista
             is_analista = user and user.groups.filter(name='ANALISTA').exists()
-            
+
             # Verifica se a venda já foi gerada
             venda_gerada = self.instance.venda is not None
-            
+
             if user and not user.has_perm('vendas.change_status_analise') and not is_analista:
-                # if self.instance.status == 'EA':
                 self.fields['produto'].disabled = True
                 self.fields['numero_parcelas'].disabled = True
                 self.fields['data_pagamento'].disabled = True
+                self.fields['entrada_informada'].disabled = True
                 self.fields['analise_online'].disabled = True
-            
+
             # Se a venda foi gerada, apenas usuários com permissão específica podem editar
             if venda_gerada:
                 if not user.has_perm('vendas.can_edit_finished_sale'):
                     self.fields['produto'].disabled = True
                     self.fields['numero_parcelas'].disabled = True
                     self.fields['data_pagamento'].disabled = True
+                    self.fields['entrada_informada'].disabled = True
                     self.fields['observacao'].disabled = True
                     self.fields['analise_online'].disabled = True
             # Se a venda não foi gerada, analistas podem editar tudo
             elif not venda_gerada and is_analista:
-                # Analistas podem editar tudo antes da venda ser gerada
                 self.fields['produto'].disabled = False
                 self.fields['numero_parcelas'].disabled = False
                 self.fields['data_pagamento'].disabled = False
+                self.fields['entrada_informada'].disabled = False
                 self.fields['observacao'].disabled = False
                 self.fields['analise_online'].disabled = False
+
+    def clean(self):
+        cleaned_data = super().clean()
+        produto = cleaned_data.get('produto')
+        entrada_informada = cleaned_data.get('entrada_informada')
+        numero_parcelas = cleaned_data.get('numero_parcelas')
+
+        if produto and entrada_informada is not None:
+            if entrada_informada < produto.entrada_cliente:
+                self.add_error('entrada_informada', f'A entrada mínima obrigatória é R$ {produto.entrada_cliente}.')
+
+        if numero_parcelas:
+            from vendas.models import Parcelamento
+            if not Parcelamento.objects.filter(qtd_vezes=numero_parcelas).exists():
+                self.add_error('numero_parcelas', f'Parcelamento {numero_parcelas}x não cadastrado.')
+
+        return cleaned_data
 
 
 class AnaliseCreditoClienteRenavamForm(forms.ModelForm):
@@ -482,7 +511,7 @@ class AnaliseCreditoClienteRenavamForm(forms.ModelForm):
         fields = ['produto','data_pagamento','numero_parcelas', 'renavam', 'observacao']
         widgets = {
             'data_pagamento': forms.Select(attrs={'class': 'form-control'}),
-            'numero_parcelas': forms.Select(attrs={'class': 'form-control'}),
+            'numero_parcelas': forms.TextInput(attrs={'class': 'form-control'}),
             'renavam': EstoqueImeiSelectWidget(
                 max_results=10,
                 attrs={
@@ -804,6 +833,37 @@ class TipoPagamentoForm(forms.ModelForm):
         return instance
 
     
+class ParcelamentoForm(forms.ModelForm):
+    class Meta:
+        model = Parcelamento
+        fields = ['qtd_vezes', 'porcentagem_juros']
+        widgets = {
+            'qtd_vezes': forms.NumberInput(attrs={'class': 'form-control', 'min': '1'}),
+            'porcentagem_juros': forms.NumberInput(attrs={'class': 'form-control', 'min': '0', 'step': '0.01'}),
+        }
+        labels = {
+            'qtd_vezes': 'Quantidade de parcelas',
+            'porcentagem_juros': 'Porcentagem de juros (%)',
+        }
+
+    def __init__(self, *args, disabled=False, **kwargs):
+        self.user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+        if disabled:
+            for field in self.fields.values():
+                field.widget.attrs['disabled'] = True
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        if self.user:
+            if not instance.pk:
+                instance.criado_por = self.user
+            instance.modificado_por = self.user
+        if commit:
+            instance.save()
+        return instance
+
+
 class VendaForm(forms.ModelForm):
     class Meta:
         model = Venda

@@ -46,6 +46,11 @@ from .models import (
     AnaliseCreditoCliente, Caixa, Cliente, Loja, Pagamento, Parcela, Parcelamento, ProdutoVenda, TipoPagamento, Venda,
     LancamentoCaixa, LancamentoCaixaTotal
 )
+from .utils import (
+    save_temp_files, restore_temp_files,
+    get_temp_file_urls, clean_temp_files,
+    get_temp_field_names,
+)
 from pypix import Pix
 #import q
 from django.template.loader import get_template
@@ -528,7 +533,7 @@ class ClienteCreateView(PermissionRequiredMixin, CreateView):
         context['form_analise_credito'] = kwargs.get('form_analise_credito', AnaliseCreditoClienteForm(user=self.request.user))
         
         from vendas.models import Parcelamento
-        produtos = Produto.objects.all().values('id', 'nome', 'valor', 'entrada_cliente')
+        produtos = Produto.objects.filter(ativo=True).values('id', 'nome', 'valor', 'entrada_cliente')
         produtos_list = [
             {
                 'id': p['id'],
@@ -551,11 +556,15 @@ class ClienteCreateView(PermissionRequiredMixin, CreateView):
     def post(self, request, *args, **kwargs):
         self.object = None
 
+        # Restaura arquivos temporários da sessão se o campo não veio no request.FILES
+        combined_files = restore_temp_files(request.session, request.FILES)
+        temp_fields = get_temp_field_names(request.session)
+
         # Passando o user para os formulários
         form_cliente = ClienteForm(request.POST, user=request.user)
         form_adicional = ContatoAdicionalForm(request.POST, user=request.user)
         form_informacao = InformacaoPessoalForm(request.POST, user=request.user)
-        form_comprovantes = ComprovantesClienteForm(request.POST, request.FILES, user=request.user)
+        form_comprovantes = ComprovantesClienteForm(request.POST, combined_files, user=request.user, temp_field_names=temp_fields)
         form_analise_credito = AnaliseCreditoClienteForm(request.POST, user=request.user)
 
         if all([
@@ -612,6 +621,7 @@ class ClienteCreateView(PermissionRequiredMixin, CreateView):
             print("✅ Análise de crédito salva")
 
             messages.success(request, "✅ Soliticitação cadastrado com sucesso")
+            clean_temp_files(request.session)
             return redirect(self.success_url)
 
         else:
@@ -629,6 +639,9 @@ class ClienteCreateView(PermissionRequiredMixin, CreateView):
                         
             messages.error(request, "❌ Erro ao cadastrar Soliticitação. Verifique os dados e tente novamente.")
 
+            # Salva arquivos enviados em temp para persistir na re-renderização
+            save_temp_files(request.session, combined_files)
+
         # Renderiza novamente com os erros
         context = self.get_context_data(
             form_cliente=form_cliente,
@@ -637,6 +650,7 @@ class ClienteCreateView(PermissionRequiredMixin, CreateView):
             form_comprovantes=form_comprovantes,
             form_analise_credito=form_analise_credito,
         )
+        context['temp_file_urls'] = get_temp_file_urls(request.session)
         return self.render_to_response(context)
 
 class ClienteUpdateView(PermissionRequiredMixin, UpdateView):
@@ -673,6 +687,25 @@ class ClienteUpdateView(PermissionRequiredMixin, UpdateView):
             context['analise_credito'] = analise
         
         context['status_app_choices'] = AnaliseCreditoCliente.STATUS_APP_CHOICES
+
+        from vendas.models import Parcelamento
+        produtos = Produto.objects.filter(ativo=True).values('id', 'nome', 'valor', 'entrada_cliente')
+        produtos_list = [
+            {
+                'id': p['id'],
+                'nome': p['nome'],
+                'valor': float(p['valor']),
+                'entrada': float(p['entrada_cliente']),
+            }
+            for p in produtos
+        ]
+        context['produtos_json'] = json.dumps(produtos_list)
+
+        parcelamentos = Parcelamento.objects.all().values('qtd_vezes', 'porcentagem_juros')
+        context['parcelamentos_json'] = json.dumps([
+            {'qtd_vezes': p['qtd_vezes'], 'porcentagem_juros': float(p['porcentagem_juros'])}
+            for p in parcelamentos
+        ])
 
         return context
 
@@ -714,10 +747,14 @@ class ClienteUpdateView(PermissionRequiredMixin, UpdateView):
             except Loja.DoesNotExist:
                 loja = None
 
+        # Restaura arquivos temporários da sessão se o campo não veio no request.FILES
+        combined_files = restore_temp_files(request.session, request.FILES)
+        temp_fields = get_temp_field_names(request.session)
+
         form_cliente = ClienteForm(request.POST, instance=self.object, user=user)
         form_adicional = ContatoAdicionalForm(request.POST, instance=self.object.contato_adicional, user=user)
         form_informacao = InformacaoPessoalForm(request.POST, instance=self.object.informacao_pessoal, user=user)
-        form_comprovantes = ComprovantesClienteForm(request.POST, request.FILES, instance=self.object.comprovantes, user=user)
+        form_comprovantes = ComprovantesClienteForm(request.POST, combined_files, instance=self.object.comprovantes, user=user, temp_field_names=temp_fields)
         form_analise_credito = AnaliseCreditoClienteForm(request.POST, instance=self.object.analise_credito, user=request.user, loja=loja)
          
             # Busca análise de crédito de forma segura
@@ -763,9 +800,11 @@ class ClienteUpdateView(PermissionRequiredMixin, UpdateView):
 
             cliente = form_cliente.save(commit=False)
             cliente.contato_adicional = contato_adicional
+            cliente.informacao_pessoal = informacao
             cliente.comprovantes = comprovantes
             cliente.save(user=user)
             messages.success(request, "✅ Soliticitação atualizada com sucesso")
+            clean_temp_files(request.session)
             
             # Verificar se deve redirecionar para aprovação
             aprovar_url = request.POST.get('aprovar_apos_salvar')
@@ -785,12 +824,17 @@ class ClienteUpdateView(PermissionRequiredMixin, UpdateView):
                         messages.error(request, f"Erro no campo '{field}': {error}")
             messages.error(request, "❌ Erro ao atualizar Soliticitação. Verifique os dados e tente novamente.")
 
+            # Salva arquivos enviados em temp para persistir na re-renderização
+            save_temp_files(request.session, combined_files)
+
         context = self.get_context_data(
             form_cliente=form_cliente,
             form_adicional=form_adicional,
+            form_informacao=form_informacao,
             form_comprovantes=form_comprovantes,
             form_analise_credito=form_analise_credito,
         )
+        context['temp_file_urls'] = get_temp_file_urls(request.session)
         return self.render_to_response(context)
     
 class ClienteUpdateImeiTelefoneView(PermissionRequiredMixin, UpdateView):
@@ -815,7 +859,7 @@ class ClienteUpdateImeiTelefoneView(PermissionRequiredMixin, UpdateView):
         context['status_app_choices'] = AnaliseCreditoCliente.STATUS_APP_CHOICES
         
         from vendas.models import Parcelamento
-        produtos = Produto.objects.all().values('id', 'nome', 'valor', 'entrada_cliente')
+        produtos = Produto.objects.filter(ativo=True).values('id', 'nome', 'valor', 'entrada_cliente')
         produtos_list = [
             {
                 'id': p['id'],
@@ -2242,7 +2286,7 @@ def get_payment_method(request):
 
 class ProdutoAutoComplete(AutoResponseView):
     def get_queryset(self):
-        return Produto.objects.all()
+        return Produto.objects.filter(ativo=True)
     
     
 def get_produtos(request):
@@ -2251,9 +2295,9 @@ def get_produtos(request):
     loja = get_object_or_404(Loja, id=loja_id)
     
     if term:
-        produtos = Produto.objects.filter(estoque_atual__loja_id=loja_id, estoque_atual__quantidade_disponivel__gt=0, loja=loja).distinct().filter(nome__icontains=term)
+        produtos = Produto.objects.filter(ativo=True, estoque_atual__loja_id=loja_id, estoque_atual__quantidade_disponivel__gt=0, loja=loja).distinct().filter(nome__icontains=term)
     else:
-        produtos = Produto.objects.filter(estoque_atual__loja_id=loja_id, estoque_atual__quantidade_disponivel__gt=0, loja=loja).distinct()
+        produtos = Produto.objects.filter(ativo=True, estoque_atual__loja_id=loja_id, estoque_atual__quantidade_disponivel__gt=0, loja=loja).distinct()
 
     produtos_data = [{'id': produto.id, 'text': produto.nome} for produto in produtos]
     return JsonResponse({'results': produtos_data})

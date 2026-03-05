@@ -186,6 +186,16 @@
                     {% endif %}
                   </label>
                   {{ field }}
+                  {% if field.label == 'Produto' %}
+                    <small id="hint-entrada-minima" class="form-text text-muted" style="display:none;">
+                      Entrada mínima: <strong id="hint-entrada-minima-valor"></strong>
+                    </small>
+                  {% endif %}
+                  {% if field.label == 'Entrada informada' %}
+                    <small id="aviso-entrada-minima" class="form-text text-warning" style="display:none;">
+                      <i class="bx bx-error-circle me-1"></i><span id="aviso-entrada-minima-texto"></span>
+                    </small>
+                  {% endif %}
                 </div>
               {% endfor %}
               <div class="row text-center mb-4" id="parcelas-info">
@@ -270,8 +280,9 @@
   {{ form_analise_credito.media.js }}
   <script>
     $(function(){
-      // lista de produtos do contexto
+      // lista de produtos e parcelamentos do contexto
       const produtos = JSON.parse('{{ produtos_json|escapejs }}');
+      const parcelamentos = JSON.parse('{{ parcelamentos_json|escapejs }}');
 
       function formatBRL(v) {
         return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -284,40 +295,66 @@
         // se não houver produto selecionado, limpa tudo
         if (!prodId) {
           $('#info-entrada, #info-total, #info-parcela').text('—');
+          $('#hint-entrada-minima').hide();
+          $('#aviso-entrada-minima').hide();
           return;
         }
 
         // busca dados do produto
         const p = produtos.find(x => x.id == prodId) || {};
-        const entrada = p.entrada  || 0;
-        const valor4  = p.valor4   || 0;
-        const valor6  = p.valor6   || 0;
-        const valor8  = p.valor8   || 0;
-        const valor10 = p.valor10  || 0;
-        const valor12 = p.valor12  || 0;
-        const valor14 = p.valor14  || 0;
+        const entradaMinima = p.entrada || 0;
+        const valorBase = p.valor || 0;
 
-        // escolhe total conforme parcelas
-        const total = { '4': valor4, '6': valor6, '8': valor8, '10': valor10, '12': valor12, '14': valor14 }[np] || 0;
-        const parcela = (np && total)
-          ? total / parseInt(np, 10)
-          : 0;
+        // mostra hint de entrada mínima abaixo do produto
+        if (entradaMinima > 0) {
+          $('#hint-entrada-minima-valor').text(formatBRL(entradaMinima));
+          $('#hint-entrada-minima').show();
+        } else {
+          $('#hint-entrada-minima').hide();
+        }
+
+        // entrada informada pelo operador (campo do formulário), ou mínima do produto
+        const entradaInputRaw = $('#id_entrada_informada').val() || '';
+        const entradaInformada = parseFloat(entradaInputRaw.replace(/\./g, '').replace(',', '.')) || 0;
+        const entrada = (entradaInformada >= entradaMinima) ? entradaInformada : entradaMinima;
+
+        // aviso se entrada informada é menor que a mínima
+        if (entradaInputRaw && entradaInformada > 0 && entradaInformada < entradaMinima) {
+          $('#aviso-entrada-minima-texto').text('O valor informado é menor que a entrada mínima de ' + formatBRL(entradaMinima));
+          $('#aviso-entrada-minima').show();
+          $('#id_entrada_informada').addClass('is-invalid');
+        } else {
+          $('#aviso-entrada-minima').hide();
+          $('#id_entrada_informada').removeClass('is-invalid');
+        }
+
+        // busca juros do parcelamento escolhido
+        const parc = parcelamentos.find(x => x.qtd_vezes == np);
+        if (!parc || !np || !valorBase) {
+          $('#info-entrada').text(formatBRL(entrada));
+          $('#info-total, #info-parcela').text('—');
+          return;
+        }
+
+        const valorFinanciado = valorBase - entrada;
+        const total = valorFinanciado * (1 + parc.porcentagem_juros / 100);
+        const parcela = total / parseInt(np, 10);
 
         // preenche os cards
         $('#info-entrada').text(formatBRL(entrada));
         $('#info-total')  .text(formatBRL(total));
 
-        const textoParcela = np
-          ? `${np}× de ${formatBRL(parcela)}`
-          : '—';
+        const textoParcela = `${np}× de ${formatBRL(parcela)}`;
         $('#info-parcela').text(textoParcela);
       }
 
-      // dispara ao mudar produto (Select2) ou número de parcelas
+      // dispara ao mudar produto (Select2), número de parcelas ou entrada informada
       $('#id_produto')
         .on('change select2:select', atualizaInfo);
       $('#id_numero_parcelas')
         .on('change', atualizaInfo);
+      $('#id_entrada_informada')
+        .on('input change', atualizaInfo);
 
       // inicializa ao carregar a página
       atualizaInfo();

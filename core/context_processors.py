@@ -45,7 +45,6 @@ def menu_items(request):
             "label": "Caixa",
             "icon": "bx bx-cart",
             "permission": "vendas.view_caixa",
-            "url_name": "vendas:caixa_list",
             "section": "Vendas"
         },
         {          

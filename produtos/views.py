@@ -1,5 +1,6 @@
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
 from django.contrib.auth.mixins import PermissionRequiredMixin
+from django.contrib.auth.decorators import permission_required
 from django.contrib import messages
 from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, DetailView, UpdateView, DeleteView
@@ -16,10 +17,23 @@ class ProdutoListView(PermissionRequiredMixin, ListView):
 
     def get_queryset(self):
         queryset = Produto.objects.all()
+        # Usuários sem permissão de alterar produto não veem produtos inativos
+        if not self.request.user.has_perm('produtos.change_produto'):
+            queryset = queryset.filter(ativo=True)
         search = self.request.GET.get('search')
         if search:
             return queryset.filter(nome__icontains=search)
         return queryset.order_by('nome')
+
+
+@permission_required('produtos.change_produto')
+def toggle_ativo_produto(request, pk):
+    produto = get_object_or_404(Produto, pk=pk)
+    produto.ativo = not produto.ativo
+    produto.save()
+    status = 'ativado' if produto.ativo else 'desativado'
+    messages.success(request, f'Produto "{produto.nome}" {status} com sucesso!')
+    return redirect('produtos:produtos')
 
 def generate_views(modelo, form=None, paginacao=10, template_dir=''):
     """

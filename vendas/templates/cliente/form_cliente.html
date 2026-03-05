@@ -575,12 +575,25 @@
                       </label>
                       
                       {% if field.value and field.value.url %}
-                        <div class="mb-2">
+                        <div class="mb-2" data-existing-file="{{ field.id_for_label }}">
                           <a href="{{ field.value.url }}" target="_blank" class="d-block mb-2">
                             <img src="{{ field.value.url }}" class="img-thumbnail" style="max-height:100px;">
                           </a>
                           <small class="text-muted">Escolha um novo arquivo se quiser substituir.</small>
                         </div>
+                      {% elif temp_file_urls %}
+                        {% with field_name=field.html_name %}
+                          {% for tf_name, tf_url in temp_file_urls.items %}
+                            {% if tf_name == field_name %}
+                              <div class="mb-2" data-temp-file="{{ field.id_for_label }}">
+                                <a href="{{ tf_url }}" target="_blank" class="d-block mb-2">
+                                  <img src="{{ tf_url }}" class="img-thumbnail" style="max-height:100px;">
+                                </a>
+                                <small class="text-success"><i class="bx bx-check-circle me-1"></i>Arquivo enviado anteriormente (será mantido).</small>
+                              </div>
+                            {% endif %}
+                          {% endfor %}
+                        {% endwith %}
                       {% endif %}
                       
                       {{ field }}
@@ -680,6 +693,16 @@
                       {{ field }}
                       {% if field.errors %}
                         <div class="text-danger small">{{ field.errors|striptags }}</div>
+                      {% endif %}
+                      {% if field.label == 'Produto' %}
+                        <small id="hint-entrada-minima" class="form-text text-muted" style="display:none;">
+                          Entrada mínima: <strong id="hint-entrada-minima-valor"></strong>
+                        </small>
+                      {% endif %}
+                      {% if field.label == 'Entrada informada' %}
+                        <small id="aviso-entrada-minima" class="form-text text-warning" style="display:none;">
+                          <i class="bx bx-error-circle me-1"></i><span id="aviso-entrada-minima-texto"></span>
+                        </small>
                       {% endif %}
                     </div>
                   </div>
@@ -951,8 +974,11 @@
         
         let complete = true;
         requiredFields.forEach(field => {
-          let value = $(field).val();
-          if (!value || value.trim() === '') {
+          let $field = $(field);
+          let value = $field.val();
+          // Considera válido se tem arquivo selecionado, ou se já existe um arquivo (salvo ou temporário)
+          let hasExistingFile = $field.closest('.form-group').find('[data-existing-file], [data-temp-file]').length > 0;
+          if ((!value || value.trim() === '') && !hasExistingFile) {
             complete = false;
             return false;
           }
@@ -1179,6 +1205,8 @@
         // se não houver produto selecionado, limpa tudo
         if (!prodId) {
           $('#info-preco-venda, #info-entrada, #info-total, #info-parcela').text('—');
+          $('#hint-entrada-minima').hide();
+          $('#aviso-entrada-minima').hide();
           return;
         }
 
@@ -1187,10 +1215,28 @@
         const entradaMinima = p.entrada || 0;
         const valorBase = p.valor || 0;
 
+        // mostra hint de entrada mínima abaixo do produto
+        if (entradaMinima > 0) {
+          $('#hint-entrada-minima-valor').text(formatBRL(entradaMinima));
+          $('#hint-entrada-minima').show();
+        } else {
+          $('#hint-entrada-minima').hide();
+        }
+
         // entrada informada pelo operador (campo do formulário), ou mínima do produto
         const entradaInputRaw = $('#id_entrada_informada').val() || '';
         const entradaInformada = parseFloat(entradaInputRaw.replace(/\./g, '').replace(',', '.')) || 0;
         const entrada = (entradaInformada >= entradaMinima) ? entradaInformada : entradaMinima;
+
+        // aviso se entrada informada é menor que a mínima
+        if (entradaInputRaw && entradaInformada > 0 && entradaInformada < entradaMinima) {
+          $('#aviso-entrada-minima-texto').text('O valor informado é menor que a entrada mínima de ' + formatBRL(entradaMinima));
+          $('#aviso-entrada-minima').show();
+          $('#id_entrada_informada').addClass('is-invalid');
+        } else {
+          $('#aviso-entrada-minima').hide();
+          $('#id_entrada_informada').removeClass('is-invalid');
+        }
 
         // busca juros do parcelamento escolhido
         const parc = parcelamentos.find(x => x.qtd_vezes == np);

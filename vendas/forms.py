@@ -69,7 +69,7 @@ class ClienteForm(forms.ModelForm):
             'cidade': forms.TextInput(attrs={'class': 'form-control'}),
             'profissao': forms.TextInput(attrs={'class': 'form-control'}),
             'quantidade_dependentes': forms.NumberInput(attrs={'class': 'form-control', 'min': '0'}),
-            'recebe_auxilio': forms.Select(choices=[(True, 'Sim'), (False, 'Não')], attrs={'class': 'form-control'}),
+            'recebe_auxilio': forms.Select(choices=[('True', 'Sim'), ('False', 'Não')], attrs={'class': 'form-control'}),
             'total_renda': forms.TextInput(attrs={'class': 'form-control money'}),
             'observacao': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
         }
@@ -99,8 +99,11 @@ class ClienteForm(forms.ModelForm):
 
         # Força escolha explícita em "Recebe Auxílio?"
         if 'recebe_auxilio' in self.fields:
-            self.fields['recebe_auxilio'].choices = [('', '---------'), (True, 'Sim'), (False, 'Não')]
-            self.fields['recebe_auxilio'].initial = ''
+            self.fields['recebe_auxilio'].choices = [('', '---------'), ('True', 'Sim'), ('False', 'Não')]
+            if not self.instance or not self.instance.pk:
+                self.fields['recebe_auxilio'].initial = ''
+            else:
+                self.fields['recebe_auxilio'].initial = str(self.instance.recebe_auxilio)
                 
         if self.instance and self.instance.pk:
             if user and not user.has_perm('vendas.can_edit_finished_sale'):
@@ -127,6 +130,14 @@ class ClienteForm(forms.ModelForm):
                 self.fields['bairro'].disabled = True
                 self.fields['endereco'].disabled = True
                 self.fields['cidade'].disabled = True
+
+    def clean_recebe_auxilio(self):
+        value = self.cleaned_data.get('recebe_auxilio')
+        if value == 'True':
+            return True
+        elif value == 'False':
+            return False
+        return value
 
     def clean_telefone(self):
         telefone = self.cleaned_data.get('telefone')
@@ -409,7 +420,7 @@ class InformacaoPessoalEditForm(forms.ModelForm):
 
 class AnaliseCreditoClienteForm(forms.ModelForm):
     produto = ProdutoChoiceField(
-        queryset=Produto.objects.all(),
+        queryset=Produto.objects.filter(ativo=True),
         widget=Select2Widget(attrs={'class': 'form-control'}),
         label='Produto'
     )
@@ -430,7 +441,7 @@ class AnaliseCreditoClienteForm(forms.ModelForm):
             'observacao': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }
         labels = {
-            'entrada_informada': 'Entrada informada (opcional)',
+            'entrada_informada': 'Entrada informada',
         }
 
     def __init__(self, *args, **kwargs):
@@ -502,7 +513,7 @@ class AnaliseCreditoClienteForm(forms.ModelForm):
 
 class AnaliseCreditoClienteRenavamForm(forms.ModelForm):
     produto = ProdutoChoiceField(
-        queryset=Produto.objects.all(),
+        queryset=Produto.objects.filter(ativo=True),
         widget=Select2Widget(attrs={'class': 'form-control'}),
         label='Produto'
     )
@@ -579,6 +590,7 @@ class ComprovantesClienteForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         user = kwargs.pop('user', None)
+        self._temp_field_names = kwargs.pop('temp_field_names', [])
         super().__init__(*args, **kwargs)
         
         # Verificar permissões do usuário
@@ -626,7 +638,13 @@ class ComprovantesClienteForm(forms.ModelForm):
             for name, field in self.fields.items():
                 if name not in exceptions:
                     field.required = True
-        
+
+        # 4) Arquivos temporários na sessão já serão injetados via restore_temp_files;
+        #    marca esses campos como não-obrigatórios para evitar "Este campo é obrigatório".
+        for fname in self._temp_field_names:
+            if fname in self.fields:
+                self.fields[fname].required = False
+
         if self.instance and self.instance.pk:
             if user and not user.has_perm('vendas.change_status_analise'):
                 self.fields['documento_identificacao_frente'].disabled = True
@@ -927,7 +945,7 @@ class ProdutoVendaForm(forms.ModelForm):
         )
     )
     produto = forms.ModelChoiceField(
-        queryset=Produto.objects.all(),
+        queryset=Produto.objects.filter(ativo=True),
         label="Produto",
         widget=ProdutoSelectWidget(
             max_results=10,
@@ -960,6 +978,8 @@ class ProdutoVendaForm(forms.ModelForm):
         loja = kwargs.pop('loja', None)
         super().__init__(*args, **kwargs)
         self.fields['produto'].queryset = Produto.objects.filter(
+            ativo=True
+        ).filter(
             Exists(
                 Estoque.objects.filter(
                     produto=OuterRef('pk'),

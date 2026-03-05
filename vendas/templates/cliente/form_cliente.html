@@ -789,6 +789,20 @@
     $('.cpf').mask('000.000.000-00');
     $('.rg').mask('00000000');
     $('.cep').mask('00000000');
+
+    // Pré-formata valores monetários que vêm do Django em formato "1500.00"
+    // para o formato brasileiro "1.500,00" antes de aplicar a máscara
+    $('.money').each(function() {
+      var v = $(this).val();
+      if (v && v.indexOf(',') === -1 && v.indexOf('.') !== -1) {
+        // Formato Django: 1500.00 → converter para centavos string: 150000
+        var parts = v.split('.');
+        var inteiro = parts[0];
+        var decimal = (parts[1] || '00').substring(0, 2).padEnd(2, '0');
+        $(this).val(inteiro + decimal);
+      }
+    });
+    $('.money').mask('000.000.000,00', {reverse: true});
   </script>
   <script>
     $(function(){
@@ -1148,6 +1162,19 @@
         return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
       }
 
+      // Parse valor monetário que pode estar em formato Django (800.00)
+      // ou formato BR mascarado (800,00 / 1.500,00)
+      function parseMoney(val) {
+        if (!val) return 0;
+        val = val.trim();
+        // Se contém vírgula → formato BR (800,00 ou 1.500,00)
+        if (val.indexOf(',') !== -1) {
+          return parseFloat(val.replace(/\./g, '').replace(',', '.')) || 0;
+        }
+        // Senão → formato decimal padrão (800.00)
+        return parseFloat(val) || 0;
+      }
+
       // Helper: calcula idade e atualiza hint
       function calcularIdade(dateStr) {
         if (!dateStr) return null;
@@ -1225,7 +1252,7 @@
 
         // entrada informada pelo operador (campo do formulário), ou mínima do produto
         const entradaInputRaw = $('#id_entrada_informada').val() || '';
-        const entradaInformada = parseFloat(entradaInputRaw.replace(/\./g, '').replace(',', '.')) || 0;
+        const entradaInformada = parseMoney(entradaInputRaw);
         const entrada = (entradaInformada >= entradaMinima) ? entradaInformada : entradaMinima;
 
         // aviso se entrada informada é menor que a mínima
@@ -1277,6 +1304,14 @@
       
       // Form submission enhancement - bloqueia se idade < 22 e se Dados do Cliente incompleto
       $('#clienteForm').on('submit', function(e) {
+        // Remove máscara monetária para enviar valor decimal puro ao Django
+        $('.money').each(function() {
+          var rawValue = $(this).cleanVal();
+          if (rawValue === '') return;
+          var numericValue = parseInt(rawValue, 10) / 100;
+          $(this).val(numericValue.toFixed(2));
+        });
+
         // Bloqueia imediatamente se a aba Dados do Cliente estiver incompleta
         if (!checkDadosComplete()) {
           e.preventDefault();

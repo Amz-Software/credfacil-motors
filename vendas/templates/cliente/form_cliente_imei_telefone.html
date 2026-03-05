@@ -78,7 +78,7 @@
       {% endif %}
     </div>
 
-    <form method="post" enctype="multipart/form-data">
+    <form method="post" enctype="multipart/form-data" id="clienteFormImei">
       {% csrf_token %}
       <div class="card-body">
         <!-- Nav tabs -->
@@ -288,6 +288,19 @@
         return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
       }
 
+      // Parse valor monetário que pode estar em formato Django (800.00)
+      // ou formato BR mascarado (800,00 / 1.500,00)
+      function parseMoney(val) {
+        if (!val) return 0;
+        val = val.trim();
+        // Se contém vírgula → formato BR (800,00 ou 1.500,00)
+        if (val.indexOf(',') !== -1) {
+          return parseFloat(val.replace(/\./g, '').replace(',', '.')) || 0;
+        }
+        // Senão → formato decimal padrão (800.00)
+        return parseFloat(val) || 0;
+      }
+
       function atualizaInfo() {
         const prodId = $('#id_produto').val();
         const np     = $('#id_numero_parcelas').val();
@@ -315,7 +328,7 @@
 
         // entrada informada pelo operador (campo do formulário), ou mínima do produto
         const entradaInputRaw = $('#id_entrada_informada').val() || '';
-        const entradaInformada = parseFloat(entradaInputRaw.replace(/\./g, '').replace(',', '.')) || 0;
+        const entradaInformada = parseMoney(entradaInputRaw);
         const entrada = (entradaInformada >= entradaMinima) ? entradaInformada : entradaMinima;
 
         // aviso se entrada informada é menor que a mínima
@@ -355,6 +368,29 @@
         .on('change', atualizaInfo);
       $('#id_entrada_informada')
         .on('input change', atualizaInfo);
+
+      // Pré-formata valores monetários que vêm do Django em formato "1500.00"
+      // para o formato brasileiro "1.500,00" antes de aplicar a máscara
+      $('.money').each(function() {
+        var v = $(this).val();
+        if (v && v.indexOf(',') === -1 && v.indexOf('.') !== -1) {
+          var parts = v.split('.');
+          var inteiro = parts[0];
+          var decimal = (parts[1] || '00').substring(0, 2).padEnd(2, '0');
+          $(this).val(inteiro + decimal);
+        }
+      });
+      $('.money').mask('000.000.000,00', {reverse: true});
+
+      // Remove máscara monetária no submit para enviar valor decimal puro ao Django
+      $('#clienteFormImei').on('submit', function() {
+        $('.money').each(function() {
+          var rawValue = $(this).cleanVal();
+          if (rawValue === '') return;
+          var numericValue = parseInt(rawValue, 10) / 100;
+          $(this).val(numericValue.toFixed(2));
+        });
+      });
 
       // inicializa ao carregar a página
       atualizaInfo();

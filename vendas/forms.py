@@ -94,14 +94,14 @@ class ClienteForm(forms.ModelForm):
         user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
         for name, field in self.fields.items():
-            if name not in ['email']:
+            if name not in ['email', 'recebe_auxilio']:
                 field.required = True
 
-        # Força escolha explícita em "Recebe Auxílio?"
+        # Define opções para "Recebe Auxílio?"
         if 'recebe_auxilio' in self.fields:
-            self.fields['recebe_auxilio'].choices = [('', '---------'), ('True', 'Sim'), ('False', 'Não')]
+            self.fields['recebe_auxilio'].choices = [('False', 'Não'), ('True', 'Sim')]
             if not self.instance or not self.instance.pk:
-                self.fields['recebe_auxilio'].initial = ''
+                self.fields['recebe_auxilio'].initial = 'False'
             else:
                 self.fields['recebe_auxilio'].initial = str(self.instance.recebe_auxilio)
                 

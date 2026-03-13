@@ -553,7 +553,7 @@ class AnaliseCreditoClienteRenavamForm(forms.ModelForm):
 class ComprovantesClienteForm(forms.ModelForm):
     restricao = forms.ChoiceField(
         label='Restrição',
-        required=None,
+        required=False,
         widget=forms.Select(attrs={'class': 'form-control'}),
         choices=[(True, 'Com Restrição'), (False, 'Sem Restrição')]
     )
@@ -673,7 +673,7 @@ class ComprovantesClienteForm(forms.ModelForm):
 class ComprovantesClienteEditForm(forms.ModelForm):
     restricao = forms.ChoiceField(
         label='Restrição',
-        required=None,
+        required=False,
         widget=forms.Select(attrs={'class': 'form-control'}),
         choices=[(True, 'Com Restrição'), (False, 'Sem Restrição')]
     )

@@ -32,6 +32,17 @@
     .table-responsive.d-none.d-md-block {
       overflow: visible;
     }
+    /* Corrigir z-index do modal e backdrop */
+    .modal-backdrop {
+      z-index: 1040 !important;
+    }
+    .modal {
+      z-index: 1050 !important;
+    }
+    /* Remover backdrop após fechar modal */
+    .modal-backdrop.fade.show {
+      opacity: 0.5;
+    }
   </style>
 {% endblock %}
 
@@ -261,6 +272,23 @@
 <script>
   document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => new bootstrap.Tooltip(el));
+    
+    // Corrigir problemas com modal-backdrop ficando na tela
+    const quitacaoModal = document.getElementById('quitacaoModal');
+    if (quitacaoModal) {
+      const modal = new bootstrap.Modal(quitacaoModal);
+      
+      // Quando o modal é fechado, remover backdrops aninhados
+      quitacaoModal.addEventListener('hidden.bs.modal', function() {
+        // Remover todos os modal-backdrops extras
+        document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
+          backdrop.remove();
+        });
+        // Restaurar body scroll
+        document.body.classList.remove('modal-open');
+        document.body.style.paddingRight = '';
+      });
+    }
   });
 </script>
 {% endblock %}

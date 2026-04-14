@@ -225,7 +225,7 @@
   </div>
 
   <!-- Modal de Quitação -->
-  <div class="modal fade" id="quitacaoModal" tabindex="-1" aria-labelledby="quitacaoModalLabel" aria-hidden="true">
+  <div class="modal fade" id="quitacaoModal" tabindex="-1" aria-labelledby="quitacaoModalLabel" aria-hidden="true" data-bs-backdrop="false" data-bs-focus="false">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <div class="modal-header text-white">
@@ -268,7 +268,7 @@
 {% endblock %}
 
 
-{% block extra_js %}
+{% block extra_scripts %}
 <script>
   document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => new bootstrap.Tooltip(el));

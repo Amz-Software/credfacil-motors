@@ -272,23 +272,35 @@
 <script>
   document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => new bootstrap.Tooltip(el));
-    
-    // Corrigir problemas com modal-backdrop ficando na tela
-    const quitacaoModal = document.getElementById('quitacaoModal');
-    if (quitacaoModal) {
-      const modal = new bootstrap.Modal(quitacaoModal);
-      
-      // Quando o modal é fechado, remover backdrops aninhados
-      quitacaoModal.addEventListener('hidden.bs.modal', function() {
-        // Remover todos os modal-backdrops extras
-        document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
-          backdrop.remove();
-        });
-        // Restaurar body scroll
-        document.body.classList.remove('modal-open');
-        document.body.style.paddingRight = '';
-      });
+
+    function clearStaleModalState() {
+      document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
+      document.body.classList.remove('modal-open');
+      document.body.style.paddingRight = '';
+      document.body.style.overflow = '';
     }
+
+    // Limpa estado órfão caso a página volte com backdrop preso
+    clearStaleModalState();
+    window.addEventListener('pageshow', clearStaleModalState);
+
+    const quitacaoModal = document.getElementById('quitacaoModal');
+    if (!quitacaoModal) {
+      return;
+    }
+
+    quitacaoModal.addEventListener('hidden.bs.modal', clearStaleModalState);
+
+    // Se o formulário for enviado dentro do modal, fecha e limpa imediatamente
+    quitacaoModal.querySelectorAll('form').forEach(function (form) {
+      form.addEventListener('submit', function () {
+        const instance = bootstrap.Modal.getInstance(quitacaoModal);
+        if (instance) {
+          instance.hide();
+        }
+        clearStaleModalState();
+      });
+    });
   });
 </script>
 {% endblock %}

@@ -129,8 +129,11 @@ CACHES = {
 
 SELECT2_CACHE_BACKEND = "select2"
 
-DATA_UPLOAD_MAX_MEMORY_SIZE = 52428800
+# Configurações para upload de arquivos
+DATA_UPLOAD_MAX_MEMORY_SIZE = 104857600  # 100MB
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000
+FILE_UPLOAD_MAX_MEMORY_SIZE = 104857600  # 100MB
+FILE_UPLOAD_PERMISSIONS = 0o644
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases

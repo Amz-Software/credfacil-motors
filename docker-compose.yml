@@ -3,33 +3,25 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    # Em produção, evite bind-mount do projeto (.-/app). Mantive apenas volumes de persistência.
+    # Mesmos mounts do container que roda em produção: o .env e as mídias (mediafiles)
+    # ficam no host. Trocar por volumes nomeados esconderia as mídias já enviadas.
     volumes:
-      - staticfiles:/app/staticfiles
-      - mediafiles:/app/mediafiles
+      - .:/app
+      - ./mediafiles:/app/mediafiles
+      - ./static:/app/static
     command: >
       sh -c "python3 manage.py migrate &&
              python3 manage.py collectstatic --noinput &&
              daphne -b 0.0.0.0 -p 8020 --proxy-headers -t 300 --websocket_timeout 300 core.asgi:application"
     restart: always
+    # Só localhost: o nginx faz o proxy. Porta publicada em 0.0.0.0 fica aberta à internet (o Docker ignora o UFW).
     ports:
-      - "8020:8020"
-    depends_on:
-      - redis
+      - "127.0.0.1:8020:8020"
     networks:
       - mynetwork
 
-  redis:
-    image: redis:7-alpine
-    restart: always
-    ports:
-      - "6386:6379"
-    networks:
-      - mynetwork
+# Sem Redis: o app usa LocMemCache e InMemoryChannelLayer (core/settings.py).
+# O Redis antigo ficava exposto na porta 6386 sem senha e sem uso.
 
 networks:
   mynetwork:
-
-volumes:
-  staticfiles:
-  mediafiles:
